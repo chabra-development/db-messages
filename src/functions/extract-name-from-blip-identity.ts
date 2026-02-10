@@ -1,7 +1,5 @@
-export function extractNameFromBlipIdentity(identity: string | undefined) {
-    
-    if (!identity) return null
-    
+export function extractNameFromBlipIdentity(identity: string) {
+
     // pega só a parte antes do @
     const beforeAt = identity.split("@")[0]
 

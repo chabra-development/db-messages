@@ -1,15 +1,16 @@
 "use client"
 
+import { signUpEmail } from "@/actions/better-auth/sign-up"
 import { SpanErrorMessage } from "@/components/span-error"
 import { toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { signUpSchema, type FormSignUpProps } from "@/schemas/sign-up-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -17,8 +18,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 
 export const FormSignUp = () => {
+
 	const [visible, setVisible] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
 
 	const form = useForm<FormSignUpProps>({
 		mode: "onSubmit",
@@ -34,34 +35,29 @@ export const FormSignUp = () => {
 
 	const { push } = useRouter()
 
+	const {
+		mutate,
+		isPending: isLoading
+	} = useMutation({
+		mutationKey: ["sign-up-email"],
+		mutationFn: signUpEmail,
+		onSuccess: () => {
+			toast({
+				title: "Usuário criado com sucesso",
+				onAutoClose: () => push("/sign-in"),
+			})
+		},
+		onError: (error: any) => {
+			toast({
+				title: "Erro",
+				description: error.message ?? "Erro ao criar usuário",
+				variant: "destructive",
+			})
+		},
+	})
+
 	async function onSubmit({ email, name, password }: FormSignUpProps) {
-		await authClient.signUp.email(
-			{
-				email,
-				name,
-				password,
-			},
-			{
-				onRequest: () => setIsLoading(true),
-				onSuccess: () => {
-					toast({
-						title: "Usuario criado com sucesso",
-						onAutoClose: () => push("/sign-in"),
-					})
-				},
-				onError: ({ error }) => {
-					console.log(error.message)
-
-					setIsLoading(false)
-
-					toast({
-						title: "Error",
-						description: error.message,
-						variant: "destructive",
-					})
-				},
-			}
-		)
+		mutate({ email, name, password, identity: "fklasejflkjse", teams: [] })
 	}
 
 	return (

@@ -1,5 +1,6 @@
 "use client"
 
+import { signInEmail } from "@/actions/better-auth/sign-in"
 import { SpanErrorMessage } from "@/components/span-error"
 import { toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { signInSchema, type FormSignProps } from "@/schemas/sign-in-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { createAuthClient } from "better-auth/client"
+import { useMutation } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -17,7 +18,22 @@ import { useForm } from "react-hook-form"
 export const FormSign = () => {
 
 	const [visible, setVisible] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
+
+	const { mutate, isPending: isLoading } = useMutation({
+		mutationKey: ["sign-in-email"],
+		mutationFn: signInEmail,
+		onError: (error) => {
+
+			console.log(error)
+
+			toast({
+				title: "Error no login",
+				description: "Senha ou email inválidos.",
+				variant: "destructive",
+			})
+		},
+
+	})
 
 	const form = useForm<FormSignProps>({
 		mode: "onSubmit",
@@ -31,30 +47,8 @@ export const FormSign = () => {
 		formState: { errors },
 	} = form
 
-	const authClient = createAuthClient()
-
 	async function onSignInSubmit({ email, password }: FormSignProps) {
-		await authClient.signIn.email(
-			{
-				email,
-				password,
-				callbackURL: "/",
-			},
-			{
-				onRequest: () => setIsLoading(true),
-				onError: ({ error }) => {
-					console.log(error)
-
-					setIsLoading(false)
-
-					toast({
-						title: "Error no login",
-						description: "Senha ou email inválidos.",
-						variant: "destructive",
-					})
-				},
-			}
-		)
+		mutate({ email, password })
 	}
 
 	return (
@@ -73,7 +67,11 @@ export const FormSign = () => {
 							]
 						)}
 					/>
-					{errors.email && <SpanErrorMessage message={errors.email.message} />}
+					{
+						errors.email && (
+							<SpanErrorMessage message={errors.email.message} />
+						)
+					}
 				</div>
 				<div className="space-y-2">
 					<Input
@@ -87,9 +85,11 @@ export const FormSign = () => {
 							]
 						)}
 					/>
-					{errors.password && (
-						<SpanErrorMessage message={errors.password.message} />
-					)}
+					{
+						errors.password && (
+							<SpanErrorMessage message={errors.password.message} />
+						)
+					}
 					<Button
 						type="button"
 						variant={"link"}

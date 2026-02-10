@@ -1,4 +1,4 @@
-import { FormSign } from "@/components/forms/form-sign"
+import { FormSign } from "@/components/forms/form-sign-in"
 import {
 	Card,
 	CardContent,

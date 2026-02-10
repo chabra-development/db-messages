@@ -4,48 +4,31 @@ CREATE TYPE "Role" AS ENUM ('USER', 'SUPERVISOR', 'ADMIN');
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
+    "identity" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "name" TEXT NOT NULL,
-    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "teams" TEXT[],
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "image" TEXT,
+    "banner" TEXT,
     "role" "Role" NOT NULL DEFAULT 'USER',
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "lists" (
+CREATE TABLE "import_job" (
     "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "userId" TEXT,
+    "total" INTEGER NOT NULL,
+    "processed" INTEGER NOT NULL DEFAULT 0,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "failed" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "lists_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "tickets" (
-    "id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "listId" TEXT,
-
-    CONSTRAINT "tickets_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "messages" (
-    "id" TEXT NOT NULL,
-    "to" TEXT NOT NULL,
-    "from" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "ticketId" TEXT,
-
-    CONSTRAINT "messages_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "import_job_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -94,6 +77,9 @@ CREATE TABLE "verification" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_identity_key" ON "users"("identity");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
@@ -107,15 +93,6 @@ CREATE INDEX "account_userId_idx" ON "account"("userId");
 
 -- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
-
--- AddForeignKey
-ALTER TABLE "lists" ADD CONSTRAINT "lists_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tickets" ADD CONSTRAINT "tickets_listId_fkey" FOREIGN KEY ("listId") REFERENCES "lists"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "messages" ADD CONSTRAINT "messages_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "tickets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

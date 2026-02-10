@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar"
 import { auth } from "@/lib/auth"
 import {
+	BookUser,
 	Calendar,
 	ChevronUp,
 	Cog,
@@ -64,6 +65,14 @@ export const AppSidebar = async () => {
 							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton asChild>
+									<Link href={"/contacts"}>
+										<BookUser />
+										<span>Tickets</span>
+									</Link>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+							<SidebarMenuItem>
+								<SidebarMenuButton asChild>
 									<Link href={"/tickets"}>
 										<Tag />
 										<span>Tickets</span>
@@ -80,7 +89,7 @@ export const AppSidebar = async () => {
 							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton asChild>
-									<Link href={"/"}>
+									<Link href={"/settings"}>
 										<Settings />
 										<span>Opções</span>
 									</Link>
@@ -103,7 +112,7 @@ export const AppSidebar = async () => {
 							</DropdownMenuTrigger>
 							<DropdownMenuContent side="top">
 								<DropdownMenuItem asChild>
-									<Link href={"/"}>
+									<Link href={"/settings"}>
 										<Cog />
 										<span>Opções</span>
 									</Link>

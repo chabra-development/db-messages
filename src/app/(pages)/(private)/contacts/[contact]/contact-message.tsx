@@ -1,5 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
+import { 
+    extractNameFromBlipIdentity 
+} from "@/functions/extract-name-from-blip-identity"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
 import { LimeMetadata } from "@/types/lime-thread-messages-response.types"
@@ -16,9 +18,6 @@ export const ContactMessage = ({
     date: string
     metadata?: LimeMetadata
 }) => {
-
-    const attendantName = extractNameFromBlipIdentity(metadata?.["#message.agentIdentity"])
-
     return (
         <Alert className={cn(
             "max-w-[70%] w-fit text-sm text-foreground shadow-2xl space-y-2",
@@ -28,9 +27,9 @@ export const ContactMessage = ({
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
             {
-                attendantName && (
+                metadata?.["#message.agentIdentity"] && (
                     <AlertTitle className="capitalize">
-                        {attendantName}
+                        {extractNameFromBlipIdentity(metadata?.["#message.agentIdentity"])}
                     </AlertTitle>
                 )
             }

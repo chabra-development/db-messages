@@ -1,9 +1,11 @@
 "use client"
 
-import { findManyAttendants } from "@/actions/blip/find-many-attendants"
+import { findManyAttendants } from "@/actions/attendants/find-many-attendants"
 import { SearchInput } from "@/components/seach-input"
+import {
+    ImportAttendantsForm
+} from "@/components/forms/form-import-attendants/import-attendants-form"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
     Card,
     CardAction,
@@ -14,10 +16,8 @@ import {
     CardTitle
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
-import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
+import { AttendantsQueryLoading } from "./attendants-query-loading"
 
 export const AttendantsQuery = () => {
 
@@ -25,74 +25,43 @@ export const AttendantsQuery = () => {
         data: attendants,
         isLoading
     } = useQuery({
-        queryKey: ["find-many-tickets"],
+        queryKey: ["find-many-attendants"],
         queryFn: () => findManyAttendants()
     })
 
     if (isLoading || !attendants) {
         return (
-            <Card className="flex-1 border-none rounded-none">
-                <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
-                    {
-                        Array.from({ length: 7 }).map((_, index) => (
-                            <Card
-                                key={index}
-                                className="h-42 bg-background"
-                            >
-                                <CardHeader>
-                                    <CardTitle>
-                                        <Skeleton className="h-6 rounded-full" />
-                                    </CardTitle>
-                                    <CardDescription>
-                                        <Skeleton className="w-1/2 h-4 rounded-full" />
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
-                        ))
-                    }
-                </CardContent>
-            </Card>
+            <AttendantsQueryLoading />
         )
     }
-
-    const { resource: { items = [] } } = attendants
 
     return (
         <Card className="flex-1 border-none rounded-none">
             <CardHeader className="border-b py-4">
                 <SearchInput
                     placeholder="Pesquisar atendente..."
-                    classNameDiv="w-2/3 mx-auto"
+                    classNameDiv="w-2/3"
                 />
+                <CardAction>
+                    <ImportAttendantsForm />
+                </CardAction>
             </CardHeader>
             <ScrollArea className="flex-1 min-h-200">
                 <ScrollBar />
                 <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
                     {
-                        items.map(({
-                            identity, email, status, teams = []
-                        }) => (
+                        attendants.map(({ id, email, name, teams = [] }) => (
                             <Card
-                                key={identity}
+                                key={id}
                                 className="min-h-40 overflow-hidden"
                             >
                                 <CardHeader>
                                     <CardTitle className="capitalize text-xl">
-                                        {
-                                            extractNameFromBlipIdentity(identity)
-                                        }
+                                        {name}
                                     </CardTitle>
                                     <CardDescription>
                                         {email}
                                     </CardDescription>
-                                    <CardAction>
-                                        <Badge className={cn(
-                                            "text-sm",
-                                            status === "Offline" && "opacity-60"
-                                        )}>
-                                            {status}
-                                        </Badge>
-                                    </CardAction>
                                 </CardHeader>
                                 <ScrollArea className="max-h-52">
                                     <CardFooter className="flex flex-wrap h-full gap-2.5 items-start px-4 py-4 mx-6 border rounded-lg text-xs drop-shadow-2xl">
@@ -106,7 +75,7 @@ export const AttendantsQuery = () => {
                                         ) : (
                                             teams.map((team, index) => (
                                                 <Badge
-                                                    key={`${identity}-${team}-${index}`}
+                                                    key={`${id}-${team}-${index}`}
                                                     className="w-fit px-3 py-2 rounded-md text-center whitespace-normal"
                                                 >
                                                     {team}

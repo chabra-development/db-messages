@@ -1,20 +1,11 @@
 "use client"
 
 import { findManyTickets } from "@/actions/blip/find-many-tickets"
-import { Alert, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Spinner } from "@/components/ui/spinner"
-import {
-    extractNameFromBlipIdentity
-} from "@/functions/extract-name-from-blip-identity"
-import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-import { formatDate } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { TicketsQueryItem } from "@/components/ticket/ticket-query-item"
+import { TicketsQueryLoading } from "./ticket-query-loading"
 
 export const TicketsQuery = () => {
 
@@ -28,42 +19,11 @@ export const TicketsQuery = () => {
 
     if (isLoading || !tickets) {
         return (
-            <Card className="flex-1 border-none rounded-none">
-                <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
-                    {
-                        Array.from({ length: 7 }).map((_, index) => (
-                            <Card
-                                key={index}
-                                className="h-42 bg-background"
-                            >
-                                <CardHeader>
-                                    <CardTitle>
-                                        <Skeleton className="h-6 rounded-full" />
-                                    </CardTitle>
-                                    <CardDescription>
-                                        <Skeleton className="w-1/2 h-4 rounded-full" />
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
-                        ))
-                    }
-                </CardContent>
-            </Card>
+            <TicketsQueryLoading />
         )
     }
 
     const { resource: { items = [] } } = tickets
-
-    function translateStatus(status: string) {
-
-        if (status === "ClosedAttendant") {
-            return "atendimento encerrado"
-        } else if (status === "Transferred") {
-            return "transferido"
-        }
-
-        return "aberto"
-    }
 
     return (
         <Card className="flex-1 border-none rounded-none">
@@ -71,65 +31,11 @@ export const TicketsQuery = () => {
                 <ScrollBar />
                 <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
                     {
-                        items.map(({
-                            id, status, team, closedBy, closeDate
-                        }) => (
-                            <Card
-                                key={id}
-                                className="min-h-40"
-                            >
-                                <CardHeader>
-                                    <CardTitle>
-                                        {id}
-                                    </CardTitle>
-                                    <CardAction>
-                                        <Badge className={cn(
-                                            "text-sm text-primary",
-                                            translateStatus(status) === "aberto"
-                                                ? "bg-red-500"
-                                                : translateStatus(status) === "transferido"
-                                                    ? "bg-orange-400"
-                                                    : "bg-green-500"
-                                        )}>
-                                            {translateStatus(status)}
-                                        </Badge>
-                                    </CardAction>
-                                </CardHeader>
-                                <CardFooter className="flex-col gap-2.5 items-start">
-                                    <div className="flex">
-                                        fila:
-                                        <Badge
-                                            variant={"secondary"} className="text-sm mx-2"
-                                        >
-                                            {
-                                                team !== "DIRECT_TRANSFER"
-                                                    ? team : "transferência direta"
-                                            }
-                                        </Badge>
-                                    </div>
-                                    {
-                                        closeDate && (
-                                            <div className="flex">
-                                                fechado em:
-                                                <Badge className="text-sm mx-2">
-                                                    {formatDate(closeDate, "PPP", { locale: ptBR })}
-                                                </Badge>
-                                            </div>
-
-                                        )
-                                    }
-                                    {
-                                        closedBy && (
-                                            <div className="flex">
-                                                fechado por:
-                                                <Badge className="text-sm mx-2 capitalize">
-                                                    {extractNameFromBlipIdentity(closedBy)}
-                                                </Badge>
-                                            </div>
-                                        )
-                                    }
-                                </CardFooter>
-                            </Card>
+                        items.map((ticket, index) => (
+                            <TicketsQueryItem
+                                key={`${ticket.id}-${index}`}
+                                ticket={ticket}
+                            />
                         ))
                     }
                 </CardContent>

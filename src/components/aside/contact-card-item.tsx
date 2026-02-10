@@ -44,13 +44,13 @@ export const ContactCardItem = ({ limeContact }: ContactCardItemProps) => {
 
     return (
         <Link
-            href={`/${contact}`}
+            href={`/contacts/${contact}`}
             className="group"
         >
             <Card className={cn(
                 "size-full transition-all my-2",
                 "group-hover:bg-card/60 group-hover:border-2 group-hover:scale-95",
-                pathname === contact && "bg-secondary border-none"
+                pathname.includes(contact) && "bg-secondary border-none"
             )}>
 
                 <CardHeader>

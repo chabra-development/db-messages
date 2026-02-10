@@ -5,7 +5,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { QueryDevtools } from "./react-query-dev-tools"
 
-const client = new QueryClient()
+export const queryClient = new QueryClient()
 
 export function ThemeProvider({
   children,
@@ -13,7 +13,7 @@ export function ThemeProvider({
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider {...props}>
-      <QueryClientProvider client={client}>
+      <QueryClientProvider client={queryClient}>
         <QueryDevtools />
         {children}
       </QueryClientProvider>

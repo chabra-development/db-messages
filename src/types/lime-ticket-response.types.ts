@@ -1,3 +1,41 @@
+export type IrisTicketResponse = {
+    type: "application/vnd.iris.ticket+json"
+    resource: {
+        id: string
+        sequentialId: number
+        ownerIdentity: string
+        customerIdentity: string
+        customerDomain: string
+        agentIdentity: string
+        provider: "Lime"
+        status: "ClosedAttendant" | string
+        storageDate: string // ISO date
+        openDate: string // ISO date
+        closeDate: string // ISO date
+        statusDate: string // ISO date
+        rating: number
+        team: string
+        unreadMessages: number
+        closed: boolean
+        closedBy: string
+        firstResponseDate: string // ISO date
+        parentSequentialId: number
+        priority: number
+        isAutomaticDistribution: boolean
+    }
+    method: "get" | string
+    status: "success" | "failure" | string
+    id: string
+    from: string
+    to: string
+    metadata: {
+        traceparent: string
+        "#command.uri": string
+        "#metrics.custom.label": string
+    }
+}
+
+
 export type LimeCollectionResponse = {
     type: string
     resource: LimeCollectionResource

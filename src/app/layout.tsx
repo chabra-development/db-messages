@@ -17,7 +17,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="pt-BR" suppressHydrationWarning>
       <head />
       <body className={cn(roboto.className, "antialiased")}>
-        <ThemeProvider attribute="class" defaultTheme="system">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+        >
           <Background>
             {children}
           </Background>
