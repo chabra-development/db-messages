@@ -18,10 +18,8 @@ import {
 import { auth } from "@/lib/auth"
 import {
 	BookUser,
-	Calendar,
 	ChevronUp,
 	Cog,
-	Home,
 	Settings,
 	Tag,
 	UserCircle2,
@@ -30,9 +28,9 @@ import {
 import { headers } from "next/headers"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { SidebarModeToggle } from "./sidebar-mode-toogle"
 import { SidebarTrigger } from "./sidebar-trigger"
 import { SignOutButton } from "./sign-out-button"
-import { SidebarModeToggle } from "./sidebar-mode-toogle"
 
 export const AppSidebar = async () => {
 
@@ -55,14 +53,6 @@ export const AppSidebar = async () => {
 					<SidebarGroupContent>
 						<SidebarMenu>
 							<SidebarTrigger />
-							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<Link href={"/"}>
-										<Home />
-										<span>Home</span>
-									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton asChild>
 									<Link href={"/contacts"}>

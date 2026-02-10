@@ -9,7 +9,7 @@ export default async function PublicLayout({ children }: LayoutProps) {
 		headers: await headers(),
 	})
 
-	if (session) redirect("/")
+	if (session) redirect("/contacts")
 
 	return <>{children}</>
 }

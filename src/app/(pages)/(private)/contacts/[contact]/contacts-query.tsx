@@ -30,6 +30,15 @@ import { isSameDay } from "date-fns"
 import { formatChatDate } from "@/functions/format-chat-date"
 import { Badge } from "@/components/ui/badge"
 import { AudioPlayer } from "@/components/audio-player"
+import { 
+    isLimeMediaContent, 
+    isLimeEmojiReaction, 
+    isLimeSelectContent, 
+    isLimeReplyContent, 
+    isLimeInteractiveList, 
+    isLimeInteractiveButton, 
+    isLimeInteractiveMessage 
+} from "@/functions/lime-thread-messages.guards"
 
 export const ContactsQuery = ({ identity }: { identity: string }) => {
 
@@ -114,206 +123,145 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                                     </CardContent>
                                 </Card>
                             )
-                            : [...resource.items].reverse().map((
-                                {
-                                    id, direction, content, date, metadata
-                                },
-                                index,
-                                array
-                            ) => {
+                            : [...resource.items].reverse().map(
+                                ({ id, direction, content, date, metadata }, index, array) => {
 
-                                const currentDate = new Date(date)
+                                    const currentDate = new Date(date)
+                                    const previousDate =
+                                        index > 0 ? new Date(array[index - 1].date) : null
 
-                                const previousDate =
-                                    index > 0 ? new Date(array[index - 1].date) : null
+                                    const showDateDivider =
+                                        !previousDate || !isSameDay(currentDate, previousDate)
 
-                                const showDateDivider =
-                                    !previousDate || !isSameDay(currentDate, previousDate)
-
-                                if (
-                                    typeof content === "object" &&
-                                    "type" in content &&
-                                    typeof content.type === "string" &&
-                                    content.type === "audio/ogg"
-                                ) {
-                                    console.log(content)
-                                }
-
-                                return (
-                                    <div
-                                        key={id}
-                                        className={cn(
-                                            "w-full flex flex-col",
-                                            direction === "sent"
-                                                ? "items-end"
-                                                : "items-start"
-                                        )}
-                                    >
-                                        {
-                                            showDateDivider && (
+                                    return (
+                                        <div
+                                            key={id}
+                                            className={cn(
+                                                "w-full flex flex-col",
+                                                direction === "sent"
+                                                    ? "items-end"
+                                                    : "items-start"
+                                            )}
+                                        >
+                                            {showDateDivider && (
                                                 <Badge
                                                     variant="secondary"
-                                                    className="text-xs  mx-auto py-2 px-4 dark:bg-muted bg-zinc-100 border border-border mb-3 not-first:mt-2.5"
+                                                    className="text-xs mx-auto py-2 px-4 mb-3"
                                                 >
                                                     {formatChatDate(currentDate)}
                                                 </Badge>
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "type" in content &&
-                                                typeof content.type === "string" &&
-                                                content.type === "audio/ogg"
-                                            ) && (
-                                                <AudioPlayer
-                                                    url={content.uri}
-                                                    date={date}
-                                                    direction={direction}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "emoji" in content
-                                            ) && (
-                                                <ContactMessage
-                                                    date={date}
-                                                    direction={direction}
-                                                    content={renderEmoji(content.emoji)}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "recipient_type" in content &&
-                                                "interactive" in content &&
-                                                "body" in content.interactive &&
-                                                "action" in content.interactive &&
-                                                "button" in content.interactive.action
-                                            ) && (
-                                                <ContactInterativeList
-                                                    date={date}
-                                                    direction={direction}
-                                                    sections={content.interactive.action.sections}
-                                                    title={content.interactive.body.text}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "options" in content &&
-                                                !("scope" in content) &&
-                                                direction === "sent"
-                                            ) && (
-                                                <ContactScopeAvaliation
-                                                    content={content}
-                                                    date={date}
-                                                    direction={direction}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "replied" in content &&
-                                                "value" in content.replied
-                                            ) && (
-                                                <ContactScopeTextResponse
-                                                    date={date}
-                                                    direction={direction}
-                                                    title={content.replied.value}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "replied" in content &&
-                                                "interactive" in content.inReplyTo.value &&
-                                                "type" in content.inReplyTo.value.interactive &&
-                                                content.inReplyTo.value.interactive.type === "list" &&
-                                                direction === "sent"
-                                            ) && (
-                                                <ContactInterativeList
-                                                    title={
-                                                        content.inReplyTo.value.interactive.body.text
-                                                    }
-                                                    sections={
-                                                        content.inReplyTo.value.interactive.action.sections
-                                                    }
-                                                    date={date}
-                                                    direction={direction}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            (
-                                                typeof content === "object" &&
-                                                "replied" in content &&
-                                                "interactive" in content.inReplyTo.value &&
-                                                "type" in content.inReplyTo.value.interactive &&
-                                                content.inReplyTo.value.interactive.type === "button" &&
-                                                direction === "sent"
-                                            ) && (
-                                                <ContactInterative
-                                                    title={
-                                                        content.inReplyTo.value.interactive.body.text
-                                                    }
-                                                    buttons={
-                                                        content.inReplyTo.value.interactive.action.buttons
-                                                    }
-                                                    date={date}
-                                                    direction={direction}
-                                                />
-                                            )
-                                        }
-                                        {
-                                            typeof content === "string" && (
+                                            )}
+
+                                            {/* ===================== TEXT ===================== */}
+                                            {typeof content === "string" && (
                                                 <ContactMessage
                                                     date={date}
                                                     content={content}
                                                     direction={direction}
                                                     metadata={metadata}
                                                 />
-                                            )
-                                        }
-                                        {(
-                                            typeof content === "object" &&
-                                            "scope" in content
-                                        ) && (
-                                                <ContactScopeText
-                                                    content={content}
+                                            )}
+
+                                            {/* ===================== AUDIO ===================== */}
+                                            {isLimeMediaContent(content) &&
+                                                content.type === "audio/ogg" && (
+                                                    <AudioPlayer
+                                                        url={content.uri}
+                                                        date={date}
+                                                        direction={direction}
+                                                    />
+                                                )
+                                            }
+
+                                            {/* ===================== EMOJI ===================== */}
+                                            {isLimeEmojiReaction(content) && (
+                                                <ContactMessage
                                                     date={date}
                                                     direction={direction}
+                                                    content={renderEmoji(content.emoji)}
                                                 />
-                                            )
-                                        }
-                                        {(
-                                            typeof content === "object" &&
-                                            "interactive" in content &&
-                                            "body" in content.interactive &&
-                                            "buttons" in content.interactive.action
-                                        ) && (
-                                                <ContactInterative
-                                                    title={content.interactive.body.text}
-                                                    buttons={
-                                                        content
-                                                            .interactive
-                                                            .action
-                                                            .buttons
-                                                    }
-                                                    date={date}
-                                                    direction={direction}
-                                                />
-                                            )
-                                        }
-                                    </div>
-                                )
-                            })
+                                            )}
+
+                                            {/* ===================== SELECT / SCOPE ===================== */}
+                                            {isLimeSelectContent(content) &&
+                                                !content.scope &&
+                                                direction === "sent" && (
+                                                    <ContactScopeAvaliation
+                                                        content={content}
+                                                        date={date}
+                                                        direction={direction}
+                                                    />
+                                                )
+                                            }
+
+                                            {/* ===================== REPLY ===================== */}
+                                            {isLimeReplyContent(content) && (
+                                                <>
+                                                    <ContactScopeTextResponse
+                                                        date={date}
+                                                        direction={direction}
+                                                        title={content.replied.value}
+                                                    />
+
+                                                    {isLimeInteractiveList(
+                                                        content.inReplyTo.value.interactive
+                                                    ) && direction === "sent" && (
+                                                            <ContactInterativeList
+                                                                title={
+                                                                    content.inReplyTo.value.interactive.body.text
+                                                                }
+                                                                sections={
+                                                                    content.inReplyTo.value.interactive.action.sections
+                                                                }
+                                                                date={date}
+                                                                direction={direction}
+                                                            />
+                                                        )}
+
+                                                    {isLimeInteractiveButton(
+                                                        content.inReplyTo.value.interactive
+                                                    ) && direction === "sent" && (
+                                                            <ContactInterative
+                                                                title={
+                                                                    content.inReplyTo.value.interactive.body.text
+                                                                }
+                                                                buttons={
+                                                                    content.inReplyTo.value.interactive.action.buttons
+                                                                }
+                                                                date={date}
+                                                                direction={direction}
+                                                            />
+                                                        )}
+                                                </>
+                                            )}
+
+                                            {/* ===================== INTERACTIVE (OUTBOUND) ===================== */}
+                                            {isLimeInteractiveMessage(content) &&
+                                                isLimeInteractiveList(content.interactive) && (
+                                                    <ContactInterativeList
+                                                        date={date}
+                                                        direction={direction}
+                                                        sections={content.interactive.action.sections}
+                                                        title={content.interactive.body.text}
+                                                    />
+                                                )
+                                            }
+
+                                            {isLimeInteractiveMessage(content) &&
+                                                isLimeInteractiveButton(content.interactive) && (
+                                                    <ContactInterative
+                                                        title={content.interactive.body.text}
+                                                        buttons={content.interactive.action.buttons}
+                                                        date={date}
+                                                        direction={direction}
+                                                    />
+                                                )
+                                            }
+                                        </div>
+                                    )
+                                }
+                            )
+
                     }
                 </CardContent>
             </ScrollArea>

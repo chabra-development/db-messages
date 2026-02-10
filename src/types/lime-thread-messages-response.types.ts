@@ -22,8 +22,6 @@ export type LimeThreadMessagesResource = {
     items: LimeThreadMessage[]
 }
 
-
-
 /* ======================================================
  * LIME Thread Message – Base
  * ====================================================== */

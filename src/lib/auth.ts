@@ -25,7 +25,7 @@ export const auth = betterAuth({
 			},
 			teams: {
 				type: "string[]",
-			},
+			}
 		}
 	},
 	emailAndPassword: {

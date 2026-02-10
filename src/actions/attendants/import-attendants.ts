@@ -38,7 +38,7 @@ export async function importAttendants({ attendents }: ImportAttendantsProps) {
                                     name: extractNameFromBlipIdentity(identity),
                                     password: "Chabra@123",
                                     identity,
-                                    teams,
+                                    teams
                                 },
                             })
                         }
