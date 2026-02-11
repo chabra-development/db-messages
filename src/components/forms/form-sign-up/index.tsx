@@ -47,7 +47,7 @@ export const FormSignUp = () => {
 				onAutoClose: () => push("/sign-in"),
 			})
 		},
-		onError: (error: any) => {
+		onError: (error: Error) => {
 			toast({
 				title: "Erro",
 				description: error.message ?? "Erro ao criar usuário",
@@ -56,8 +56,13 @@ export const FormSignUp = () => {
 		},
 	})
 
-	async function onSubmit({ email, name, password }: FormSignUpProps) {
-		mutate({ email, name, password, identity: "fklasejflkjse", teams: [] })
+	async function onSubmit({ email, password }: FormSignUpProps) {
+		mutate({ 
+			email, 
+			password, 
+			identity: "", 
+			teams: [] 
+		})
 	}
 
 	return (
@@ -77,19 +82,6 @@ export const FormSignUp = () => {
 						)}
 					/>
 					{errors.email && <SpanErrorMessage message={errors.email.message} />}
-				</div>
-				<div className="space-y-2">
-					<Input
-						placeholder="user name"
-						{...register("name")}
-						className={cn(
-							errors.name && [
-								"focus-visible:ring-destructive",
-								"not-focus-visible:border-destructive",
-							]
-						)}
-					/>
-					{errors.name && <SpanErrorMessage message={errors.name.message} />}
 				</div>
 				<div className="space-y-2">
 					<Input

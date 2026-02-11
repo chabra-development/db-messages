@@ -29,8 +29,9 @@ import { Ellipsis, Filter } from "lucide-react"
 import { useState } from "react"
 import { AttendantsQueryLoading } from "./attendants-query-loading"
 import { authClient } from "@/lib/auth-client"
-import { User } from "@prisma/client"
+import { User, Role } from "@prisma/client"
 import { Button } from "@/components/ui/button"
+import { ChangeRoleUserDialog } from "./change-role-attendants"
 
 const cardVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -53,7 +54,11 @@ export const AttendantsQuery = () => {
         isLoading
     } = useQuery({
         queryKey: ["find-many-attendants"],
-        queryFn: () => findManyAttendants()
+        queryFn: () => findManyAttendants({
+            orderBy: {
+                name: "asc"
+            }
+        })
     })
 
     if (isLoading || !attendants || !data) {
@@ -95,7 +100,17 @@ export const AttendantsQuery = () => {
 
     const { role } = data.user as User
 
-    console.log(role)
+    function translateRole(role: Role) {
+
+        if (role === "ADMIN") {
+            return "Administrador"
+        } else if (role === "SUPERVISOR") {
+            return "Supervisor"
+        }
+
+        return "Atendente"
+
+    }
 
     return (
         <Card className="flex-1 border-none rounded-none">
@@ -169,7 +184,7 @@ export const AttendantsQuery = () => {
                         </p>
                     ) : (
                         filteredAttendants.map(({
-                            id, email, name, teams = []
+                            id, email, name, role, teams = []
                         }, index) => (
                             <motion.div
                                 key={id}
@@ -184,13 +199,16 @@ export const AttendantsQuery = () => {
                                         <CardTitle className="capitalize text-xl">
                                             {name}
                                         </CardTitle>
-                                        <CardDescription>
-                                            {email}
-                                        </CardDescription>
+                                        <div className="flex items-center w-full gap-2.5">
+                                            <CardDescription>
+                                                {email}
+                                            </CardDescription>
+                                            <Badge>
+                                                {translateRole(role)}
+                                            </Badge>
+                                        </div>
                                         <CardAction>
-                                            <Button variant={"ghost"}>
-                                                <Ellipsis />
-                                            </Button>
+                                            <ChangeRoleUserDialog />
                                         </CardAction>
                                     </CardHeader>
                                     <ScrollArea className={cn(

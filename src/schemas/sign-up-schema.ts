@@ -8,7 +8,6 @@ export const signUpSchema = z
 				message: "Apenas emails '@chabra.com.br' são permitidos",
 			})
 			.toLowerCase(),
-		name: z.string().nonempty("O name é obrigatório.").toLowerCase(),
 		password: z.string().min(6, "A senha deve ter no minimo 6 caracteres"),
 		confirmPassword: z.string().min(1, "Confirmação de senha é obrigatória"),
 	})

@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./prisma"
+import { Role } from "@prisma/client";
 
 export const auth = betterAuth({
 	session: {
@@ -25,7 +26,11 @@ export const auth = betterAuth({
 			},
 			teams: {
 				type: "string[]",
-			}
+			},
+			role: {
+				type: ["USER", "SUPERVISOR", "ADMIN"],
+				defaultValue: "USER",
+			},
 		}
 	},
 	emailAndPassword: {
