@@ -1,5 +1,15 @@
-import { ComponentProps } from "react"
+import type { ComponentProps } from "react";
 
-export function stringToHTML(html: string, props?: ComponentProps<"div">) {
-	return <div dangerouslySetInnerHTML={{ __html: html }} {...props} />
+export function stringToHTML(
+	html: string,
+	props?: ComponentProps<"div">
+) {
+	const normalizedHTML = html.replace(/\n/g, "<br />");
+
+	return (
+		<div
+			dangerouslySetInnerHTML={{ __html: normalizedHTML }}
+			{...props}
+		/>
+	);
 }

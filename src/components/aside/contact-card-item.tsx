@@ -7,7 +7,7 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card"
-import { normalizeWhatsAppIdentify } from "@/functions/validate-identify"
+import { normalizeWhatsAppIdentify } from "@/functions/normalize-whatsapp-identify"
 import { phoneNumberBRSchema } from "@/functions/validate-phone-number"
 import { cn } from "@/lib/utils"
 import { LimeContact } from "@/types/lime-collection-response.types"

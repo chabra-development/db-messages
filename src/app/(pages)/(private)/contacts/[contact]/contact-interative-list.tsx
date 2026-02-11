@@ -36,7 +36,7 @@ export const ContactInterativeList = ({
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
             direction === "sent"
-                ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
+                ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
             <CardHeader>

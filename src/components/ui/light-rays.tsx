@@ -95,6 +95,7 @@ export function LightRays({
   ref,
   ...props
 }: LightRaysProps) {
+  
   const [rays, setRays] = useState<LightRay[]>([])
   const cycleDuration = Math.max(speed, 0.1)
 

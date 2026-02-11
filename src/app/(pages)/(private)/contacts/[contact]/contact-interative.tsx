@@ -30,7 +30,7 @@ export const ContactInterative = ({
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
             direction === "sent"
-                ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
+                ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none",
         )}>
             <CardHeader>
@@ -48,7 +48,7 @@ export const ContactInterative = ({
                     }) => (
                         <Button
                             key={id}
-                            className="w-full"
+                            className="w-full select-none"
                             variant={"outline"}
                             type="button"
                         >

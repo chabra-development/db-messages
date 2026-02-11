@@ -1,3 +1,30 @@
+export const KNOWN_MESSAGE_TYPES = [
+    "text/plain",
+    "application/vnd.lime.select+json",
+    "application/vnd.lime.reply+json",
+    "application/vnd.lime.media-link+json",
+] as const;
+
+export const KNOWN_MEDIA_MIME_TYPES = [
+    // 📹 Vídeo
+    "video/mp4",
+
+    // 🖼️ Imagem
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+
+    // 🎧 Áudio
+    "audio/ogg",
+    "audio/ogg; codecs=opus",
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+
+    // 🧩 Sticker
+    "sticker/webp",
+] as const;
+
 /* ======================================================
  * LIME Thread Messages – Response
  * ====================================================== */
@@ -101,6 +128,7 @@ export type LimeMessageContent =
     | LimeTicketContent
     | LimeInteractiveMessage
     | LimeEmojiReaction
+    | LimeReplyTextContent
 
 /* ======================================================
  * Text
@@ -270,3 +298,16 @@ export type LimeInteractiveList = {
         }>
     }
 }
+
+export type LimeReplyTextContent = {
+    replied: {
+        type: "text/plain";
+        value: string;
+    };
+    inReplyTo: {
+        id: string;
+        type: "text/plain";
+        value: string;
+        direction: "sent" | "received";
+    };
+};

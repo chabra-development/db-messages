@@ -2,6 +2,8 @@
  * Helpers
  * ====================================================== */
 
+import { KNOWN_MEDIA_MIME_TYPES, LimeReplyTextContent } from "@/types/lime-thread-messages-response.types"
+
 function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null
 }
@@ -153,4 +155,107 @@ export function isLimeReplyToText(
         isObject(value.inReplyTo) &&
         isString(value.inReplyTo.value)
     )
+}
+
+export function isLimeReplyTextContent(
+    content: unknown
+): content is LimeReplyTextContent {
+    if (!content || typeof content !== "object") {
+        return false;
+    }
+
+    const obj = content as Record<string, unknown>;
+
+    // replied
+    if (
+        !obj.replied ||
+        typeof obj.replied !== "object"
+    ) {
+        return false;
+    }
+
+    const replied = obj.replied as Record<string, unknown>;
+
+    if (
+        replied.type !== "text/plain" ||
+        typeof replied.value !== "string"
+    ) {
+        return false;
+    }
+
+    // inReplyTo
+    if (
+        !obj.inReplyTo ||
+        typeof obj.inReplyTo !== "object"
+    ) {
+        return false;
+    }
+
+    const inReplyTo = obj.inReplyTo as Record<string, unknown>;
+
+    if (
+        typeof inReplyTo.id !== "string" ||
+        inReplyTo.type !== "text/plain" ||
+        typeof inReplyTo.value !== "string" ||
+        (inReplyTo.direction !== "sent" &&
+            inReplyTo.direction !== "received")
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+export function isUnknownContent(content: unknown): boolean {
+    // 🛑 null, undefined, primitive inesperado
+    if (content == null) {
+        return true;
+    }
+
+    // 1️⃣ text/plain → string
+    if (typeof content === "string") {
+        return false;
+    }
+
+    // daqui pra frente precisa ser objeto
+    if (typeof content !== "object") {
+        return true;
+    }
+
+    const obj = content as Record<string, unknown>;
+
+    if (isLimeReplyTextContent(content)) {
+        return false; // conhecido
+    }
+
+    // 2️⃣ media-link
+    if (
+        typeof obj.type === "string" &&
+        typeof obj.uri === "string"
+    ) {
+        const normalizedMime = obj.type.split(";")[0].trim();
+
+        return !KNOWN_MEDIA_MIME_TYPES.includes(normalizedMime as any);
+    }
+
+    // 3️⃣ select
+    if (
+        typeof obj.text === "string" &&
+        Array.isArray(obj.options)
+    ) {
+        return false;
+    }
+
+    // 4️⃣ reply
+    if (
+        typeof obj.replied === "object" &&
+        obj.replied !== null &&
+        typeof obj.inReplyTo === "object" &&
+        obj.inReplyTo !== null
+    ) {
+        return false;
+    }
+
+    // ❌ não bateu com nenhum formato conhecido
+    return true;
 }

@@ -22,7 +22,6 @@ import { ContactInterative } from "./contact-interative"
 import { ContactInterativeList } from "./contact-interative-list"
 import { ContactMessage } from "./contact-message"
 import { ContactScopeAvaliation } from "./contact-scope-avaliation"
-import { ContactScopeText } from "./contact-scope-text"
 import { ContactScopeTextResponse } from "./contact-scope-text-response"
 import { ContactsQueryLoading } from "./contacts-query-loading"
 import { renderEmoji } from "@/functions/render-emoji"
@@ -30,15 +29,18 @@ import { isSameDay } from "date-fns"
 import { formatChatDate } from "@/functions/format-chat-date"
 import { Badge } from "@/components/ui/badge"
 import { AudioPlayer } from "@/components/audio-player"
-import { 
-    isLimeMediaContent, 
-    isLimeEmojiReaction, 
-    isLimeSelectContent, 
-    isLimeReplyContent, 
-    isLimeInteractiveList, 
-    isLimeInteractiveButton, 
-    isLimeInteractiveMessage 
+import {
+    isLimeMediaContent,
+    isLimeEmojiReaction,
+    isLimeSelectContent,
+    isLimeReplyContent,
+    isLimeInteractiveList,
+    isLimeInteractiveButton,
+    isLimeInteractiveMessage,
+    isLimeReplyToText,
+    isUnknownContent
 } from "@/functions/lime-thread-messages.guards"
+import { stringToHTML } from "@/functions/string-to-HTML"
 
 export const ContactsQuery = ({ identity }: { identity: string }) => {
 
@@ -86,7 +88,7 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
     const { resource } = data
 
     return (
-        <Card className="flex-1 border-none rounded-none">
+        <Card className="size-full border-none rounded-none">
             {
                 contact && (
                     <CardHeader className="border-b pb-3 gap-0">
@@ -109,9 +111,7 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
             }
             <ScrollArea className="flex-1 min-h-200 @container/chat">
                 <ScrollBar />
-                <CardContent className={cn(
-                    "space-y-2 px-2"
-                )}>
+                <CardContent className={cn("space-y-2 px-2")}>
                     {
                         resource.items.length === 0
                             ? (
@@ -132,6 +132,10 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
 
                                     const showDateDivider =
                                         !previousDate || !isSameDay(currentDate, previousDate)
+
+                                    if (isLimeReplyToText(content)) {
+                                        console.log(stringToHTML(content.replied.value))
+                                    }
 
                                     return (
                                         <div
@@ -160,6 +164,31 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                                                     direction={direction}
                                                     metadata={metadata}
                                                 />
+                                            )}
+
+                                            {(isLimeReplyToText(content)) && (
+                                                <Card className={cn(
+                                                    "w-1/2 text-sm",
+                                                    "@max-5xl/chat:w-9/10 py-1 gap-2",
+                                                    direction === "sent"
+                                                        ? "bg-message rounded-tr-none"
+                                                        : "bg-message-foreground rounded-tl-none"
+                                                )}>
+                                                    <CardHeader className="px-1">
+                                                        <CardTitle className="bg-card/30 py-2.5 px-4 rounded-sm text-muted-foreground">
+                                                            {
+                                                                stringToHTML(content.inReplyTo.value)
+                                                            }
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                    <CardHeader className="px-1">
+                                                        <CardTitle className="px-2 rounded-md">
+                                                            {
+                                                                stringToHTML(content.replied.value)
+                                                            }
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                </Card>
                                             )}
 
                                             {/* ===================== AUDIO ===================== */}
@@ -257,6 +286,12 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                                                     />
                                                 )
                                             }
+
+                                            {isUnknownContent(content) && (
+                                                <pre>
+                                                    {JSON.stringify(content, null, 2)}
+                                                </pre>
+                                            )}
                                         </div>
                                     )
                                 }

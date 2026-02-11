@@ -38,7 +38,7 @@ export const ContactsQueryLoading = () => {
                                     <Alert className={cn(
                                         "w-[70%] h-20 px-4 py-2 pt-4 text-sm text-foreground shadow-2xl space-y-2",
                                         isLeft.includes(index)
-                                            ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
+                                            ? "bg-message rounded-tr-none"
                                             : "dark:bg-muted bg-zinc-100 rounded-tl-none"
                                     )}>
                                         <AlertTitle />

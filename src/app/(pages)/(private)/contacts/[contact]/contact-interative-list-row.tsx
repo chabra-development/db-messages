@@ -1,12 +1,6 @@
-import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from "@/components/ui/card"
-import { stringToHTML } from "@/functions/string-to-HTML";
+import { Button } from "@/components/ui/button"
+import { CardDescription} from "@/components/ui/card"
+import { stringToHTML } from "@/functions/string-to-HTML"
 
 export const ContactInterativeListRow = ({
     row: {
@@ -24,7 +18,7 @@ export const ContactInterativeListRow = ({
         <div className="bg-transparent">
             <Button
                 variant="outline"
-                className="flex flex-col size-full whitespace-normal"
+                className="flex flex-col size-full whitespace-normal select-none"
             >
                 {stringToHTML(title)}
                 {

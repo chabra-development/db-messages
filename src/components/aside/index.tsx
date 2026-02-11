@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { normalizeWhatsAppIdentify } from "@/functions/validate-identify"
+import { normalizeWhatsAppIdentify } from "@/functions/normalize-whatsapp-identify"
 import { LimeContact } from "@/types/lime-collection-response.types"
 import { useQuery } from "@tanstack/react-query"
 import { Contact } from "lucide-react"

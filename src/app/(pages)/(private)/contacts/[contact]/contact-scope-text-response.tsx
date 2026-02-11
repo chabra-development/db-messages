@@ -17,7 +17,7 @@ export const ContactScopeTextResponse = ({
             "max-w-[70%] w-fit text-sm text-foreground shadow-2xl space-y-2",
             "@max-5xl/chat:max-w-9/10",
             direction === "sent"
-                ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
+                ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
             <AlertTitle className="tracking-normal leading-normal break-words whitespace-pre-wrap block">
