@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
 
   // Se não houver sessão, redireciona para login
   if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    return NextResponse.redirect(new URL("/sign-in", request.url))
   }
 
   // Se for a raiz e tiver sessão, redireciona para contacts

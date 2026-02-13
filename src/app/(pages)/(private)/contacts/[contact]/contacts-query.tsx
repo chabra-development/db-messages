@@ -296,7 +296,6 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                                     )
                                 }
                             )
-
                     }
                 </CardContent>
             </ScrollArea>

@@ -65,7 +65,7 @@ export const AppSidebar = async ({ user }: { user: AuthenticatedUser }) => {
 							</SidebarMenuItem>
 							<SidebarMenuItem>
 								<SidebarMenuButton asChild>
-									<Link href={"/attendants"}>
+									<Link href={"/attendants?skip=0&take=10"}>
 										<UsersRound />
 										<span>Atendentes</span>
 									</Link>

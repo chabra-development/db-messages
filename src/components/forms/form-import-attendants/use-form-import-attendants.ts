@@ -1,6 +1,5 @@
 import { importAttendants } from "@/actions/attendants/import-attendants"
 import { findManyAttendants } from "@/actions/blip/find-many-attendants"
-import { getImportJob } from "@/actions/jobs/get-import-progress"
 import { toast } from "@/components/toast"
 import { queryClient } from "@/providers/theme-provider"
 import {
@@ -38,36 +37,6 @@ export function useFormImportAttendants() {
         name: "attendents"
     })
 
-    const { data: job } = useQuery({
-        queryKey: ["import-job", jobId],
-        queryFn: () => getImportJob(jobId!),
-        enabled: !!jobId,
-        refetchInterval: (query) =>
-            query.state.data?.status === "pending" ? 1000 : false,
-    })
-
-    useEffect(() => {
-
-        setTimeout(() => {
-            if (job?.status === "done") {
-                toast({
-                    title: "Importação concluída",
-                    onAutoClose: () => {
-                        setOpen(false)
-                        reset()
-                    }
-                })
-            }
-        }, 3500)
-
-        if (job?.status === "error") {
-            toast({
-                title: "Importação interrompida",
-                variant: "destructive",
-            })
-        }
-    }, [job])
-
     const {
         mutate,
         isPending,
@@ -76,7 +45,7 @@ export function useFormImportAttendants() {
         mutationFn: ({ attendents }: ImportAttendantsProps) => {
             return importAttendants({ attendents })
         },
-        onSuccess: ({ jobId }) => {
+        onSuccess: async ({ jobId }) => {
 
             setJobId(jobId)
 
@@ -131,7 +100,7 @@ export function useFormImportAttendants() {
         append(all)
     }
 
-    function onSubmit(data: ImportAttendantsProps) {
+    async function onSubmit(data: ImportAttendantsProps) {
         mutate(data)
     }
 
@@ -150,9 +119,10 @@ export function useFormImportAttendants() {
         append,
         remove,
         errors,
-        job,
+        jobId,
+        setJobId,
         attendants,
         isLoading,
-        items
+        items,
     }
 }

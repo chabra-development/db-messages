@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
-import { nextCookies } from "better-auth/next-js";
+import { nextCookies } from "better-auth/next-js"
 import { prisma } from "./prisma"
-import { Role } from "@prisma/client";
+import { Role } from "@prisma/client"
+import { randomUUID } from "node:crypto"
 
 export const auth = betterAuth({
 	session: {
@@ -20,6 +21,14 @@ export const auth = betterAuth({
 		accountLinking: {
 			enabled: true,
 		},
+	},
+	// ✅ MOVIDO PARA O NÍVEL RAIZ (fora do user)
+	emailAndPassword: {
+		enabled: true,
+		requireEmailVerification: false,
+		minPasswordLength: 8,
+		maxPasswordLength: 128,
+		autoSignIn: true,
 	},
 	user: {
 		deleteUser: {
@@ -47,21 +56,16 @@ export const auth = betterAuth({
 				required: false,
 			}
 		},
-		emailAndPassword: {
-			enabled: true,
-			requireEmailVerification: false,
-			minPasswordLength: 8,
-			maxPasswordLength: 128,
-			autoSignIn: true,
+	},
+	trustedOrigins: [
+		process.env.VERCEL_URL || "http://localhost:3000",
+	],
+	advanced: {
+		database: {
+			generateId: () => randomUUID(),
 		},
-		trustedOrigins: [
-			process.env.VERCEL_URL || "http://localhost:3000",
-		],
-		advanced: {
-			generateId: () => crypto.randomUUID(),
-			useSecureCookies: process.env.NODE_ENV === "production",
-			cookieSameSite: "lax",
-		},
-		plugins: [nextCookies()]
-	}
+		useSecureCookies: process.env.NODE_ENV === "production",
+		cookieSameSite: "lax",
+	},
+	plugins: [nextCookies()]
 })

@@ -14,6 +14,7 @@ const findContactIdByNumberPhoneSchema = z.object({
     .trim()
     .transform((value) => value.replace(/\D/g, ""))
     .superRefine((value, ctx) => {
+      
       const phone = value.startsWith("55") ? value.slice(2) : value
 
       if (![10, 11].includes(phone.length)) {

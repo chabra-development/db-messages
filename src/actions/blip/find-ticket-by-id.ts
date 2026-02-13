@@ -40,7 +40,6 @@ export async function findTicketById(id: string) {
         },
     })
 
-    console.log(response)
 
     return response.data
 }

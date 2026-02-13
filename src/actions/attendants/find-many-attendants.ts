@@ -16,7 +16,7 @@ export async function findManyAttendants({
 
     const { data, error } = findManyAttendantsSchema.safeParse({ skip, take })
 
-    if (error) redirect("/attendants?skip=0&take=20")
+    if (error) redirect("/attendants?skip=0&take=10")
 
     const attendants = await prisma.user.findMany({
         take: data.take,
@@ -28,8 +28,6 @@ export async function findManyAttendants({
 
     const page = Math.floor(data.skip / data.take) + 1
     const totalPages = Math.ceil(count / data.take)
-
-    console.log(totalPages)
 
     return {
         count,

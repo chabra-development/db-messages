@@ -26,12 +26,17 @@ model User {
 }
 
 model ImportJob {
-  id        String   @id @default(uuid())
-  total     Int
-  processed Int      @default(0)
-  status    String   @default("pending")
-  failed    Json?
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  total       Int
+  processed   Int       @default(0)
+  succeeded   Int       @default(0)
+  failedCount Int       @default(0) @map("failed_count")
+  status      String
+  failed      Json[]    @default([])
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
 
   @@map("import_job")
 }

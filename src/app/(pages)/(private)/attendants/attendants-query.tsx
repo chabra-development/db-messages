@@ -33,15 +33,7 @@ import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { AttendantsQueryLoading } from "./attendants-query-loading"
 import { ChangeRoleUserDialog } from "./change-role-attendants"
-
-const cardVariants = {
-    hidden: { opacity: 0, y: 12 },
-    visible: (i: number) => ({
-        opacity: 1,
-        y: 0,
-        transition: { delay: i * 0.05, duration: 0.25 },
-    }),
-}
+import { AttendantCard } from "./attendant-card"
 
 export const AttendantsQuery = () => {
 
@@ -109,20 +101,6 @@ export const AttendantsQuery = () => {
     }
 
     const { role } = data.user as User
-
-    function translateRole(role: Role) {
-
-        if (role === "ADMIN") {
-            return "Administrador"
-        } else if (role === "SUPERVISOR") {
-            return "Supervisor"
-        }
-
-        return "Atendente"
-
-    }
-
-    console.log(dataAttendants)
 
     return (
         <Card className="flex-1 border-none rounded-none gap-0">
@@ -195,65 +173,20 @@ export const AttendantsQuery = () => {
                                 : "Nenhum atendente cadastrado."}
                         </p>
                     ) : (
-                        filteredAttendants.map(({
-                            id, email, name, role, teams = []
-                        }, index) => (
-                            <motion.div
-                                key={id}
-                                layout
-                                initial="hidden"
-                                animate="visible"
-                                custom={index}
-                                variants={cardVariants}
-                            >
-                                <Card className="h-full justify-between">
-                                    <CardHeader>
-                                        <CardTitle className="capitalize text-xl">
-                                            {name}
-                                        </CardTitle>
-                                        <div className="flex items-center w-full gap-2.5">
-                                            <CardDescription>
-                                                {email}
-                                            </CardDescription>
-                                            <Badge>
-                                                {translateRole(role)}
-                                            </Badge>
-                                        </div>
-                                        <CardAction>
-                                            <ChangeRoleUserDialog />
-                                        </CardAction>
-                                    </CardHeader>
-                                    <ScrollArea className={cn(
-                                        teams.length > 3 ? "h-36" : "h-20"
-                                    )}>
-                                        <CardFooter className="flex flex-wrap h-full gap-2.5 items-start px-4 py-4 mx-6 border rounded-lg text-xs drop-shadow-2xl">
-                                            {teams.length === 0 ? (
-                                                <Badge
-                                                    variant={"secondary"}
-                                                    className="w-fit px-3 py-2 rounded-md text-center whitespace-normal"
-                                                >
-                                                    Sem listas adicionadas
-                                                </Badge>
-                                            ) : (
-                                                teams.map((team, index) => (
-                                                    <Badge
-                                                        key={`${id}-${team}-${index}`}
-                                                        className="w-fit px-3 py-2 rounded-md text-center whitespace-normal"
-                                                    >
-                                                        {team}
-                                                    </Badge>
-                                                ))
-                                            )}
-                                        </CardFooter>
-                                    </ScrollArea>
-                                </Card>
-                            </motion.div>
+                        filteredAttendants.map((attendant, index) => (
+                            <AttendantCard
+                                key={attendant.id}
+                                attendant={attendant}
+                                index={index}
+                            />
                         ))
                     )}
                 </CardContent>
             </ScrollArea>
             <CardFooter className="border-t">
-                <Pagination paginationData={{ page, take, totalPages, count }} />
+                <Pagination
+                    paginationData={{ page, take, totalPages, count }}
+                />
             </CardFooter>
         </Card>
     )

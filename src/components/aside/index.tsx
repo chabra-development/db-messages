@@ -74,8 +74,6 @@ export const Aside = () => {
 
     const items = removeDuplicatedIdentities(resource.items)
 
-    console.log(items)
-
     return (
         <Card className="size-full rounded-none">
             <CardHeader>
@@ -96,13 +94,6 @@ export const Aside = () => {
                 <CardContent className="px-2 size-full pt-4">
                     {
                         items.map((limeContact, index) => {
-
-                            if (limeContact.phoneNumber) {
-                                console.log(limeContact)
-                            } else {
-                                console.log("nao tem nao")
-                            }
-
                             return (
                                 <ContactCardItem
                                     key={`${limeContact.identity}-${index}`}

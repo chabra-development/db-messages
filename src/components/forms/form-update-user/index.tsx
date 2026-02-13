@@ -46,22 +46,6 @@ export const FormUpdateUser = (props: ComponentProps<"form">) => {
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
 							<Input
-								defaultValue={session.data?.user.name}
-								placeholder="Nome do usuário"
-								{...register("name")}
-								className={cn(
-									errors.name && [
-										"focus-visible:ring-destructive",
-										"not-focus-visible:border-destructive",
-									]
-								)}
-							/>
-							{errors.name && (
-								<SpanErrorMessage message={errors.name.message} />
-							)}
-						</div>
-						<div className="space-y-2">
-							<Input
 								type={visible ? "text" : "password"}
 								placeholder="Senha atual"
 								{...register("currentPassword")}

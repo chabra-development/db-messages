@@ -55,8 +55,6 @@ function formatTime(seconds: number) {
         return `${hrs}:${pad(mins)}:${pad(secs)}`
     }
 
-    console.log(pad(secs))
-
     // apenas segundos
     return `0${mins}:${pad(secs)}`
 }

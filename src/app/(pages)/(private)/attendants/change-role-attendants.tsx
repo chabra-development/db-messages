@@ -3,20 +3,25 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
-    DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Ellipsis } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { DropdownMenuItemAlert } from "./dropdown-menu-item-alert"
+import { User } from "@prisma/client"
+import { useState } from "react"
 
-export const ChangeRoleUserDialog = () => {
+export const ChangeRoleUserDialog = ({ user }: { user: User }) => {
 
-    const { push } = useRouter()
+    const [open, setOpen] = useState(false)
+    const { name } = user
 
     return (
-        <DropdownMenu>
+        <DropdownMenu
+            open={open}
+            onOpenChange={setOpen}
+        >
             <DropdownMenuTrigger asChild>
                 <Button variant={"ghost"}>
                     <Ellipsis />
@@ -29,12 +34,17 @@ export const ChangeRoleUserDialog = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenu>
-                        <DropdownMenuItem onClick={() => push("/change-role-attendants")}>
+                        <DropdownMenuItemAlert
+                            title={`Alterar cargo do atendente "${name}"`}
+                            description=""
+                            user={user}
+                            setDropdownOpen={setOpen}
+                        >
                             Alterar cargo do atendente
-                        </DropdownMenuItem>
+                        </DropdownMenuItemAlert>
                     </DropdownMenu>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>
     )
-}
+} 

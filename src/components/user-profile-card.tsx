@@ -1,6 +1,6 @@
 "use client"
 
-import { findAttendantsByUser } from "@/actions/attendants/find-attendants-by-id"
+import { findAttendantsById } from "@/actions/attendants/find-attendants-by-id"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { getInitials } from "@/functions/get-initials"
@@ -13,7 +13,7 @@ export function UserProfileCard({ id }: { id: string }) {
 
     const { data: user, isLoading } = useQuery({
         queryKey: ["find-user-by-id", id],
-        queryFn: () => findAttendantsByUser(id)
+        queryFn: () => findAttendantsById(id)
     })
 
     if (!user || isLoading) {

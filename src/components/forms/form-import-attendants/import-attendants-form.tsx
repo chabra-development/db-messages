@@ -1,4 +1,3 @@
-import { ImportProgressBar } from "@/components/import-progress-bar"
 import { SpanErrorMessage } from "@/components/span-error"
 import {
     AlertDialog,
@@ -27,7 +26,10 @@ import {
     extractNameFromBlipIdentity
 } from "@/functions/extract-name-from-blip-identity"
 import { Import, ListChecks, ListX, X } from "lucide-react"
+import { ImportProgressDisplay } from "./import-attendants-display"
 import { useFormImportAttendants } from "./use-form-import-attendants"
+import { queryClient } from "@/providers/theme-provider"
+import { Separator } from "@/components/ui/separator"
 
 export type ImportFailedItem = {
     identity: string
@@ -52,10 +54,11 @@ export const ImportAttendantsForm = () => {
         append,
         remove,
         errors,
-        job,
+        jobId,
+        setJobId,
         items,
         attendants,
-        isLoading
+        isLoading,
     } = useFormImportAttendants()
 
     if (!attendants || isLoading) {
@@ -154,11 +157,17 @@ export const ImportAttendantsForm = () => {
                     errors.attendents &&
                     <SpanErrorMessage message={errors.attendents.message} />
                 }
-                {
-                    job && (
-                        <ImportProgressBar jobId={job.id} />
-                    )
-                }
+                <ImportProgressDisplay
+                    jobId={jobId}
+                    onComplete={() => {
+                        queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] })
+                    }}
+                    onClose={() => {
+                        setJobId(null)
+                        setOpen(false)
+                    }}
+                />
+                <Separator />
                 <AlertDialogFooter>
                     <AlertDialogCancel
                         type="button"

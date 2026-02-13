@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Progress } from "@/components/ui/progress"
-import { getImportJob } from "@/actions/jobs/get-import-progress"
+import { getImportJob } from "@/actions/jobs/get-import-job"
 
 type ImportStatus = "pending" | "running" | "done" | "error"
 
