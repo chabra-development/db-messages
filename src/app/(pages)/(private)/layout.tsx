@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { auth } from "@/lib/auth"
+import { AuthenticatedUser } from "@/types/auth.types"
 import { LayoutProps } from "@/types/index.types"
 import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
@@ -21,7 +22,7 @@ export default async function PrivateLayout({ children }: LayoutProps) {
 			defaultOpen={defaultOpen}
 			className="size-full"
 		>
-			<AppSidebar />
+			<AppSidebar user={session.user as unknown as AuthenticatedUser} />
 			{children}
 		</SidebarProvider>
 	)

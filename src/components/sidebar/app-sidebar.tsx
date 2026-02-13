@@ -15,7 +15,6 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { auth } from "@/lib/auth"
 import {
 	BookUser,
 	ChevronUp,
@@ -25,27 +24,20 @@ import {
 	UserCircle2,
 	UsersRound
 } from "lucide-react"
-import { headers } from "next/headers"
 import Link from "next/link"
-import { redirect } from "next/navigation"
 import { SidebarModeToggle } from "./sidebar-mode-toogle"
 import { SidebarTrigger } from "./sidebar-trigger"
 import { SignOutButton } from "./sign-out-button"
+import { AuthenticatedUser } from "@/types/auth.types"
 
-export const AppSidebar = async () => {
-
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	})
-
-	if (!session) redirect("/sign-in")
-
+export const AppSidebar = async ({ user }: { user: AuthenticatedUser }) => {
 	return (
 		<Sidebar
 			variant="floating"
 			collapsible="icon"
+			className="bg-transparent"
 		>
-			<SidebarContent>
+			<SidebarContent className="bg-transparent">
 				<SidebarGroup>
 					<SidebarGroupLabel className="text-primary text-xl mb-4">
 						Messages
@@ -57,7 +49,9 @@ export const AppSidebar = async () => {
 								<SidebarMenuButton asChild>
 									<Link href={"/contacts"}>
 										<BookUser />
-										<span>Tickets</span>
+										<span>
+											Contatos
+										</span>
 									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
@@ -96,7 +90,7 @@ export const AppSidebar = async () => {
 							<DropdownMenuTrigger asChild>
 								<SidebarMenuButton>
 									<UserCircle2 className="size-10" />
-									<span>{session.user.name}</span>
+									<span>{user.name}</span>
 									<ChevronUp className="ml-auto" />
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>

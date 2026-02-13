@@ -5,24 +5,19 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuPortal,
     DropdownMenuSeparator,
-    DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { Role } from "@prisma/client"
 import { Ellipsis } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export const ChangeRoleUserDialog = () => {
 
-    const roles: Role[] = ["ADMIN", "SUPERVISOR", "USER"]
+    const { push } = useRouter()
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
                 <Button variant={"ghost"}>
                     <Ellipsis />
                 </Button>
@@ -33,22 +28,11 @@ export const ChangeRoleUserDialog = () => {
                         Opções
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
+                    <DropdownMenu>
+                        <DropdownMenuItem onClick={() => push("/change-role-attendants")}>
                             Alterar cargo do atendente
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                {
-                                    roles.map(role => (
-                                        <DropdownMenuItem key={role}>
-                                            {role}
-                                        </DropdownMenuItem>
-                                    ))
-                                }
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub>
+                        </DropdownMenuItem>
+                    </DropdownMenu>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>

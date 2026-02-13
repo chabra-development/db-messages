@@ -7,15 +7,15 @@ const envSchema = z.object({
     SUPABASE_KEY: z.string().min(1),
 })
 
-const SUPABASE_URL = env.SUPABASE_URL
-const SUPABASE_KEY = env.SUPABASE_KEY
-
-const { data } = envSchema.safeParse({ SUPABASE_KEY, SUPABASE_URL })
+const { data } = envSchema.safeParse({
+    SUPABASE_KEY: env.SUPABASE_KEY,
+    SUPABASE_URL: env.SUPABASE_URL
+})
 
 if (!data) {
     throw new Error('Invalid or missing SUPABASE_URL or SUPABASE_KEY in environment variables')
 }
 
-const { SUPABASE_URL: url, SUPABASE_KEY: key } = data
+const { SUPABASE_URL, SUPABASE_KEY } = data
 
-export const supabase = createClient(url, key)
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
