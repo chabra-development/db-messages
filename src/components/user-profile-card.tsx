@@ -1,6 +1,6 @@
 "use client"
 
-import { findUserByUser } from "@/actions/users/find-user-by-id"
+import { findAttendantsByUser } from "@/actions/attendants/find-attendants-by-id"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { getInitials } from "@/functions/get-initials"
@@ -13,7 +13,7 @@ export function UserProfileCard({ id }: { id: string }) {
 
     const { data: user, isLoading } = useQuery({
         queryKey: ["find-user-by-id", id],
-        queryFn: () => findUserByUser(id)
+        queryFn: () => findAttendantsByUser(id)
     })
 
     if (!user || isLoading) {
@@ -31,10 +31,10 @@ export function UserProfileCard({ id }: { id: string }) {
                     </Avatar>
                     <div className="space-y-2">
                         <CardTitle className="capitalize">
-                            <Skeleton className="h-6"/>
+                            <Skeleton className="h-6" />
                         </CardTitle>
                         <CardDescription>
-                            <Skeleton className="h-4 w-2/3"/>
+                            <Skeleton className="h-4 w-2/3" />
                         </CardDescription>
                     </div>
                 </div>

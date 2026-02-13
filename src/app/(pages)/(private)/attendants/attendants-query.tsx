@@ -31,6 +31,8 @@ import { AttendantsQueryLoading } from "./attendants-query-loading"
 import { authClient } from "@/lib/auth-client"
 import { User } from "@prisma/client"
 import { Button } from "@/components/ui/button"
+import { useSearchParams } from "next/navigation"
+import { Pagination } from "@/components/pagination"
 
 const cardVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -43,24 +45,37 @@ const cardVariants = {
 
 export const AttendantsQuery = () => {
 
+    const searchParams = useSearchParams()
+
     const [search, setSearch] = useState("")
     const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set())
+
+    const take = searchParams.get("take")
+    const skip = searchParams.get("skip")
 
     const { data } = authClient.useSession()
 
     const {
-        data: attendants,
+        data: dataAttendants,
         isLoading
     } = useQuery({
-        queryKey: ["find-many-attendants"],
-        queryFn: () => findManyAttendants()
+        queryKey: ["find-many-attendants", take, skip],
+        queryFn: () => findManyAttendants({
+            skip,
+            take,
+            orderBy: {
+                name: "asc"
+            }
+        })
     })
 
-    if (isLoading || !attendants || !data) {
+    if (isLoading || !dataAttendants || !data) {
         return (
             <AttendantsQueryLoading />
         )
     }
+
+    const { data: attendants, page, totalPages, count } = dataAttendants
 
     const uniqueTeams = [
         ...new Set(attendants.flatMap((a) => a.teams ?? [])),
@@ -97,8 +112,10 @@ export const AttendantsQuery = () => {
 
     console.log(role)
 
+    console.log(dataAttendants)
+
     return (
-        <Card className="flex-1 border-none rounded-none">
+        <Card className="flex-1 border-none rounded-none gap-0">
             <CardHeader className="border-b py-4">
                 <div className="flex flex-col gap-3 min-w-0">
                     <SearchInput
@@ -159,7 +176,7 @@ export const AttendantsQuery = () => {
                     )
                 }
             </CardHeader>
-            <ScrollArea className="min-h-0 flex-1">
+            <ScrollArea className="min-h-0 flex-1 py-6">
                 <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
                     {filteredAttendants.length === 0 ? (
                         <p className="col-span-2 text-center text-muted-foreground py-8">
@@ -222,6 +239,9 @@ export const AttendantsQuery = () => {
                     )}
                 </CardContent>
             </ScrollArea>
-        </Card >
+            <CardFooter className="border-t">
+                <Pagination paginationData={{ page, take, totalPages, count }} />
+            </CardFooter>
+        </Card>
     )
 }  

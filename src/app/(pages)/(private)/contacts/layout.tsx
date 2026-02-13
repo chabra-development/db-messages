@@ -29,6 +29,7 @@ export default async function LayoutContact({ children }: LayoutProps) {
             <ResizablePanel
                 defaultSize={75}
                 minSize={40}
+                className="flex items-center justify-center"
             >
                 {children}
             </ResizablePanel>
