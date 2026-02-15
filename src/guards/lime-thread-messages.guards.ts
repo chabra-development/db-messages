@@ -2,7 +2,25 @@
  * Helpers
  * ====================================================== */
 
-import { KNOWN_MEDIA_MIME_TYPES, LimeReplyTextContent } from "@/types/lime-thread-messages-response.types"
+import {
+    LimeReplyTextContent,
+    LimeTicketMessageContent,
+    LimeReplyToSelectContent
+} from "@/types/lime-thread-messages-response.types"
+
+const KNOWN_CONTENT_GUARDS = [
+    isLimeReplyTextContent,
+    isLimeReplyToText,
+    isLimeTicketContent,
+    isLimeSelectContent,
+    isLimeReplyContent,
+    isLimeMediaContent,
+    isLimeEmojiReaction,
+    isLimeInteractiveButton,
+    isLimeInteractiveList,
+    isLimeInteractiveMessage,
+    isLimeReplyToSelectContent
+] as const
 
 function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null
@@ -206,56 +224,85 @@ export function isLimeReplyTextContent(
     return true;
 }
 
+export function isLimeTicketContent(
+    content: unknown
+): content is LimeTicketMessageContent {
+
+    if (typeof content !== "object" || content === null) {
+        return false
+    }
+
+    const c = content as Record<string, unknown>
+
+    return (
+        typeof c.id === "string" &&
+        typeof c.sequentialId === "number" &&
+        typeof c.ownerIdentity === "string" &&
+        typeof c.customerIdentity === "string" &&
+        typeof c.status === "string" &&
+        typeof c.storageDate === "string" &&
+        typeof c.rating === "number" &&
+        typeof c.unreadMessages === "number" &&
+        typeof c.closed === "boolean" &&
+        typeof c.priority === "number"
+    )
+}
+
+export function isLimeReplyToSelectContent(
+    content: unknown
+): content is LimeReplyToSelectContent {
+
+    if (typeof content !== "object" || content === null) {
+        return false
+    }
+
+    const obj = content as Record<string, unknown>
+
+    // replied
+    if (
+        !obj.replied ||
+        typeof obj.replied !== "object"
+    ) {
+        return false
+    }
+
+    const replied = obj.replied as Record<string, unknown>
+
+    if (
+        replied.type !== "text/plain" ||
+        typeof replied.value !== "string"
+    ) {
+        return false
+    }
+
+    // inReplyTo
+    if (
+        !obj.inReplyTo ||
+        typeof obj.inReplyTo !== "object"
+    ) {
+        return false
+    }
+
+    const inReplyTo = obj.inReplyTo as Record<string, unknown>
+
+    if (
+        typeof inReplyTo.id !== "string" ||
+        inReplyTo.type !== "application/vnd.lime.select+json" ||
+        (inReplyTo.direction !== "sent" &&
+            inReplyTo.direction !== "received") ||
+        !isLimeSelectContent(inReplyTo.value)
+    ) {
+        return false
+    }
+
+    return true
+}
+
 export function isUnknownContent(content: unknown): boolean {
-    // 🛑 null, undefined, primitive inesperado
-    if (content == null) {
-        return true;
-    }
 
-    // 1️⃣ text/plain → string
-    if (typeof content === "string") {
-        return false;
-    }
+    if (content == null) return true;
 
-    // daqui pra frente precisa ser objeto
-    if (typeof content !== "object") {
-        return true;
-    }
+    if (typeof content === "string") return false;
 
-    const obj = content as Record<string, unknown>;
-
-    if (isLimeReplyTextContent(content)) {
-        return false; // conhecido
-    }
-
-    // 2️⃣ media-link
-    if (
-        typeof obj.type === "string" &&
-        typeof obj.uri === "string"
-    ) {
-        const normalizedMime = obj.type.split(";")[0].trim();
-
-        return !KNOWN_MEDIA_MIME_TYPES.includes(normalizedMime as any);
-    }
-
-    // 3️⃣ select
-    if (
-        typeof obj.text === "string" &&
-        Array.isArray(obj.options)
-    ) {
-        return false;
-    }
-
-    // 4️⃣ reply
-    if (
-        typeof obj.replied === "object" &&
-        obj.replied !== null &&
-        typeof obj.inReplyTo === "object" &&
-        obj.inReplyTo !== null
-    ) {
-        return false;
-    }
-
-    // ❌ não bateu com nenhum formato conhecido
-    return true;
+    return !KNOWN_CONTENT_GUARDS.some(guard => guard(content))
 }

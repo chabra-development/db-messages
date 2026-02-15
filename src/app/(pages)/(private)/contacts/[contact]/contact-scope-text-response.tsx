@@ -1,31 +1,55 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { LimeReplyContent } from "@/types/lime-thread-messages-response.types"
 import { formatDate } from "date-fns"
 
 export const ContactScopeTextResponse = ({
     direction,
     date,
-    title
+    title,
+    content
 }: {
     direction: "sent" | "received"
     title: string
-    date: string
+    date: string,
+    content: any
 }) => {
+
+    console.log(content.inReplyTo.value.interactive.body.text)
+
+    const response = content.inReplyTo.value.interactive.body.text
+
     return (
-        <Alert className={cn(
-            "max-w-[70%] w-fit text-sm text-foreground shadow-2xl space-y-2",
-            "@max-5xl/chat:max-w-9/10",
+        <Card className={cn(
+            "w-1/2 text-sm",
+            "@max-5xl/chat:w-9/10 py-1 gap-2",
             direction === "sent"
                 ? "bg-message rounded-tr-none"
-                : "dark:bg-muted bg-zinc-100 rounded-tl-none"
+                : "bg-muted rounded-tl-none"
         )}>
-            <AlertTitle className="tracking-normal leading-normal break-words whitespace-pre-wrap block">
-                {stringToHTML(title)}
-            </AlertTitle>
-            <AlertDescription className="ml-auto">
-                {formatDate(date, "HH:mm")}
-            </AlertDescription>
-        </Alert>
+            <CardHeader className="px-1">
+                <CardTitle className="bg-card/30 py-2.5 px-4 rounded-sm text-muted-foreground">
+                    {
+                        stringToHTML(response)
+                    }
+                </CardTitle>
+            </CardHeader>
+            <CardHeader className="px-1">
+                <CardTitle className="px-2 rounded-md">
+                    {
+                        stringToHTML(title)
+                    }
+                </CardTitle>
+            </CardHeader>
+            <CardFooter className="ml-auto">
+                <CardDescription>
+                    {formatDate(date, "HH:mm")}
+                </CardDescription>
+            </CardFooter>
+        </Card>
     )
 }
+
+

@@ -129,6 +129,8 @@ export type LimeMessageContent =
     | LimeInteractiveMessage
     | LimeEmojiReaction
     | LimeReplyTextContent
+    | LimeTicketMessageContent
+    | LimeReplyToSelectContent
 
 /* ======================================================
  * Text
@@ -299,6 +301,28 @@ export type LimeInteractiveList = {
     }
 }
 
+export interface LimeTicketMessageContent {
+    id: string
+    sequentialId: number
+    ownerIdentity: string
+    customerIdentity: string
+    customerDomain: string
+    provider: string
+    status: string
+    storageDate: string
+    externalId: string
+    rating: number
+    team: string
+    unreadMessages: number
+    closed: boolean
+    customerInput?: {
+        type: string
+        value: string
+    }
+    priority: number
+}
+
+
 export type LimeReplyTextContent = {
     replied: {
         type: "text/plain";
@@ -311,3 +335,16 @@ export type LimeReplyTextContent = {
         direction: "sent" | "received";
     };
 };
+
+export interface LimeReplyToSelectContent {
+    replied: {
+        type: "text/plain"
+        value: string
+    }
+    inReplyTo: {
+        id: string
+        type: "application/vnd.lime.select+json"
+        value: LimeSelectContent
+        direction: "sent" | "received"
+    }
+}

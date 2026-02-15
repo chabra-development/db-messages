@@ -4,8 +4,8 @@ import { findManyTickets } from "@/actions/blip/find-many-tickets"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { useQuery } from "@tanstack/react-query"
-import { TicketsQueryItem } from "@/components/ticket/ticket-query-item"
 import { TicketsQueryLoading } from "./ticket-query-loading"
+import { TicketInfoSheet } from "./ticket-info-sheet"
 
 export const TicketsQuery = () => {
 
@@ -32,7 +32,7 @@ export const TicketsQuery = () => {
                 <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
                     {
                         items.map((ticket, index) => (
-                            <TicketsQueryItem
+                            <TicketInfoSheet
                                 key={`${ticket.id}-${index}`}
                                 ticket={ticket}
                             />
@@ -40,6 +40,6 @@ export const TicketsQuery = () => {
                     }
                 </CardContent>
             </ScrollArea>
-        </Card>
+        </Card >
     )
 }  

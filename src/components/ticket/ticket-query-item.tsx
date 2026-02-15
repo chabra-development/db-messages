@@ -52,7 +52,8 @@ export const TicketsQueryItem = ({
                 <div className="flex">
                     fila:
                     <Badge
-                        variant={"secondary"} className="text-sm mx-2"
+                        variant={"secondary"}
+                        className="text-sm mx-2"
                     >
                         {
                             team !== "DIRECT_TRANSFER"
