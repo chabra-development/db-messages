@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function Contact() {
     return (
-        <Card className="w-4/6 bg-transparent border-none">
+        <Card className="w-4/6 bg-transparent border-none shadow-none">
             <CardHeader>
                 <CardTitle className="mx-auto text-2xl">
                     <MessageCircleX className="size-20" />

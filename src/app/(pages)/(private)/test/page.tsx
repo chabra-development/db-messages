@@ -1,123 +1,153 @@
-"use client"
+'use client'
 
-import {
-    findContactIdByNumberPhone
-} from "@/actions/blip/find-contact-id-by-number-phone"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { BlipAccountResponse } from "@/types/blip-account-response.types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import z from "zod"
-
-const Schema = z.object({
-    numberPhone: z
-        .string()
-        .trim()
-        .transform((value) => value.replace(/\D/g, ""))
-        .superRefine((value, ctx) => {
-            // Remove o 55 se existir
-            const phone = value.startsWith("55") ? value.slice(2) : value;
-
-            // 🔹 Validação de tamanho
-            if (![10, 11].includes(phone.length)) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message:
-                        "O telefone deve conter DDD + número (10 dígitos para fixo ou 11 para celular).",
-                });
-                return;
-            }
-
-            const ddd = phone.slice(0, 2);
-            const number = phone.slice(2);
-
-            // 🔹 Validação do DDD
-            if (ddd.startsWith("0")) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "DDD inválido. O DDD não pode começar com 0.",
-                });
-            }
-
-            // 🔹 Validação do número
-            if (number.length === 9) {
-                // Celular
-                if (!number.startsWith("9")) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: "Número de celular inválido. Deve começar com 9.",
-                    });
-                }
-            } else if (number.length === 8) {
-                // Fixo
-                if (!/^[2-5]/.test(number)) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message:
-                            "Número fixo inválido. Deve começar com 2, 3, 4 ou 5.",
-                    });
-                }
-            }
-        })
-})
-
-type FormData = z.infer<typeof Schema>
+import { usePosts } from './use-posts'
+import { Loader2 } from 'lucide-react'
+import { useRef, useEffect } from 'react'
 
 export default function Home() {
 
-    const [data, setData] = useState<BlipAccountResponse | null>(null)
-
     const {
-        register,
-        handleSubmit,
-        formState: { errors }
-    } = useForm<FormData>({
-        resolver: zodResolver(Schema)
-    })
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        error,
+    } = usePosts()
 
-    async function onSubmit({ numberPhone }: FormData) {
+    // Ref para o elemento "trigger" no final da lista
+    const observerTarget = useRef<HTMLDivElement>(null)
 
-        const result = await findContactIdByNumberPhone(numberPhone)
-        setData(result)
+    // Intersection Observer - detecta quando o elemento fica visível
+    useEffect(() => {
+        const element = observerTarget.current
+        if (!element) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                // Se o elemento está visível E tem mais páginas E não está carregando
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage()
+                }
+            },
+            {
+                threshold: 1.0, // 100% do elemento precisa estar visível
+                rootMargin: '0px', // Sem margem extra
+            }
+        )
+
+        observer.observe(element)
+
+        // Cleanup
+        return () => {
+            if (element) {
+                observer.unobserve(element)
+            }
+        }
+    }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+    // Loading inicial (primeira vez)
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center space-y-4">
+                    <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+                    <p className="text-muted-foreground">Carregando posts...</p>
+                </div>
+            </div>
+        )
     }
 
+    // Error state
+    if (isError) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center space-y-4">
+                    <p className="text-destructive">Erro ao carregar posts</p>
+                    <p className="text-sm text-muted-foreground">{error.message}</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Junta todos os posts de todas as páginas
+    const allPosts = data?.pages.flatMap(page => page.posts) ?? []
+
     return (
-        <Card className="flex-1">
-            <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="contents"
+        <div className="w-full mx-auto overflow-scroll">
+            {/* Header fixo */}
+            <div className="sticky top-0 z-10 bg-background border-b p-4">
+                <h1 className="text-2xl font-bold">Feed de Posts</h1>
+            </div>
+
+            {/* Lista de posts */}
+            <div className="divide-y">
+                {allPosts.map((post, index) => (
+                    <article
+                        key={post.id}
+                        className="p-6 hover:bg-muted/50 transition-colors"
+                    >
+                        <div className="flex items-start gap-3">
+                            {/* Avatar simulado */}
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <span className="text-sm font-semibold">
+                                    {post.id}
+                                </span>
+                            </div>
+
+                            {/* Conteúdo */}
+                            <div className="flex-1 min-w-0">
+                                <h2 className="font-semibold text-lg mb-1">
+                                    {post.title}
+                                </h2>
+                                <p className="text-muted-foreground">
+                                    {post.body}
+                                </p>
+
+                                {/* Meta info */}
+                                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                                    <span>Post #{post.id}</span>
+                                    <span>•</span>
+                                    <span>Página {Math.ceil(post.id / 10)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                ))}
+            </div>
+
+            {/* Elemento observador (invisível) */}
+            <div
+                ref={observerTarget}
+                className="flex justify-center py-8"
             >
-                <CardContent>
-                    <Input
-                        type="tel"
-                        {...register("numberPhone")}
-                    />
-                    {
-                        errors.numberPhone && (
-                            <span className="text-sm text-red-500">
-                                {errors.numberPhone.message}
-                            </span>
-                        )
-                    }
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit">
-                        Enviar
-                    </Button>
-                </CardFooter>
-            </form>
-            <Separator />
-            {
-                data && (
-                    <CardContent>
-                        <pre>{JSON.stringify(data, null, 2)}</pre>
-                    </CardContent>
-                )
-            }
-        </Card>
+                {isFetchingNextPage && (
+                    <div className="text-center space-y-2">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                        <p className="text-sm text-muted-foreground">
+                            Carregando mais posts...
+                        </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Fim da lista */}
+            {!hasNextPage && allPosts.length > 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">🎉 Você chegou ao fim!</p>
+                    <p className="text-xs mt-1">
+                        {allPosts.length} posts carregados
+                    </p>
+                </div>
+            )}
+
+            {/* Lista vazia */}
+            {allPosts.length === 0 && (
+                <div className="text-center py-16 text-muted-foreground">
+                    <p>Nenhum post encontrado</p>
+                </div>
+            )}
+        </div>
     )
 }

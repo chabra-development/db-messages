@@ -1,3 +1,5 @@
+"use client"
+
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -19,6 +21,7 @@ import {
 	BookUser,
 	ChevronUp,
 	Cog,
+	LucideIcon,
 	Settings,
 	Tag,
 	UserCircle2,
@@ -29,8 +32,46 @@ import { SidebarModeToggle } from "./sidebar-mode-toogle"
 import { SidebarTrigger } from "./sidebar-trigger"
 import { SignOutButton } from "./sign-out-button"
 import { AuthenticatedUser } from "@/types/auth.types"
+import { usePathname } from "next/navigation"
+import { Route } from "next"
+import { cn } from "@/lib/utils"
 
-export const AppSidebar = async ({ user }: { user: AuthenticatedUser }) => {
+type SidebarItem = {
+	label: string
+	href: Route
+	icon: LucideIcon
+}
+
+export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
+
+	const pathname = usePathname()
+
+
+	const sidebarMenuItems: SidebarItem[] = [
+		{
+			label: "Contatos",
+			href: "/contacts",
+			icon: BookUser
+		},
+		{
+			label: "Tickets",
+			href: "/tickets",
+			icon: Tag
+		},
+		{
+			label: "Atendentes",
+			href: "/attendants?skip=0&take=10",
+			icon: UsersRound
+		},
+		{
+			label: "Opções",
+			href: "/settings",
+			icon: Settings
+		},
+	] as const
+
+	console.log(pathname)
+
 	return (
 		<Sidebar
 			variant="floating"
@@ -45,40 +86,26 @@ export const AppSidebar = async ({ user }: { user: AuthenticatedUser }) => {
 					<SidebarGroupContent>
 						<SidebarMenu>
 							<SidebarTrigger />
-							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<Link href={"/contacts"}>
-										<BookUser />
-										<span>
-											Contatos
-										</span>
-									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<Link href={"/tickets"}>
-										<Tag />
-										<span>Tickets</span>
-									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<Link href={"/attendants?skip=0&take=10"}>
-										<UsersRound />
-										<span>Atendentes</span>
-									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-							<SidebarMenuItem>
-								<SidebarMenuButton asChild>
-									<Link href={"/settings"}>
-										<Settings />
-										<span>Opções</span>
-									</Link>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
+							{
+								sidebarMenuItems.map(({
+									href, icon: Icon, label
+								}) => (
+									<SidebarMenuItem key={href}>
+										<SidebarMenuButton asChild>
+											<Link
+												href={href}
+												className={cn(pathname.includes(href) && "border border-primary")
+												}
+											>
+												<Icon />
+												<span>
+													{label}
+												</span>
+											</Link>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								))
+							}
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>

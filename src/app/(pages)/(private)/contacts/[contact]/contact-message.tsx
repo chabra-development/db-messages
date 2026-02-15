@@ -23,7 +23,7 @@ export const ContactMessage = ({
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
-            <AlertTitle className="tracking-normal leading-normal break-words whitespace-pre-wrap block">
+            <AlertTitle className="tracking-normal leading-normal wrap-break-word whitespace-pre-wrap block">
                 {stringToHTML(content)}
             </AlertTitle>
             <AlertDescription className="ml-auto">

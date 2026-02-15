@@ -17,23 +17,18 @@ import {
     Card,
     CardAction,
     CardContent,
-    CardDescription,
     CardFooter,
-    CardHeader,
-    CardTitle
+    CardHeader
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
-import { Role, User } from "@prisma/client"
+import { User } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
-import { motion } from "framer-motion"
 import { Filter } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
-import { AttendantsQueryLoading } from "./attendants-query-loading"
-import { ChangeRoleUserDialog } from "./change-role-attendants"
 import { AttendantCard } from "./attendant-card"
+import { AttendantsQueryLoading } from "./attendants-query-loading"
 
 export const AttendantsQuery = () => {
 
@@ -108,7 +103,7 @@ export const AttendantsQuery = () => {
                 <div className="flex flex-col gap-3 min-w-0">
                     <SearchInput
                         placeholder="Pesquisar atendente..."
-                        classNameDiv="w-2/3"
+                        className="w-2/3"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -186,6 +181,7 @@ export const AttendantsQuery = () => {
             <CardFooter className="border-t">
                 <Pagination
                     paginationData={{ page, take, totalPages, count }}
+                    countLabel="Total de atendentes"
                 />
             </CardFooter>
         </Card>

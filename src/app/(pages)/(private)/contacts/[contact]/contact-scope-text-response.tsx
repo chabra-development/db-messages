@@ -17,8 +17,6 @@ export const ContactScopeTextResponse = ({
     content: any
 }) => {
 
-    console.log(content.inReplyTo.value.interactive.body.text)
-
     const response = content.inReplyTo.value.interactive.body.text
 
     return (

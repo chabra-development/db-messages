@@ -29,7 +29,7 @@ export async function findManyTickets() {
         id: randomUUID(),
         to: "postmaster@desk.msging.net",
         method: "get",
-        uri: "/tickets"
+        uri: "/tickets?$skip=0&$take=100"
     }
 
     const response = await api.post<LimeCollectionResponse>(url, body, {
