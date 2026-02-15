@@ -15,7 +15,11 @@ const roboto = Roboto_Mono({
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html
+      lang="pt-BR"
+      className="scroll-smooth"
+      suppressHydrationWarning
+    >
       <head />
       <body className={cn(roboto.className, "antialiased")}>
         <ThemeProvider

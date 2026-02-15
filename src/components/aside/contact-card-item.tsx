@@ -8,6 +8,7 @@ import { LimeContact } from "@/types/lime-collection-response.types"
 import { Phone } from "lucide-react"
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import Link from "next/link"
+import { phoneNumberBRSchema } from "@/functions/validate-phone-number"
 interface ContactCardItemProps {
     limeContact: LimeContact
     searchQuery?: string
@@ -24,6 +25,8 @@ export function ContactCardItem({
 
     const identity = normalizeWhatsAppIdentify(limeContact.identity)
     const name = limeContact.name || "Sem nome"
+
+    const phoneNumber = phoneNumberBRSchema.parse(limeContact.phoneNumber)
 
     // Função para destacar o texto da busca
     const highlightText = (text: string) => {
@@ -76,10 +79,10 @@ export function ContactCardItem({
                     )}>
                         {highlightText(name)}
                     </CardTitle>
-                    <CardDescription className="flex items-center gap-1.5 text-xs">
+                    <CardDescription className="flex items-center gap-1.5 text-xs truncate">
                         <Phone className="size-3" />
                         <span className="truncate">
-                            {limeContact.phoneNumber}
+                            {phoneNumber}
                         </span>
                     </CardDescription>
                 </CardHeader>

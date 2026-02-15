@@ -1,10 +1,10 @@
-// src/components/aside/index.tsx
 "use client"
 
 import { findManyContacts } from "@/actions/blip/find-many-contacts"
 import { SearchInput } from "@/components/seach-input"
 import { toast } from "@/components/toast"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
     Card,
     CardContent,
@@ -13,27 +13,25 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { normalizeWhatsAppIdentify } from "@/functions/normalize-whatsapp-identify"
+import {
+    normalizeWhatsAppIdentify
+} from "@/functions/normalize-whatsapp-identify"
+import { useDebounce } from "@/hooks/use-debounce"
 import { LimeContact } from "@/types/lime-collection-response.types"
 import { useQuery } from "@tanstack/react-query"
 import { Contact, RefreshCw } from "lucide-react"
-import { useState, useMemo, useCallback } from "react"
-import { useDebounce } from "@/hooks/use-debounce"
+import { useCallback, useMemo, useState } from "react"
+import { AsideEmptyState } from "./aside-empty-state"
 import { AsideLoading } from "./aside-loading"
 import { ContactCardItem } from "./contact-card-item"
-import { AsideEmptyState } from "./aside-empty-state"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
 
 export const Aside = () => {
-
-    const { push } = useRouter()
 
     const [searchQuery, setSearchQuery] = useState("")
     const [activeContactId, setActiveContactId] = useState<string | null>(null)
 
     // Debounce da pesquisa para melhor performance
-    const debouncedSearch = useDebounce(searchQuery, 300)
+    const debouncedSearch = useDebounce(searchQuery, 500)
 
     // Indica se está digitando (diferença entre query e debounced)
     const isSearching = searchQuery !== debouncedSearch
@@ -50,19 +48,6 @@ export const Aside = () => {
         staleTime: 1000 * 60 * 5, // 5 minutos
         refetchOnWindowFocus: false,
     })
-
-    // Função para remover identidades duplicadas
-    const removeDuplicatedIdentities = useCallback(<T extends { identity: string }>(items: T[]) => {
-        const seen = new Set<string>()
-        return items.filter(item => {
-            const normalized = normalizeWhatsAppIdentify(item.identity)
-            if (seen.has(normalized)) {
-                return false
-            }
-            seen.add(normalized)
-            return true
-        })
-    }, [])
 
     // Filtra e busca contatos (memoizado para performance)
     const filteredContacts = useMemo(() => {
@@ -87,7 +72,7 @@ export const Aside = () => {
                 extras.includes(query)
             )
         })
-    }, [data, debouncedSearch, removeDuplicatedIdentities])
+    }, [data, debouncedSearch])
 
     // Handler para limpar pesquisa
     const handleClearSearch = () => setSearchQuery("")

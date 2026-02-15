@@ -131,6 +131,8 @@ export type LimeMessageContent =
     | LimeReplyTextContent
     | LimeTicketMessageContent
     | LimeReplyToSelectContent
+    | LimeMediaContentResponse
+    | LimeContactPayload
 
 /* ======================================================
  * Text
@@ -346,5 +348,52 @@ export interface LimeReplyToSelectContent {
         type: "application/vnd.lime.select+json"
         value: LimeSelectContent
         direction: "sent" | "received"
+    }
+}
+
+export interface LimeContactPayload {
+    name: string
+    phoneNumber: string
+    cellPhoneNumber: string
+    extras: {
+        org: string | null
+    }
+    firstName: string
+}
+
+export interface LimeMediaContentResponse {
+    replied: {
+        type: "text/plain"
+        value: string
+    }
+    inReplyTo: {
+        id: string,
+        type: "application/vnd.lime.media-link+json",
+        value: {
+            type: string,
+            uri: string
+        },
+        direction: "received" | "sent"
+    }
+}
+
+export interface LimeContactContentResponse {
+    replied: {
+        type: "text/plain"
+        value: string
+    }
+    inReplyTo: {
+        id: string
+        type: "application/vnd.lime.contact+json"
+        value: {
+            name: string
+            phoneNumber: string
+            cellPhoneNumber: string
+            extras: {
+                org: string | null
+            }
+            firstName: string
+        }
+        direction: "received" | "sent"
     }
 }

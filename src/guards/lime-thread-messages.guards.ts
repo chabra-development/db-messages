@@ -1,11 +1,10 @@
-/* ======================================================
- * Helpers
- * ====================================================== */
-
 import {
     LimeReplyTextContent,
     LimeTicketMessageContent,
-    LimeReplyToSelectContent
+    LimeReplyToSelectContent,
+    LimeMediaContentResponse,
+    LimeContactPayload,
+    LimeContactContentResponse
 } from "@/types/lime-thread-messages-response.types"
 
 const KNOWN_CONTENT_GUARDS = [
@@ -19,7 +18,10 @@ const KNOWN_CONTENT_GUARDS = [
     isLimeInteractiveButton,
     isLimeInteractiveList,
     isLimeInteractiveMessage,
-    isLimeReplyToSelectContent
+    isLimeReplyToSelectContent,
+    isLimeMediaContentResponse,
+    isLimeContactPayload,
+    isLimeContactContentResponse
 ] as const
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -294,6 +296,90 @@ export function isLimeReplyToSelectContent(
     ) {
         return false
     }
+
+    return true
+}
+
+export function isLimeContactPayload(
+    value: unknown
+): value is LimeContactPayload {
+    if (typeof value !== "object" || value === null) return false
+
+    const obj = value as Record<string, any>
+
+    if (typeof obj.name !== "string") return false
+    if (typeof obj.phoneNumber !== "string") return false
+    if (typeof obj.cellPhoneNumber !== "string") return false
+    if (typeof obj.firstName !== "string") return false
+
+    if (typeof obj.extras !== "object") return false
+
+    return true
+}
+
+export function isLimeMediaContentResponse(
+    content: unknown
+): content is LimeMediaContentResponse {
+    if (!content || typeof content !== "object") return false
+
+    const obj = content as any
+
+    return (
+        obj.replied &&
+        obj.replied.type === "text/plain" &&
+        typeof obj.replied.value === "string" &&
+
+        obj.inReplyTo &&
+        typeof obj.inReplyTo.id === "string" &&
+        obj.inReplyTo.type === "application/vnd.lime.media-link+json" &&
+        obj.inReplyTo.value &&
+        typeof obj.inReplyTo.value.type === "string" &&
+        typeof obj.inReplyTo.value.uri === "string" &&
+        (obj.inReplyTo.direction === "received" ||
+            obj.inReplyTo.direction === "sent")
+    )
+}
+
+export function isLimeContactContentResponse(
+    value: unknown
+): value is LimeContactContentResponse {
+    if (typeof value !== "object" || value === null) return false
+
+    const obj = value as Record<string, any>
+
+    // replied
+    if (typeof obj.replied !== "object" || obj.replied === null) return false
+    if (obj.replied.type !== "text/plain") return false
+    if (typeof obj.replied.value !== "string") return false
+
+    // inReplyTo
+    if (typeof obj.inReplyTo !== "object" || obj.inReplyTo === null) return false
+    if (typeof obj.inReplyTo.id !== "string") return false
+    if (obj.inReplyTo.type !== "application/vnd.lime.contact+json") return false
+
+    // value (contact)
+    const contact = obj.inReplyTo.value
+    if (typeof contact !== "object" || contact === null) return false
+
+    if (typeof contact.name !== "string") return false
+    if (typeof contact.phoneNumber !== "string") return false
+    if (typeof contact.cellPhoneNumber !== "string") return false
+    if (typeof contact.firstName !== "string") return false
+
+    if (typeof contact.extras !== "object" || contact.extras === null)
+        return false
+
+    if (
+        contact.extras.org !== null &&
+        typeof contact.extras.org !== "string"
+    )
+        return false
+
+    if (
+        obj.inReplyTo.direction !== "received" &&
+        obj.inReplyTo.direction !== "sent"
+    )
+        return false
 
     return true
 }

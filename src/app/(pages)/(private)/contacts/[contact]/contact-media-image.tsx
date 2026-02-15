@@ -7,20 +7,25 @@ export const ContactMediaImage = ({
     direction,
     date,
     uri,
-    type
+    type,
+    id
 }: {
     direction: "sent" | "received"
     date: string
     uri: string
     type: string
+    id: string
 }) => {
     return (
-        <Card className={cn(
-            "relative w-full max-w-xs bg-transparent border-none shadow-none gap-1 p-2",
-            direction === "sent"
-                ? "bg-message"
-                : "dark:bg-muted bg-zinc-100"
-        )} >
+        <Card
+            id={id}
+            className={cn(
+                "relative w-full max-w-xs bg-transparent border-none shadow-none gap-1 p-2",
+                direction === "sent"
+                    ? "bg-message"
+                    : "dark:bg-muted bg-zinc-100"
+            )}
+        >
             <Image
                 src={uri}
                 width={400}

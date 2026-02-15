@@ -1,11 +1,14 @@
-import { ContactMediaImage } from "@/app/(pages)/(private)/contacts/[contact]/contact-media-image"
-import { SystemInfoDate } from "@/app/(pages)/(private)/contacts/[contact]/system-info-date"
+import { ContactImageResponse } from "@/contacts/contact-image-response"
+import { ContactMediaImage } from "@/contacts/contact-media-image"
+import { SystemInfoDate } from "@/contacts/system-info-date"
 import { AudioPlayer } from "@/components/audio-player"
-import { Badge } from "@/components/ui/badge"
 import {
     Card,
     CardContent,
-    CardDescription
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
 } from "@/components/ui/card"
 import { ContactInterative } from "@/contacts/contact-interative"
 import { ContactInterativeList } from "@/contacts/contact-interative-list"
@@ -24,11 +27,14 @@ import { SystemInfoAlert } from "@/contacts/system-info-alert"
 
 import { renderEmoji } from "@/functions/render-emoji"
 import {
+    isLimeContactContentResponse,
+    isLimeContactPayload,
     isLimeEmojiReaction,
     isLimeInteractiveButton,
     isLimeInteractiveList,
     isLimeInteractiveMessage,
     isLimeMediaContent,
+    isLimeMediaContentResponse,
     isLimeReplyContent,
     isLimeReplyToSelectContent,
     isLimeReplyToText,
@@ -40,7 +46,12 @@ import { cn } from "@/lib/utils"
 import {
     LimeThreadMessagesResource
 } from "@/types/lime-thread-messages-response.types"
-import { isSameDay } from "date-fns"
+import { Copy, Phone } from "lucide-react"
+import { Separator } from "./ui/separator"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { ContactPhoneCard } from "@/app/(pages)/(private)/contacts/[contact]/contact-phone-card"
+import { ContactPhoneCardResponse } from "@/app/(pages)/(private)/contacts/[contact]/contact-phone-card-response"
 
 type MessagesBoardProps = { resource: LimeThreadMessagesResource }
 
@@ -63,7 +74,7 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                             id, direction, content, date, metadata
                         }, index, array) => {
 
-                            if (isLimeMediaContent(content)) {
+                            if (isUnknownContent(content)) {
                                 console.log(content)
                             } else {
                                 console.log("todos os tipos tratados")
@@ -73,12 +84,12 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                                 <div
                                     key={id}
                                     className={cn(
-                                        "w-full max-w-full min-w-0 flex flex-col", // ⭐ Adicionado max-w-full min-w-0
+                                        "w-full max-w-full min-w-0 flex flex-col",
                                         direction === "sent" ? "items-end" : "items-start"
                                     )}
                                 >
 
-                                    <SystemInfoDate 
+                                    <SystemInfoDate
                                         index={index}
                                         array={array}
                                         date={date}
@@ -238,10 +249,39 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
 
                                     {isLimeMediaContent(content) && content.type.includes("image/jpeg") && (
                                         <ContactMediaImage
+                                            id={id}
                                             date={date}
                                             direction={direction}
                                             uri={content.uri}
                                             type={content.type}
+                                        />
+                                    )}
+
+                                    {isLimeMediaContentResponse(content) && (
+                                        <ContactImageResponse
+                                            date={date}
+                                            direction={direction}
+                                            uri={content.inReplyTo.value.uri}
+                                            type={content.inReplyTo.value.type}
+                                            response={content.replied.value}
+                                            id={content.inReplyTo.id}
+                                        />
+                                    )}
+
+                                    {isLimeContactPayload(content) && (
+                                        <ContactPhoneCard
+                                            content={content}
+                                            date={date}
+                                            direction={direction}
+                                        />
+                                    )}
+
+                                    {isLimeContactContentResponse(content) && (
+                                        <ContactPhoneCardResponse
+                                            date={date}
+                                            direction={direction}
+                                            response={content.inReplyTo.value.name}
+                                            title={content.replied.value}
                                         />
                                     )}
                                 </div>
