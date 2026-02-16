@@ -31,7 +31,7 @@ export const ContactReplyToSelectResponse = ({
             )}
         >
             <CardHeader className="px-1">
-                <CardTitle className="bg-card/30 py-2.5 px-4 rounded-sm text-muted-foreground wrap-break-word">
+                <CardTitle className="max-h-8 h-fit bg-card/30 py-2.5 px-4 rounded-sm text-muted-foreground truncate">
                     {stringToHTML(response)}
                 </CardTitle>
             </CardHeader>

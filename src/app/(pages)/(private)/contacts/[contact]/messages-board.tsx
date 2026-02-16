@@ -1,20 +1,18 @@
-import { ContactImageResponse } from "@/contacts/contact-image-response"
-import { ContactMediaImage } from "@/contacts/contact-media-image"
-import { SystemInfoDate } from "@/contacts/system-info-date"
 import { AudioPlayer } from "@/components/audio-player"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription } from "@/components/ui/card"
 import { ContactInterative } from "@/contacts/contact-interative"
 import { ContactInterativeList } from "@/contacts/contact-interative-list"
+import { ContactMediaImage } from "@/contacts/contact-media-image"
+import { ContactImageResponse } from "@/contacts/contact-media-image-response"
 import { ContactMediaSticker } from "@/contacts/contact-media-sticker"
 import { ContactMediaVideo } from "@/contacts/contact-media-video"
 import { ContactMessage } from "@/contacts/contact-message"
+import {
+    ContactPhoneCard
+} from "@/contacts/contact-phone-card"
+import {
+    ContactPhoneCardResponse
+} from "@/contacts/contact-phone-card-response"
 import {
     ContactReplyToSelectResponse
 } from "@/contacts/contact-reply-to-select"
@@ -24,7 +22,7 @@ import {
     ContactScopeTextResponse
 } from "@/contacts/contact-scope-text-response"
 import { SystemInfoAlert } from "@/contacts/system-info-alert"
-
+import { SystemInfoDate } from "@/contacts/system-info-date"
 import { renderEmoji } from "@/functions/render-emoji"
 import {
     isLimeContactContentResponse,
@@ -46,16 +44,28 @@ import { cn } from "@/lib/utils"
 import {
     LimeThreadMessagesResource
 } from "@/types/lime-thread-messages-response.types"
-import { Copy, Phone } from "lucide-react"
-import { Separator } from "./ui/separator"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { ContactPhoneCard } from "@/app/(pages)/(private)/contacts/[contact]/contact-phone-card"
-import { ContactPhoneCardResponse } from "@/app/(pages)/(private)/contacts/[contact]/contact-phone-card-response"
+import { useEffect, useRef } from "react"
+import { ContactMessageWithLink } from "./contact-message-with-link"
+import { isSafePublicUrl } from "@/functions/validate-url"
 
 type MessagesBoardProps = { resource: LimeThreadMessagesResource }
 
 export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
+
+    const itemsReversed = [...resource.items].reverse()
+
+    const bottomRef = useRef<HTMLDivElement>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({
+                behavior: "instant",
+                block: "end"
+            })
+        }
+    }, [resource.items.length])
+
     return (
         <CardContent className={cn("space-y-2 px-2")}>
             {
@@ -69,9 +79,9 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                             </CardContent>
                         </Card>
                     )
-                    : [...resource.items].reverse().map(
+                    : itemsReversed.map(
                         ({
-                            id, direction, content, date, metadata
+                            id, direction, content, date
                         }, index, array) => {
 
                             if (isUnknownContent(content)) {
@@ -83,6 +93,7 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                             return (
                                 <div
                                     key={id}
+                                    ref={containerRef}
                                     className={cn(
                                         "w-full max-w-full min-w-0 flex flex-col",
                                         direction === "sent" ? "items-end" : "items-start"
@@ -100,8 +111,8 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                                         <ContactReplyToSelectResponse
                                             date={date}
                                             direction={direction}
-                                            response={content.replied.value}
-                                            title={content.inReplyTo.value.text}
+                                            response={content.inReplyTo.value.text}
+                                            title={content.replied.value}
                                         />
                                     )}
 
@@ -114,14 +125,25 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                                     )}
 
                                     {/* ===================== TEXT ===================== */}
-                                    {typeof content === "string" && (
-                                        <ContactMessage
-                                            date={date}
-                                            content={content}
-                                            direction={direction}
-                                            metadata={metadata}
-                                        />
-                                    )}
+                                    {(typeof content === "string" &&
+                                        !isSafePublicUrl(content)
+                                    ) && (
+                                            <ContactMessage
+                                                date={date}
+                                                content={content}
+                                                direction={direction}
+                                            />
+                                        )}
+
+                                    {(typeof content === "string" &&
+                                        isSafePublicUrl(content)
+                                    ) && (
+                                            <ContactMessageWithLink
+                                                date={date}
+                                                content={content}
+                                                direction={direction}
+                                            />
+                                        )}
 
                                     {/* ===================== REPLY TO TEXT ===================== */}
                                     {isLimeReplyToText(content) && (
@@ -266,7 +288,8 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                                             response={content.replied.value}
                                             id={content.inReplyTo.id}
                                         />
-                                    )}
+                                    )
+                                    }
 
                                     {isLimeContactPayload(content) && (
                                         <ContactPhoneCard
@@ -289,6 +312,7 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                         }
                     )
             }
+            <div ref={bottomRef} className="h-1" />
         </CardContent>
     )
 }

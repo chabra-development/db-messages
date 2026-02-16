@@ -1,7 +1,7 @@
 import {
     findMessagesByTicketId
 } from "@/actions/blip/find-many-messages-by-ticket-id"
-import { MessagesBoard } from "@/components/messages-board"
+import { MessagesBoard } from "@/app/(pages)/(private)/contacts/[contact]/messages-board"
 import { TicketsQueryItem } from "@/components/ticket/ticket-query-item"
 import { toast } from "@/components/toast"
 import { Alert, AlertTitle } from "@/components/ui/alert"

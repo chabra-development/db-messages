@@ -6,7 +6,7 @@ import {
 import {
     findMessagesByIdentifyContact
 } from "@/actions/blip/find-messages-by-identify-contact"
-import { MessagesBoard } from "@/components/messages-board"
+import { MessagesBoard } from "@/app/(pages)/(private)/contacts/[contact]/messages-board"
 import { toast } from "@/components/toast"
 import {
     Card,
@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
-import { 
-    normalizeWhatsAppIdentify 
+import {
+    normalizeWhatsAppIdentify
 } from "@/functions/normalize-whatsapp-identify"
 import { useQuery } from "@tanstack/react-query"
 import { ContactsQueryLoading } from "./contacts-query-loading"
@@ -43,7 +43,6 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
     } = useQuery({
         queryKey: ["find-many-messages-by-identify", identity],
         queryFn: () => findMessagesByIdentifyContact(identity),
-        staleTime: 1000 * 60 * 1,
     })
 
     if (error) {

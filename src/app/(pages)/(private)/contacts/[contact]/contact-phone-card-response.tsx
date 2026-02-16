@@ -23,8 +23,7 @@ export const ContactPhoneCardResponse = ({
 }) => {
     return (
         <Card className={cn(
-            "w-1/2 text-sm",
-            "@max-5xl/chat:w-9/10 py-1 gap-2",
+            "w-1/3 max-w-7/10 text-sm  py-1 gap-2",
             direction === "sent"
                 ? "bg-message rounded-tr-none"
                 : "bg-muted rounded-tl-none"
@@ -37,9 +36,7 @@ export const ContactPhoneCardResponse = ({
             </CardHeader>
             <CardHeader className="px-1">
                 <CardTitle className="px-2 rounded-md">
-                    {
-                        stringToHTML(title)
-                    }
+                    {stringToHTML(title)}
                 </CardTitle>
             </CardHeader>
             <CardFooter className="ml-auto pb-2 px-2">

@@ -14,9 +14,9 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import { Contact, Ellipsis } from "lucide-react"
-import { Spinner } from "../ui/spinner"
 
 export const AsideLoading = () => {
     return (
@@ -30,9 +30,9 @@ export const AsideLoading = () => {
                     <CardTitle className="text-2xl flex items-center gap-2">
                         <Contact className="size-6" />
                         Contatos
-                        <Badge 
-                        variant={"secondary"} 
-                        className="h-full"
+                        <Badge
+                            variant={"secondary"}
+                            className="h-full"
                         >
                             <Spinner />
                         </Badge>

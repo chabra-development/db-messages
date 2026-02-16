@@ -1,19 +1,16 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
-import { LimeMetadata } from "@/types/lime-thread-messages-response.types"
 import { formatDate } from "date-fns"
 
 export const ContactMessage = ({
     direction,
     content,
     date,
-    metadata
 }: {
     direction: "sent" | "received"
     content: string
     date: string
-    metadata?: LimeMetadata
 }) => {
     return (
         <Alert className={cn(
