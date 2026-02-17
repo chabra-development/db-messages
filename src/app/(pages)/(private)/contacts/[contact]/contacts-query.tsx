@@ -6,10 +6,11 @@ import {
 import {
     findMessagesByIdentifyContact
 } from "@/actions/blip/find-messages-by-identify-contact"
-import { MessagesBoard } from "@/app/(pages)/(private)/contacts/[contact]/messages-board"
+import { MessagesBoard } from "@/contacts/messages-board"
 import { toast } from "@/components/toast"
 import {
     Card,
+    CardAction,
     CardDescription,
     CardHeader,
     CardTitle
@@ -20,6 +21,8 @@ import {
     normalizeWhatsAppIdentify
 } from "@/functions/normalize-whatsapp-identify"
 import { useQuery } from "@tanstack/react-query"
+import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
+import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
 
 export const ContactsQuery = ({ identity }: { identity: string }) => {
@@ -32,7 +35,6 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
     } = useQuery({
         queryKey: ["find-contact-id-by-number-phone", identity],
         queryFn: () => findContactIdByNumberPhone(numberPhone),
-        staleTime: 1000 * 60 * 5,
     })
 
     const {
@@ -72,7 +74,7 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                 <CardHeader className="border-b pb-3 gap-0">
                     <CardTitle className="text-2xl mb-1.25 truncate">
                         {contactIsLoading ? (
-                            <Skeleton className="h-8 w-full rounded-full" />
+                            <Skeleton className="h-8 w-1/2 rounded-full" />
                         ) : (
                             contact.resource.fullName
                         )}
@@ -84,6 +86,10 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
                             contact.resource.phoneNumber
                         )}
                     </CardDescription>
+                    <CardAction className="flex items-center gap-2">
+                        <ContactHeaderSearch />
+                        <ContactHeaderDropMenu />
+                    </CardAction>
                 </CardHeader>
             )}
             <ScrollArea className="flex-1 min-h-1 py-8">

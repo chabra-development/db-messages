@@ -13,9 +13,6 @@ export function LinkPreviewCard({ url }: { url: string }) {
     const { data: ogData, isLoading, isError } = useQuery({
         queryKey: ["og-preview", url],
         queryFn: () => fetchOgData(url),
-        staleTime: 1000 * 60 * 10,
-        gcTime: 1000 * 60 * 30,
-        retry: 1,
     })
 
     if (isLoading) {

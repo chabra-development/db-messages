@@ -45,8 +45,6 @@ export const Aside = () => {
     } = useQuery({
         queryKey: ["find-many-contacts"],
         queryFn: () => findManyContacts(),
-        staleTime: 1000 * 60 * 5, // 5 minutos
-        refetchOnWindowFocus: false,
     })
 
     // Filtra e busca contatos (memoizado para performance)

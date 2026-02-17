@@ -1,6 +1,7 @@
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import {
     Card,
+    CardAction,
     CardContent,
     CardHeader,
     CardTitle
@@ -11,10 +12,10 @@ import { cn } from "@/lib/utils"
 
 export const ContactsQueryLoading = () => {
     return (
-        <Card className="flex-1 border-none rounded-none">
+        <Card className="flex-1 size-full border-none rounded-none">
             <CardHeader>
                 <CardTitle className="text-2xl mb-1.25">
-                    <Skeleton className="h-8 w-full rounded-full" />
+                    <Skeleton className="h-8 w-1/2 rounded-full" />
                 </CardTitle>
             </CardHeader>
             <ScrollArea className="flex-1 min-h-200">

@@ -1,7 +1,5 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
-import { generateVideoThumbnail } from "@/functions/generate-video-thumbnail"
 import {
     Card,
     CardDescription,
@@ -9,12 +7,13 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card"
+import { generateVideoThumbnail } from "@/functions/generate-video-thumbnail"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
 import { formatDate } from "date-fns"
-import { FileImage, Sticker, FileVideo } from "lucide-react"
+import { FileImage, FileVideo } from "lucide-react"
 import Image from "next/image"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useEffect, useState } from "react"
 
 export const ContactImageResponse = ({
     direction,
@@ -33,33 +32,36 @@ export const ContactImageResponse = ({
 }) => {
 
     const [thumb, setThumb] = useState<string | null>(null)
-    const [isPending, startTransition] = useTransition()
+    const [imageLoaded, setImageLoaded] = useState(false)
 
     useEffect(() => {
 
         let isMounted = true
 
-        if (!type.includes("video")) return 
+        if (!type.includes("video")) {
+            // Para imagens normais, usar a URI diretamente
+            if (isMounted) {
+                setThumb(uri)
+            }
+            return
+        }
 
         generateVideoThumbnail(uri).then((image) => {
 
             if (!isMounted) return
 
-            startTransition(() => {
-                setThumb(image)
-            })
+            setThumb(image)
         })
 
         return () => {
             isMounted = false
         }
-    }, [uri])
+    }, [uri, type])
 
     const [typeSplited] = type.split("/")
-
     const Icon = typeSplited === "video" ? FileVideo : FileImage
 
-    console.log(typeSplited)
+    console.log({ typeSplited, thumb })
 
     return (
         <a
@@ -81,35 +83,27 @@ export const ContactImageResponse = ({
                             <Icon className="size-4" />
                             {typeSplited}
                         </div>
-                        <div className={cn("size-24")}>
-                            {
-                                isPending && (
-                                    <Skeleton className="size-full rounded-tr-md" />
-                                )
-                            }
-                            {
-                                thumb
-                                    ? (
-                                        <Image
-                                            src={thumb}
-                                            width={100}
-                                            height={100}
-                                            quality={40}
-                                            alt={`imagem ${type}`}
-                                            className="object-cover size-full rounded-tr-md"
-                                        />
-                                    )
-                                    : (
-                                        <Image
-                                            src={uri}
-                                            width={100}
-                                            height={100}
-                                            quality={40}
-                                            alt={`imagem ${type}`}
-                                            className="object-cover size-full rounded-tr-md"
-                                        />
-                                    )
-                            }
+                        <div className="relative size-24 overflow-hidden rounded-tr-md">
+                            {/* Placeholder blur */}
+                            {!imageLoaded && thumb && (
+                                <div className="absolute inset-0 bg-linear-to-br from-muted to-muted-foreground/20 animate-pulse" />
+                            )}
+
+                            <Image
+                                src={thumb ?? uri}
+                                width={100}
+                                height={100}
+                                unoptimized
+                                quality={40}
+                                alt={`imagem ${type}`}
+                                placeholder="blur"
+                                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=="
+                                className={cn(
+                                    "object-cover size-full transition-opacity duration-300",
+                                    imageLoaded ? "opacity-100" : "opacity-0"
+                                )}
+                                onLoad={() => setImageLoaded(true)}
+                            />
                         </div>
                     </div>
                 </CardHeader>

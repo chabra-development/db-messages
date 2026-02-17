@@ -180,7 +180,7 @@ export const ContactMessageWithLink = ({
                 </CardTitle>
             </CardHeader>
             <CardFooter className="px-3 pt-0">
-                <CardDescription className="ml-auto text-[10px]">
+                <CardDescription className="ml-auto">
                     {format(new Date(date), "HH:mm")}
                 </CardDescription>
             </CardFooter>

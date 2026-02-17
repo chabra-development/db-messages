@@ -12,8 +12,8 @@ interface ContactsLayoutWrapperProps {
     children: ReactNode
 }
 
-export function ContactsLayoutWrapper({ 
-    children 
+export function ContactsLayoutWrapper({
+    children
 }: ContactsLayoutWrapperProps) {
     return (
         <div className="w-full h-full overflow-hidden">
@@ -25,7 +25,7 @@ export function ContactsLayoutWrapper({
                     defaultSize={"25%"}
                     minSize={"15%"}
                     maxSize={"40%"}
-                    className="size-full max-w-4/10"
+                    className="size-full"
                 >
                     <Aside />
                 </ResizablePanel>
@@ -36,11 +36,9 @@ export function ContactsLayoutWrapper({
                     defaultSize={"75%"}
                     minSize={"40%"}
                     maxSize={"85%"}
-                    className="overflow-hidden size-full"
+                    className="size-full"
                 >
-                    <div className="w-full h-full max-w-full overflow-hidden">
-                        {children}
-                    </div>
+                    {children}
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>
