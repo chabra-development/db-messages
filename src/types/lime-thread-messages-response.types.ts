@@ -3,7 +3,7 @@ export const KNOWN_MESSAGE_TYPES = [
     "application/vnd.lime.select+json",
     "application/vnd.lime.reply+json",
     "application/vnd.lime.media-link+json",
-] as const;
+] as const
 
 export const KNOWN_MEDIA_MIME_TYPES = [
     // 📹 Vídeo
@@ -23,7 +23,10 @@ export const KNOWN_MEDIA_MIME_TYPES = [
 
     // 🧩 Sticker
     "sticker/webp",
-] as const;
+] as const
+
+export type KnownMessageType = typeof KNOWN_MESSAGE_TYPES[number]
+export type KnownMediaMimeType = typeof KNOWN_MEDIA_MIME_TYPES[number]
 
 /* ======================================================
  * LIME Thread Messages – Response
@@ -39,45 +42,34 @@ export type LimeThreadMessagesResponse = {
     resource: LimeThreadMessagesResource
 }
 
-/* ======================================================
- * Resource (Collection)
- * ====================================================== */
-
 export type LimeThreadMessagesResource = {
     total: number
     itemType: "application/vnd.iris.thread-message+json"
     items: LimeThreadMessage[]
 }
 
-/* ======================================================
- * LIME Thread Message – Base
- * ====================================================== */
-
 export type LimeThreadMessage = {
     id: string
     direction: "sent" | "received"
     type: string
-    date: string // ISO string
+    date: string
     status: "consumed" | "dispatched"
     content: LimeMessageContent
     metadata?: LimeMetadata
 }
 
 export type LimeMetadata = {
-    // Campos comuns (quando existirem)
     $elapsedTimeToStorage?: string
     $originator?: string
     $internalId?: string
     $claims?: string
     $originatorSessionRemoteNode?: string
 
-    // Datas (geralmente como string numérica)
     date_created?: string
     "#date_processed"?: string
 
-    // Mensagem / estado
-    "#message.agentIdentity": string,
-    "#message.ticketId": string,
+    "#message.agentIdentity": string
+    "#message.ticketId": string
     "#messageId"?: string
     "#messageKind"?: "Response" | "Notification" | string
     "#previousStateId"?: string
@@ -85,12 +77,10 @@ export type LimeMetadata = {
     "#stateId"?: string
     "#stateName"?: string
 
-    // Identificadores
     "#uniqueId"?: string
     "#inReplyToId"?: string
     "#messageReferenceInternalID"?: string
 
-    // WhatsApp (quando canal = WA)
     "#wa.timestamp"?: string
     "#wa.context.from"?: string
     "#wa.context.id"?: string
@@ -101,116 +91,71 @@ export type LimeMetadata = {
     "#wa.frequently_forwarded"?: boolean | null
     "#wa.context.group_id"?: string | null
 
-    // Tunnel / roteamento
     "#tunnel.owner"?: string
     "#tunnel.originator"?: string
     "#tunnel.originalFrom"?: string
     "#tunnel.originalTo"?: string
 
-    // Tracing
     traceparent?: string
 
-    // Permite QUALQUER outro metadata que o BLiP mandar
     [key: string]: unknown
 }
-
 
 /* ======================================================
  * Content Union
  * ====================================================== */
 
 export type LimeMessageContent =
+    // Conteúdos diretos
     | LimeTextContent
     | LimeMediaContent
     | LimeSelectContent
-    | LimeReplyContent
     | LimeTemplateContent
     | LimeTicketContent
-    | LimeInteractiveMessage
-    | LimeEmojiReaction
-    | LimeReplyTextContent
-    | LimeTicketMessageContent
-    | LimeReplyToSelectContent
-    | LimeMediaContentResponse
     | LimeContactPayload
+    | LimeEmojiReaction
+    // Interativos
+    | LimeInteractiveMessage
+    // Replies
+    | LimeReplyToInteractive       // era: LimeReplyContent
+    | LimeReplyToText              // era: LimeReplyTextContent
+    | LimeReplyToSelect            // era: LimeReplyToSelectContent
+    | LimeReplyToMedia             // era: LimeMediaContentResponse
+    | LimeReplyToContact           // era: LimeContactContentResponse
+    | LimeReplyToUnknown           // era: LimeContentReply
 
 /* ======================================================
- * Text
+ * Primitivos compartilhados
+ * ====================================================== */
+
+export type LimeDirection = "sent" | "received"
+
+export type LimeRepliedText = {
+    type: "text/plain"
+    value: string
+}
+
+export type LimeInReplyToBase = {
+    id: string
+    direction: LimeDirection
+}
+
+/* ======================================================
+ * Conteúdos diretos
  * ====================================================== */
 
 export type LimeTextContent = string
-
-/* ======================================================
- * Media
- * ====================================================== */
 
 export type LimeMediaContent = {
     type: string
     uri: string
 }
 
-/* ======================================================
- * Select
- * ====================================================== */
-
 export type LimeSelectContent = {
     scope?: "immediate"
     text: string
-    options: Array<{
-        text: string
-    }>
+    options: Array<{ text: string }>
 }
-
-/* ======================================================
- * Reply
- * ====================================================== */
-
-export type LimeReplyContent = {
-    replied: {
-        type: string
-        value: string
-    }
-    inReplyTo: {
-        id: string
-        type: string
-        direction: "sent" | "received"
-        value: LimeInteractiveMessage
-    }
-}
-
-export type LimeEmojiReaction = {
-    emoji: {
-        values: number[]
-    }
-    inReactionTo: {
-        id: string
-        type: string
-        value: string
-        direction: "sent" | "received"
-    }
-}
-
-
-export type LimeReceivedInteractiveObject = {
-    direction: "received" | "sent"
-    object: LimeInteractiveList
-}
-
-export type LimeInteractiveMessage = {
-    recipient_type: "individual"
-    type: "interactive"
-    interactive: LimeInteractiveContent
-}
-
-export type LimeInteractiveContent =
-    | LimeInteractiveList
-    | LimeInteractiveButton
-    | LimeReceivedInteractiveObject
-
-
-/* ======================================================
- * Template (WhatsApp)
- * ====================================================== */
 
 export type LimeTemplateContent = {
     type: "template"
@@ -230,10 +175,7 @@ export type LimeTemplateContent = {
     }
 }
 
-/* ======================================================
- * Ticket (Iris)
- * ====================================================== */
-
+// Ticket completo (enviado pelo agente/sistema)
 export type LimeTicketContent = {
     id: string
     sequentialId: number
@@ -243,33 +185,65 @@ export type LimeTicketContent = {
     provider: string
     status: string
     storageDate: string
-    externalId: string
     rating: number
-    team: string
-    unreadMessages: number
     closed: boolean
     priority: number
+    // opcionais — ausentes em alguns payloads
+    externalId?: string
+    team?: string
+    unreadMessages?: number
+    parentSequentialId?: number
     customerInput?: {
         type: string
         value: string
     }
 }
 
+export type LimeContactPayload = {
+    name: string
+    phoneNumber: string
+    cellPhoneNumber: string
+    firstName: string
+    extras: {
+        org: string | null
+    }
+}
+
+export type LimeEmojiReaction = {
+    emoji: {
+        values: number[]
+    }
+    inReactionTo: {
+        id: string
+        type: string
+        value: string
+        direction: LimeDirection
+    }
+}
+
 /* ======================================================
- * Interactive (WhatsApp)
+ * Interactive
  * ====================================================== */
 
-export type LimeInteractive =
+export type LimeInteractiveMessage = {
+    recipient_type: "individual"
+    type: "interactive"
+    interactive: LimeInteractiveContent
+}
+
+export type LimeInteractiveContent =
     | LimeInteractiveButton
     | LimeInteractiveList
+    | LimeReceivedInteractiveObject
 
-/* ---------- Button ---------- */
+export type LimeReceivedInteractiveObject = {
+    direction: LimeDirection
+    object: LimeInteractiveList
+}
 
 export type LimeInteractiveButton = {
     type: "button"
-    body: {
-        text: string
-    }
+    body: { text: string }
     action: {
         buttons: LimeInteractiveReplyButton[]
     }
@@ -283,13 +257,9 @@ export type LimeInteractiveReplyButton = {
     }
 }
 
-/* ---------- List ---------- */
-
 export type LimeInteractiveList = {
     type: "list"
-    body: {
-        text: string
-    }
+    body: { text: string }
     action: {
         button: string
         sections: Array<{
@@ -303,97 +273,73 @@ export type LimeInteractiveList = {
     }
 }
 
-export interface LimeTicketMessageContent {
-    id: string
-    sequentialId: number
-    ownerIdentity: string
-    customerIdentity: string
-    customerDomain: string
-    provider: string
-    status: string
-    storageDate: string
-    externalId: string
-    rating: number
-    team: string
-    unreadMessages: number
-    closed: boolean
-    customerInput?: {
+/* ======================================================
+ * Replies
+ * ====================================================== */
+
+// Reply a uma mensagem interativa
+// era: LimeReplyContent
+export type LimeReplyToInteractive = {
+    replied: {
         type: string
         value: string
     }
-    priority: number
+    inReplyTo: LimeInReplyToBase & {
+        type: string
+        value: LimeInteractiveMessage
+    }
 }
 
-
-export type LimeReplyTextContent = {
-    replied: {
-        type: "text/plain";
-        value: string;
-    };
+// Reply a um texto simples
+// era: LimeReplyTextContent
+export type LimeReplyToText = {
+    replied: LimeRepliedText
     inReplyTo: {
-        id: string;
-        type: "text/plain";
-        value: string;
-        direction: "sent" | "received";
-    };
-};
-
-export interface LimeReplyToSelectContent {
-    replied: {
+        id?: string          // ✅ opcional
         type: "text/plain"
         value: string
+        direction: LimeDirection
     }
-    inReplyTo: {
-        id: string
+}
+
+// Reply a um select/menu
+// era: LimeReplyToSelectContent
+export type LimeReplyToSelect = {
+    replied: LimeRepliedText
+    inReplyTo: LimeInReplyToBase & {
         type: "application/vnd.lime.select+json"
         value: LimeSelectContent
-        direction: "sent" | "received"
     }
 }
 
-export interface LimeContactPayload {
-    name: string
-    phoneNumber: string
-    cellPhoneNumber: string
-    extras: {
-        org: string | null
+// Reply a uma mídia (imagem, vídeo, etc)
+// era: LimeMediaContentResponse
+export type LimeReplyToMedia = {
+    replied: LimeRepliedText
+    inReplyTo: LimeInReplyToBase & {
+        type: "application/vnd.lime.media-link+json"
+        value: LimeMediaContent
     }
-    firstName: string
 }
 
-export interface LimeMediaContentResponse {
+// Reply a um contato
+// era: LimeContactContentResponse
+export type LimeReplyToContact = {
+    replied: LimeRepliedText
+    inReplyTo: LimeInReplyToBase & {
+        type: "application/vnd.lime.contact+json"
+        value: LimeContactPayload
+    }
+}
+
+// Reply genérico onde só temos o id do inReplyTo
+// era: LimeContentReply
+export type LimeReplyToUnknown = {
     replied: {
-        type: "text/plain"
-        value: string
-    }
-    inReplyTo: {
-        id: string,
-        type: "application/vnd.lime.media-link+json",
-        value: {
-            type: string,
-            uri: string
-        },
-        direction: "received" | "sent"
-    }
-}
-
-export interface LimeContactContentResponse {
-    replied: {
-        type: "text/plain"
+        type: string
         value: string
     }
     inReplyTo: {
         id: string
-        type: "application/vnd.lime.contact+json"
-        value: {
-            name: string
-            phoneNumber: string
-            cellPhoneNumber: string
-            extras: {
-                org: string | null
-            }
-            firstName: string
-        }
-        direction: "received" | "sent"
     }
 }

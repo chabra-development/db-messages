@@ -38,7 +38,7 @@ export const FormUpdateUser = (props: ComponentProps<"form">) => {
 				onSubmit={handleSubmit(onSubmit)}
 				{...props}
 			>
-				<Card className="size-full">
+				<Card className="w-full">
 					<CardHeader>
 						<CardTitle className="text-lg">Editar informações</CardTitle>
 						<CardDescription>Editar informações pessoais</CardDescription>

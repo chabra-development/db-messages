@@ -1,394 +1,317 @@
-import {
-    LimeReplyTextContent,
-    LimeTicketMessageContent,
-    LimeReplyToSelectContent,
-    LimeMediaContentResponse,
+import { z } from "zod"
+import type {
+    LimeMediaContent,
+    LimeEmojiReaction,
+    LimeSelectContent,
+    LimeInteractiveMessage,
+    LimeReplyToInteractive,
+    LimeReplyToText,
+    LimeReplyToSelect,
+    LimeReplyToMedia,
+    LimeReplyToContact,
+    LimeReplyToUnknown,
+    LimeTicketContent,
     LimeContactPayload,
-    LimeContactContentResponse
 } from "@/types/lime-thread-messages-response.types"
 
-const KNOWN_CONTENT_GUARDS = [
-    isLimeReplyTextContent,
-    isLimeReplyToText,
-    isLimeTicketContent,
-    isLimeSelectContent,
-    isLimeReplyContent,
-    isLimeMediaContent,
-    isLimeEmojiReaction,
-    isLimeInteractiveButton,
-    isLimeInteractiveList,
-    isLimeInteractiveMessage,
-    isLimeReplyToSelectContent,
-    isLimeMediaContentResponse,
-    isLimeContactPayload,
-    isLimeContactContentResponse
-] as const
+/* ======================================================
+ * Primitivos reutilizáveis
+ * ====================================================== */
 
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null
-}
+const DirectionSchema = z.enum(["sent", "received"])
 
-function isString(value: unknown): value is string {
-    return typeof value === "string"
-}
+const RepliedTextSchema = z.object({
+    type: z.literal("text/plain"),
+    value: z.string()
+})
+
+const InReplyToBaseSchema = z.object({
+    id: z.string(),
+    direction: DirectionSchema
+})
+
+const LimeContactValueSchema = z.object({
+    name: z.string(),
+    phoneNumber: z.string(),
+    cellPhoneNumber: z.string(),
+    firstName: z.string(),
+    extras: z.object({
+        org: z.string().nullable()
+    })
+})
 
 /* ======================================================
  * Media
  * ====================================================== */
 
-export function isLimeMediaContent(value: unknown): value is {
-    type: string
-    uri: string
-} {
-    return (
-        isObject(value) &&
-        isString(value.type) &&
-        isString(value.uri)
-    )
+const LimeMediaContentSchema = z.object({
+    type: z.string(),
+    uri: z.string()
+})
+
+export function isLimeMediaContent(value: unknown): value is LimeMediaContent {
+    return LimeMediaContentSchema.safeParse(value).success
 }
 
 /* ======================================================
  * Emoji
  * ====================================================== */
 
-export function isLimeEmojiReaction(value: unknown): value is {
-    emoji: { values: number[] }
-} {
-    return (
-        isObject(value) &&
-        isObject(value.emoji) &&
-        Array.isArray(value.emoji.values)
-    )
+const LimeEmojiReactionSchema = z.object({
+    emoji: z.object({
+        values: z.array(z.number())
+    }),
+    inReactionTo: z.object({
+        id: z.string(),
+        type: z.string(),
+        value: z.string(),
+        direction: DirectionSchema
+    })
+})
+
+export function isLimeEmojiReaction(value: unknown): value is LimeEmojiReaction {
+    return LimeEmojiReactionSchema.safeParse(value).success
 }
 
 /* ======================================================
  * Select
  * ====================================================== */
 
-export function isLimeSelectContent(value: unknown): value is {
-    text: string
-    options: { text: string }[]
-    scope?: "immediate"
-} {
-    return (
-        isObject(value) &&
-        isString(value.text) &&
-        Array.isArray(value.options)
-    )
+const LimeSelectContentSchema = z.object({
+    scope: z.literal("immediate").optional(),
+    text: z.string(),
+    options: z.array(z.object({ text: z.string() }))
+})
+
+export function isLimeSelectContent(value: unknown): value is LimeSelectContent {
+    return LimeSelectContentSchema.safeParse(value).success
 }
 
 /* ======================================================
  * Interactive – Button
  * ====================================================== */
 
-export function isLimeInteractiveButton(
-    value: unknown
-): value is {
-    type: "button"
-    body: { text: string }
-    action: { buttons: unknown[] }
-} {
-    return (
-        isObject(value) &&
-        value.type === "button" &&
-        isObject(value.body) &&
-        isString(value.body.text) &&
-        isObject(value.action) &&
-        Array.isArray(value.action.buttons)
-    )
+const LimeInteractiveButtonSchema = z.object({
+    type: z.literal("button"),
+    body: z.object({ text: z.string() }),
+    action: z.object({
+        buttons: z.array(z.unknown())
+    })
+})
+
+export function isLimeInteractiveButton(value: unknown): value is z.infer<typeof LimeInteractiveButtonSchema> {
+    return LimeInteractiveButtonSchema.safeParse(value).success
 }
 
 /* ======================================================
  * Interactive – List
  * ====================================================== */
 
-export function isLimeInteractiveList(
-    value: unknown
-): value is {
-    type: "list"
-    body: { text: string }
-    action: { sections: unknown[] }
-} {
-    return (
-        isObject(value) &&
-        value.type === "list" &&
-        isObject(value.body) &&
-        isString(value.body.text) &&
-        isObject(value.action) &&
-        Array.isArray(value.action.sections)
-    )
+const LimeInteractiveListSchema = z.object({
+    type: z.literal("list"),
+    body: z.object({ text: z.string() }),
+    action: z.object({
+        button: z.string(),
+        sections: z.array(z.object({
+            title: z.string(),
+            rows: z.array(z.object({
+                id: z.string(),
+                title: z.string(),
+                description: z.string().optional()
+            }))
+        }))
+    })
+})
+
+export function isLimeInteractiveList(value: unknown): value is z.infer<typeof LimeInteractiveListSchema> {
+    return LimeInteractiveListSchema.safeParse(value).success
 }
 
 /* ======================================================
  * Interactive Message
  * ====================================================== */
 
-export function isLimeInteractiveMessage(
-    value: unknown
-): value is {
-    type: "interactive"
-    recipient_type: "individual"
-    interactive: unknown
-} {
-    return (
-        isObject(value) &&
-        value.type === "interactive" &&
-        value.recipient_type === "individual" &&
-        "interactive" in value
-    )
+const LimeInteractiveMessageSchema = z.object({
+    type: z.literal("interactive"),
+    recipient_type: z.literal("individual"),
+    interactive: z.unknown()
+})
+
+export function isLimeInteractiveMessage(value: unknown): value is LimeInteractiveMessage {
+    return LimeInteractiveMessageSchema.safeParse(value).success
 }
 
 /* ======================================================
- * Reply
+ * Ticket
  * ====================================================== */
 
-export function isLimeReplyContent(
-    value: unknown
-): value is {
-    replied: { value: string }
-    inReplyTo: {
-        value: {
-            type: "interactive"
-            interactive: unknown
-        }
-    }
-} {
-    return (
-        isObject(value) &&
-        isObject(value.replied) &&
-        isString(value.replied.value) &&
-        isObject(value.inReplyTo) &&
-        isLimeInteractiveMessage(value.inReplyTo.value)
-    )
+const LimeTicketContentSchema = z.object({
+    id: z.string(),
+    sequentialId: z.number(),
+    ownerIdentity: z.string(),
+    customerIdentity: z.string(),
+    customerDomain: z.string(),
+    provider: z.string(),
+    status: z.string(),
+    storageDate: z.string(),
+    rating: z.number(),
+    closed: z.boolean(),
+    priority: z.number(),
+    // opcionais
+    externalId: z.string().optional(),
+    team: z.string().optional(),
+    unreadMessages: z.number().optional(),
+    parentSequentialId: z.number().optional(),
+    customerInput: z.object({
+        type: z.string(),
+        value: z.string()
+    }).optional()
+})
+
+export function isLimeTicketContent(content: unknown): content is LimeTicketContent {
+    return LimeTicketContentSchema.safeParse(content).success
 }
 
-export function isLimeReplyToText(
-    value: unknown
-): value is {
-    replied: { value: string }
-    inReplyTo: { value: string }
-} {
-    return (
-        isObject(value) &&
-        isObject(value.replied) &&
-        isString(value.replied.value) &&
-        isObject(value.inReplyTo) &&
-        isString(value.inReplyTo.value)
-    )
+/* ======================================================
+ * Contact Payload
+ * ====================================================== */
+
+export function isLimeContactPayload(value: unknown): value is LimeContactPayload {
+    return LimeContactValueSchema.safeParse(value).success
 }
 
-export function isLimeReplyTextContent(
-    content: unknown
-): content is LimeReplyTextContent {
-    if (!content || typeof content !== "object") {
-        return false;
-    }
+/* ======================================================
+ * Reply – inReplyTo Interactive
+ * era: isLimeReplyContent
+ * ====================================================== */
 
-    const obj = content as Record<string, unknown>;
+const LimeReplyToInteractiveSchema = z.object({
+    replied: z.object({
+        type: z.string(),
+        value: z.string()
+    }),
+    inReplyTo: InReplyToBaseSchema.extend({
+        type: z.string(),
+        value: LimeInteractiveMessageSchema
+    })
+})
 
-    // replied
-    if (
-        !obj.replied ||
-        typeof obj.replied !== "object"
-    ) {
-        return false;
-    }
-
-    const replied = obj.replied as Record<string, unknown>;
-
-    if (
-        replied.type !== "text/plain" ||
-        typeof replied.value !== "string"
-    ) {
-        return false;
-    }
-
-    // inReplyTo
-    if (
-        !obj.inReplyTo ||
-        typeof obj.inReplyTo !== "object"
-    ) {
-        return false;
-    }
-
-    const inReplyTo = obj.inReplyTo as Record<string, unknown>;
-
-    if (
-        typeof inReplyTo.id !== "string" ||
-        inReplyTo.type !== "text/plain" ||
-        typeof inReplyTo.value !== "string" ||
-        (inReplyTo.direction !== "sent" &&
-            inReplyTo.direction !== "received")
-    ) {
-        return false;
-    }
-
-    return true;
+export function isLimeReplyToInteractive(value: unknown): value is LimeReplyToInteractive {
+    return LimeReplyToInteractiveSchema.safeParse(value).success
 }
 
-export function isLimeTicketContent(
-    content: unknown
-): content is LimeTicketMessageContent {
+/* ======================================================
+ * Reply – inReplyTo Text (value string)
+ * era: isLimeReplyToText
+ * ====================================================== */
 
-    if (typeof content !== "object" || content === null) {
-        return false
-    }
+const LimeReplyToTextSchema = z.object({
+    replied: RepliedTextSchema,
+    inReplyTo: z.object({
+        id: z.string().optional(),   // ✅ opcional
+        type: z.literal("text/plain"),
+        value: z.string(),
+        direction: DirectionSchema
+    })
+})
 
-    const c = content as Record<string, unknown>
-
-    return (
-        typeof c.id === "string" &&
-        typeof c.sequentialId === "number" &&
-        typeof c.ownerIdentity === "string" &&
-        typeof c.customerIdentity === "string" &&
-        typeof c.status === "string" &&
-        typeof c.storageDate === "string" &&
-        typeof c.rating === "number" &&
-        typeof c.unreadMessages === "number" &&
-        typeof c.closed === "boolean" &&
-        typeof c.priority === "number"
-    )
+export function isLimeReplyToText(value: unknown): value is LimeReplyToText {
+    return LimeReplyToTextSchema.safeParse(value).success
 }
 
-export function isLimeReplyToSelectContent(
-    content: unknown
-): content is LimeReplyToSelectContent {
+/* ======================================================
+ * Reply – inReplyTo Select
+ * era: isLimeReplyToSelectContent
+ * ====================================================== */
 
-    if (typeof content !== "object" || content === null) {
-        return false
-    }
+const LimeReplyToSelectSchema = z.object({
+    replied: RepliedTextSchema,
+    inReplyTo: InReplyToBaseSchema.extend({
+        type: z.literal("application/vnd.lime.select+json"),
+        value: LimeSelectContentSchema
+    })
+})
 
-    const obj = content as Record<string, unknown>
-
-    // replied
-    if (
-        !obj.replied ||
-        typeof obj.replied !== "object"
-    ) {
-        return false
-    }
-
-    const replied = obj.replied as Record<string, unknown>
-
-    if (
-        replied.type !== "text/plain" ||
-        typeof replied.value !== "string"
-    ) {
-        return false
-    }
-
-    // inReplyTo
-    if (
-        !obj.inReplyTo ||
-        typeof obj.inReplyTo !== "object"
-    ) {
-        return false
-    }
-
-    const inReplyTo = obj.inReplyTo as Record<string, unknown>
-
-    if (
-        typeof inReplyTo.id !== "string" ||
-        inReplyTo.type !== "application/vnd.lime.select+json" ||
-        (inReplyTo.direction !== "sent" &&
-            inReplyTo.direction !== "received") ||
-        !isLimeSelectContent(inReplyTo.value)
-    ) {
-        return false
-    }
-
-    return true
+export function isLimeReplyToSelect(content: unknown): content is LimeReplyToSelect {
+    return LimeReplyToSelectSchema.safeParse(content).success
 }
 
-export function isLimeContactPayload(
-    value: unknown
-): value is LimeContactPayload {
-    if (typeof value !== "object" || value === null) return false
+/* ======================================================
+ * Reply – inReplyTo Media
+ * era: isLimeMediaContentResponse
+ * ====================================================== */
 
-    const obj = value as Record<string, any>
+const LimeReplyToMediaSchema = z.object({
+    replied: RepliedTextSchema,
+    inReplyTo: InReplyToBaseSchema.extend({
+        type: z.literal("application/vnd.lime.media-link+json"),
+        value: LimeMediaContentSchema
+    })
+})
 
-    if (typeof obj.name !== "string") return false
-    if (typeof obj.phoneNumber !== "string") return false
-    if (typeof obj.cellPhoneNumber !== "string") return false
-    if (typeof obj.firstName !== "string") return false
-
-    if (typeof obj.extras !== "object") return false
-
-    return true
+export function isLimeReplyToMedia(content: unknown): content is LimeReplyToMedia {
+    return LimeReplyToMediaSchema.safeParse(content).success
 }
 
-export function isLimeMediaContentResponse(
-    content: unknown
-): content is LimeMediaContentResponse {
-    if (!content || typeof content !== "object") return false
+/* ======================================================
+ * Reply – inReplyTo Contact
+ * era: isLimeContactContentResponse
+ * ====================================================== */
 
-    const obj = content as any
+const LimeReplyToContactSchema = z.object({
+    replied: RepliedTextSchema,
+    inReplyTo: InReplyToBaseSchema.extend({
+        type: z.literal("application/vnd.lime.contact+json"),
+        value: LimeContactValueSchema
+    })
+})
 
-    return (
-        obj.replied &&
-        obj.replied.type === "text/plain" &&
-        typeof obj.replied.value === "string" &&
-
-        obj.inReplyTo &&
-        typeof obj.inReplyTo.id === "string" &&
-        obj.inReplyTo.type === "application/vnd.lime.media-link+json" &&
-        obj.inReplyTo.value &&
-        typeof obj.inReplyTo.value.type === "string" &&
-        typeof obj.inReplyTo.value.uri === "string" &&
-        (obj.inReplyTo.direction === "received" ||
-            obj.inReplyTo.direction === "sent")
-    )
+export function isLimeReplyToContact(value: unknown): value is LimeReplyToContact {
+    return LimeReplyToContactSchema.safeParse(value).success
 }
 
-export function isLimeContactContentResponse(
-    value: unknown
-): value is LimeContactContentResponse {
-    if (typeof value !== "object" || value === null) return false
+/* ======================================================
+ * Reply – inReplyTo Unknown (só id)
+ * era: isLimeContentReply
+ * ====================================================== */
 
-    const obj = value as Record<string, any>
+const LimeReplyToUnknownSchema = z.object({
+    replied: z.object({
+        type: z.string(),
+        value: z.string()
+    }),
+    inReplyTo: z.object({
+        id: z.string()
+    })
+})
 
-    // replied
-    if (typeof obj.replied !== "object" || obj.replied === null) return false
-    if (obj.replied.type !== "text/plain") return false
-    if (typeof obj.replied.value !== "string") return false
-
-    // inReplyTo
-    if (typeof obj.inReplyTo !== "object" || obj.inReplyTo === null) return false
-    if (typeof obj.inReplyTo.id !== "string") return false
-    if (obj.inReplyTo.type !== "application/vnd.lime.contact+json") return false
-
-    // value (contact)
-    const contact = obj.inReplyTo.value
-    if (typeof contact !== "object" || contact === null) return false
-
-    if (typeof contact.name !== "string") return false
-    if (typeof contact.phoneNumber !== "string") return false
-    if (typeof contact.cellPhoneNumber !== "string") return false
-    if (typeof contact.firstName !== "string") return false
-
-    if (typeof contact.extras !== "object" || contact.extras === null)
-        return false
-
-    if (
-        contact.extras.org !== null &&
-        typeof contact.extras.org !== "string"
-    )
-        return false
-
-    if (
-        obj.inReplyTo.direction !== "received" &&
-        obj.inReplyTo.direction !== "sent"
-    )
-        return false
-
-    return true
+export function isLimeReplyToUnknown(content: unknown): content is LimeReplyToUnknown {
+    return LimeReplyToUnknownSchema.safeParse(content).success
 }
+
+/* ======================================================
+ * Unknown Content
+ * ====================================================== */
+
+const KNOWN_CONTENT_GUARDS = [
+    isLimeReplyToText,
+    isLimeReplyToInteractive,
+    isLimeTicketContent,
+    isLimeSelectContent,
+    isLimeMediaContent,
+    isLimeEmojiReaction,
+    isLimeInteractiveButton,
+    isLimeInteractiveList,
+    isLimeInteractiveMessage,
+    isLimeReplyToSelect,
+    isLimeReplyToMedia,
+    isLimeContactPayload,
+    isLimeReplyToContact,
+    isLimeReplyToUnknown,
+] as const
 
 export function isUnknownContent(content: unknown): boolean {
-
-    if (content == null) return true;
-
-    if (typeof content === "string") return false;
-
+    if (content == null) return true
+    if (typeof content === "string") return false
     return !KNOWN_CONTENT_GUARDS.some(guard => guard(content))
 }

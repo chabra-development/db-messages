@@ -46,7 +46,7 @@ export function UserProfileCard({ id }: { id: string }) {
 
     return (
         <Card className="w-1/2 rounded-2xl pt-0 overflow-hidden">
-            <div className="w-full h-64 border-b flex relative">
+            <div className="w-full h-32 border-b flex relative ">
                 {
                     banner
                         ? (
@@ -63,7 +63,7 @@ export function UserProfileCard({ id }: { id: string }) {
                         )
                 }
             </div>
-            <div className="size-full gap-0 -translate-y-16 px-6 space-y-4">
+            <div className="w-full gap-0 -translate-y-16 px-6 space-y-4">
                 <Avatar className="size-20 border">
                     <AvatarImage
                         src={image || undefined}

@@ -12,10 +12,10 @@ export const SystemInfoAlert = ({
 }: SystemInfoAlertProps) => {
     return (
         <Alert className="w-full max-w-md mx-auto my-4 flex flex-col bg-secondary">
-            <AlertTitle>
+            <AlertTitle className="mx-auto">
                 Transferindo para atendente...
             </AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="mx-auto">
                 fila {team}
             </AlertDescription>
             <AlertDescription className="ml-auto">

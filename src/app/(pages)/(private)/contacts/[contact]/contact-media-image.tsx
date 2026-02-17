@@ -19,19 +19,23 @@ export const ContactMediaImage = ({
 }) => {
 
     const [loaded, setLoaded] = useState(false)
+    const [dimensions, setDimensions] = useState({ width: 400, height: 400 })
 
     return (
         <Card
             id={id}
             className={cn(
-                "relative w-full max-w-xs overflow-hidden border-none shadow-none p-2",
+                "relative w-full max-w-1/2 border-none shadow-none p-2",
                 direction === "sent"
                     ? "bg-message"
                     : "dark:bg-muted bg-zinc-100"
             )}
         >
-            {/* Container da imagem com aspect ratio */}
-            <div className="relative w-full aspect-square rounded-md overflow-hidden">
+            {/* Container com aspect ratio dinâmico */}
+            <div
+                className="relative w-full rounded-md overflow-hidden"
+                style={{ aspectRatio: `${dimensions.width} / ${dimensions.height}` }}
+            >
                 {/* Placeholder blur */}
                 {!loaded && (
                     <div className="absolute inset-0 bg-linear-to-br from-muted via-muted-foreground/10 to-muted animate-pulse" />
@@ -40,17 +44,25 @@ export const ContactMediaImage = ({
                 {/* Imagem principal */}
                 <Image
                     src={uri}
-                    fill
+                    width={dimensions.width}
+                    height={dimensions.height}
                     alt={`imagem ${type}`}
                     className={cn(
-                        "object-cover rounded-md transition-opacity duration-500",
+                        "w-full h-auto rounded-md transition-opacity duration-500",
                         loaded ? "opacity-100" : "opacity-0"
                     )}
                     sizes="(max-width: 768px) 100vw, 320px"
-                    onLoad={() => setLoaded(true)}
+                    onLoad={(e) => {
+                        const img = e.currentTarget
+                        setDimensions({
+                            width: img.naturalWidth,
+                            height: img.naturalHeight
+                        })
+                        setLoaded(true)
+                    }}
                 />
             </div>
-            <CardFooter className="w-fit ml-auto rounded-sm p-1 absolute bottom-2.5 right-2.5 bg-transparent backdrop-blur-sm">
+            <CardFooter className="w-fit ml-auto rounded-sm p-1 absolute bottom-2.5 right-2.5 bg-black/30 backdrop-blur-sm">
                 <CardDescription className="text-white font-medium">
                     {formatDate(date, "HH:mm")}
                 </CardDescription>

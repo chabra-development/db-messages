@@ -1,8 +1,12 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { 
+    Card, 
+    CardDescription, 
+    CardFooter, 
+    CardHeader, 
+    CardTitle 
+} from "@/components/ui/card"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
-import { LimeReplyContent } from "@/types/lime-thread-messages-response.types"
 import { formatDate } from "date-fns"
 
 export const ContactScopeTextResponse = ({
