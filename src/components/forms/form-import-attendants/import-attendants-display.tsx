@@ -1,303 +1,347 @@
 "use client"
 
-/**
- * Componente de feedback visual para importação de atendentes
- * Seguindo o padrão do projeto (attendants-query.tsx)
- */
-
-import {
-    useImportProgress, formatTimeRemaining
-} from "@/hooks/use-import-progress"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
+    formatTimeRemaining,
+    useImportProgress
+} from "@/hooks/use-import-progress"
 import {
-    CheckCircle2,
-    XCircle,
-    Loader2,
-    Clock,
-    Users,
     AlertTriangle,
-    X
+    CheckCircle2,
+    ChevronDown,
+    Clock,
+    Loader2,
+    Users,
+    XCircle,
 } from "lucide-react"
-import { motion, AnimatePresence, Variants } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { useEffect } from "react"
+import { toast } from "sonner"
 
-interface ImportProgressDisplayProps {
-    jobId: string | null
+interface ImportProgressToastProps {
+    jobId: string
     onComplete?: () => void
-    onClose?: () => void
 }
 
-const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: {
-            type: "spring",
-            stiffness: 300,
-            damping: 30
-        }
-    },
-    exit: {
-        opacity: 0,
-        y: -20,
-        scale: 0.95,
-        transition: { duration: 0.2 }
-    }
-}
-
-export const ImportProgressDisplay = ({
+export function ImportProgressToast({
     jobId,
     onComplete,
-    onClose
-}: ImportProgressDisplayProps) => {
+}: ImportProgressToastProps) {
 
     const {
         data,
         progress,
         isComplete,
-        hasError,
+        hasFailed,
         isRunning,
         isPending,
         estimatedTimeRemaining,
-        isLoading
+        isLoading,
     } = useImportProgress({ jobId })
 
-    // Chama callback quando completo
-    if (isComplete && onComplete) {
-        onComplete()
-    }
+    useEffect(() => {
+        if (isComplete && onComplete) {
+            onComplete()
+        }
+    }, [isComplete, onComplete])
 
-    if (!jobId || isLoading || !data) {
-        return null
-    }
+    // Toast de loading inicial
+    useEffect(() => {
+        if (isPending || isRunning) {
+            toast.custom(
+                (t) => (
+                    <ImportToastContent
+                        data={data}
+                        progress={progress}
+                        isRunning={isRunning}
+                        isPending={isPending}
+                        estimatedTimeRemaining={estimatedTimeRemaining}
+                        onDismiss={() => toast.dismiss(t)}
+                    />
+                ),
+                {
+                    id: `import-${jobId}`,
+                    duration: Infinity, // Não fecha automaticamente
+                }
+            )
+        }
+    }, [isPending, isRunning, data, progress, estimatedTimeRemaining, jobId])
 
-    const { total, processed, succeeded, failedCount, failed, metadata } = data
+    // Toast de sucesso
+    useEffect(() => {
+        if (isComplete && data) {
+            toast.dismiss(`import-${jobId}`)
+
+            toast.custom(
+                (t) => (
+                    <SuccessToastContent
+                        data={data}
+                        onDismiss={() => toast.dismiss(t)}
+                    />
+                ),
+                {
+                    id: `import-success-${jobId}`,
+                    duration: 10000, // 10 segundos
+                }
+            )
+        }
+    }, [isComplete, data, jobId])
+
+    // Toast de erro
+    useEffect(() => {
+        if (hasFailed && data) {
+            toast.dismiss(`import-${jobId}`)
+
+            toast.custom(
+                (t) => (
+                    <ErrorToastContent
+                        data={data}
+                        onDismiss={() => toast.dismiss(t)}
+                    />
+                ),
+                {
+                    id: `import-error-${jobId}`,
+                    duration: Infinity, // Fica até fechar manualmente
+                }
+            )
+        }
+    }, [hasFailed, data, jobId])
+
+    return null
+}
+
+// ============================================
+// TOAST DE PROGRESSO
+// ============================================
+interface ImportToastContentProps {
+    data: any
+    progress: number
+    isRunning: boolean
+    isPending: boolean
+    estimatedTimeRemaining: number | null
+    onDismiss: () => void
+}
+
+function ImportToastContent({
+    data,
+    progress,
+    isRunning,
+    isPending,
+    estimatedTimeRemaining,
+    onDismiss,
+}: ImportToastContentProps) {
+
+    if (!data) return null
+
+    const { total, processed, succeeded, failedCount } = data
 
     return (
-        <AnimatePresence mode="wait">
-            <motion.div
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="w-full shadow-2xl"
+        <div className="w-full max-w-xl border bg-background rounded-lg shadow-lg p-4 space-y-3">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    {isPending && (
+                        <Clock className="size-5 text-muted-foreground animate-pulse" />
+                    )}
+                    {isRunning && (
+                        <Loader2 className="size-5 text-primary animate-spin" />
+                    )}
+                    <div>
+                        <p className="font-semibold text-sm">
+                            {isPending ? "Preparando importação..." : "Importando atendentes"}
+                        </p>
+                        {data.metadata?.deduplicatedCount > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                                {data.metadata.deduplicatedCount} duplicata(s) removida(s)
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                        {processed} de {total}
+                    </span>
+                    <span className="font-medium tabular-nums">{progress}%</span>
+                </div>
+
+                <Progress value={progress} className="h-2" />
+
+                {isRunning && estimatedTimeRemaining && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="size-3" />
+                        Tempo estimado: {formatTimeRemaining(estimatedTimeRemaining)}
+                    </p>
+                )}
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 p-2 rounded-md bg-green-500/10 border border-green-500/20">
+                    <CheckCircle2 className="size-4 text-green-600" />
+                    <div className="text-xs">
+                        <p className="font-medium text-green-700 tabular-nums">{succeeded}</p>
+                        <p className="text-muted-foreground">Sucesso</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+                    <XCircle className="size-4 text-destructive" />
+                    <div className="text-xs">
+                        <p className="font-medium text-destructive tabular-nums">{failedCount}</p>
+                        <p className="text-muted-foreground">Falhas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ============================================
+// TOAST DE SUCESSO
+// ============================================
+interface SuccessToastContentProps {
+    data: any
+    onDismiss: () => void
+}
+
+function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
+
+    const { succeeded, failedCount, failed } = data
+
+    return (
+        <div className="w-full max-w-xl bg-background border rounded-lg shadow-lg p-4 space-y-3">
+            {/* Header */}
+            <div className="flex items-center gap-2">
+                <div className="size-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="size-5 text-green-600" />
+                </div>
+                <div className="flex-1">
+                    <p className="font-semibold text-sm">Importação concluída!</p>
+                    <p className="text-xs text-muted-foreground">
+                        {succeeded} atendente(s) importado(s)
+                    </p>
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={onDismiss}
+                >
+                    <XCircle className="size-4" />
+                </Button>
+            </div>
+
+            {/* Stats resumidos */}
+            <div className="flex items-center gap-4 p-3 rounded-md bg-green-500/5">
+                <div className="flex items-center gap-2">
+                    <Users className="size-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">
+                        {succeeded} sucesso
+                    </span>
+                </div>
+                {failedCount > 0 && (
+                    <div className="flex items-center gap-2">
+                        <AlertTriangle className="size-4 text-destructive" />
+                        <span className="text-sm font-medium text-destructive">
+                            {failedCount} falha(s)
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Lista de erros colapsável */}
+            {failed && failed.length > 0 && (
+                <Collapsible>
+                    <CollapsibleTrigger asChild>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between"
+                        >
+                            <span className="flex items-center gap-2">
+                                <AlertTriangle className="size-4" />
+                                Ver erros ({failed.length})
+                            </span>
+                            <ChevronDown className="size-4" />
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                        <ScrollArea className="h-32">
+                            <div className="space-y-2">
+                                {failed.map((error: any, index: number) => (
+                                    <div
+                                        key={`${error.identity}-${index}`}
+                                        className="p-2 rounded-md bg-destructive/5 border border-destructive/20"
+                                    >
+                                        <p className="text-xs font-medium text-destructive truncate">
+                                            {error.email}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground line-clamp-1">
+                                            {error.reason}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CollapsibleContent>
+                </Collapsible>
+            )}
+        </div>
+    )
+}
+
+// ============================================
+// TOAST DE ERRO
+// ============================================
+interface ErrorToastContentProps {
+    data: any
+    onDismiss: () => void
+}
+
+function ErrorToastContent({ data, onDismiss }: ErrorToastContentProps) {
+
+    const { metadata } = data
+
+    return (
+        <div className="w-full max-w-xl bg-background border border-destructive rounded-lg shadow-lg p-4 space-y-3">
+            <div className="flex items-start gap-3">
+                <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                    <XCircle className="size-5 text-destructive" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">Erro na importação</p>
+                    <p className="text-xs text-muted-foreground mt-1 wrap-break-word">
+                        {metadata?.error || "Ocorreu um erro durante a importação"}
+                    </p>
+                </div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={onDismiss}
+                >
+                    <XCircle className="size-4" />
+                </Button>
+            </div>
+
+            <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={onDismiss}
             >
-                <Card className="border-2">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 space-y-1">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    {isPending && (
-                                        <>
-                                            <Clock className="size-5 text-muted-foreground animate-pulse" />
-                                            <span>
-                                                Preparando importação...
-                                            </span>
-                                        </>
-                                    )}
-                                    {isRunning && (
-                                        <>
-                                            <Loader2 className="size-5 text-primary animate-spin" />
-                                            <span>
-                                                Importando atendentes
-                                            </span>
-                                        </>
-                                    )}
-                                    {isComplete && (
-                                        <>
-                                            <CheckCircle2 className="size-5 text-green-500" />
-                                            <span>Importação concluída!</span>
-                                        </>
-                                    )}
-                                    {hasError && (
-                                        <>
-                                            <XCircle className="size-5 text-destructive" />
-                                            <span>Erro na importação</span>
-                                        </>
-                                    )}
-                                </CardTitle>
-
-                                {metadata?.deduplicatedCount && metadata.deduplicatedCount > 0 && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {metadata.deduplicatedCount} duplicata(s) removida(s)
-                                    </p>
-                                )}
-                            </div>
-
-                            {(isComplete || hasError) && onClose && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={onClose}
-                                    className="h-8 w-8 p-0 shrink-0"
-                                >
-                                    <X className="size-4" />
-                                </Button>
-                            )}
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                        {/* Barra de progresso */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                    {processed} de {total}
-                                </span>
-                                <span className="font-medium">{progress}%</span>
-                            </div>
-
-                            <Progress value={progress} className="h-2" />
-
-                            {isRunning && estimatedTimeRemaining && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Clock className="size-3" />
-                                    Tempo estimado: {formatTimeRemaining(estimatedTimeRemaining)}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Estatísticas */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20"
-                            >
-                                <CheckCircle2 className="size-4 text-green-600 shrink-0" />
-                                <div className="text-sm min-w-0">
-                                    <p className="font-medium text-green-700 tabular-nums">
-                                        {succeeded}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground truncate">
-                                        Sucesso
-                                    </p>
-                                </div>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.15 }}
-                                className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20"
-                            >
-                                <XCircle className="size-4 text-destructive shrink-0" />
-                                <div className="text-sm min-w-0">
-                                    <p className="font-medium text-destructive tabular-nums">
-                                        {failedCount}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground truncate">
-                                        Falhas
-                                    </p>
-                                </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Lista de erros (similar ao filtro de teams) */}
-                        {failed && failed.length > 0 && (
-                            <Accordion type="single" collapsible className="w-full">
-                                <AccordionItem value="errors" className="border rounded-lg px-3">
-                                    <AccordionTrigger className="py-2 hover:no-underline">
-                                        <div className="flex items-center gap-2">
-                                            <AlertTriangle className="size-4 text-destructive" />
-                                            <span className="text-sm font-medium">
-                                                Ver erros ({failed.length})
-                                            </span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <ScrollArea className="h-40 pr-3">
-                                            <div className="space-y-2 pt-2">
-                                                {failed.map((error, index) => (
-                                                    <motion.div
-                                                        key={`${error.identity}-${index}`}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: index * 0.05 }}
-                                                        className={cn(
-                                                            "p-3 rounded-md",
-                                                            "bg-destructive/5 border border-destructive/20",
-                                                            "hover:bg-destructive/10 transition-colors"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs font-medium text-destructive truncate">
-                                                            {error.email}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                                            {error.reason}
-                                                        </p>
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        </ScrollArea>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        )}
-
-                        {/* Mensagem final - sucesso */}
-                        {isComplete && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 300,
-                                    damping: 25
-                                }}
-                                className={cn(
-                                    "p-3 rounded-lg",
-                                    "bg-green-500/10 border border-green-500/20"
-                                )}
-                            >
-                                <p className="text-sm text-green-700 font-medium flex items-center gap-2">
-                                    <Users className="size-4" />
-                                    {succeeded} atendente(s) importado(s) com sucesso!
-                                </p>
-                                {failedCount > 0 && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {failedCount} falha(s) durante o processo
-                                    </p>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {/* Mensagem final - erro */}
-                        {hasError && metadata?.error && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 300,
-                                    damping: 25
-                                }}
-                                className={cn(
-                                    "p-3 rounded-lg",
-                                    "bg-destructive/10 border border-destructive/20"
-                                )}
-                            >
-                                <p className="text-sm text-destructive font-medium flex items-center gap-2">
-                                    <XCircle className="size-4" />
-                                    Erro: {metadata.error}
-                                </p>
-                            </motion.div>
-                        )}
-                    </CardContent>
-                </Card>
-            </motion.div>
-        </AnimatePresence>
+                Fechar
+            </Button>
+        </div>
     )
 }

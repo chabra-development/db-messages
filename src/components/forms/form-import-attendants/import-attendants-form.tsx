@@ -20,16 +20,16 @@ import {
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import {
     extractNameFromBlipIdentity
 } from "@/functions/extract-name-from-blip-identity"
+import { useQueryClient } from "@tanstack/react-query"
 import { Import, ListChecks, ListX, X } from "lucide-react"
-import { ImportProgressDisplay } from "./import-attendants-display"
+import { ImportProgressToast } from "./import-attendants-display"
 import { useFormImportAttendants } from "./use-form-import-attendants"
-import { queryClient } from "@/providers/theme-provider"
-import { Separator } from "@/components/ui/separator"
 
 export type ImportFailedItem = {
     identity: string
@@ -59,7 +59,10 @@ export const ImportAttendantsForm = () => {
         items,
         attendants,
         isLoading,
+        reset
     } = useFormImportAttendants()
+
+    const queryClient = useQueryClient()
 
     if (!attendants || isLoading) {
         return (
@@ -157,16 +160,20 @@ export const ImportAttendantsForm = () => {
                     errors.attendents &&
                     <SpanErrorMessage message={errors.attendents.message} />
                 }
-                <ImportProgressDisplay
-                    jobId={jobId}
-                    onComplete={() => {
-                        queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] })
-                    }}
-                    onClose={() => {
-                        setJobId(null)
-                        setOpen(false)
-                    }}
-                />
+                {
+                    jobId && (
+                        <ImportProgressToast
+                            jobId={jobId}
+                            onComplete={() => {
+                                queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] })
+                                setJobId(null)
+                                setOpen(false)
+                                reset()
+                            }}
+                        />
+                    )
+                }
+
                 <Separator />
                 <AlertDialogFooter>
                     <AlertDialogCancel

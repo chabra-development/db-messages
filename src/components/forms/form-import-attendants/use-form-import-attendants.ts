@@ -124,5 +124,6 @@ export function useFormImportAttendants() {
         attendants,
         isLoading,
         items,
+        reset
     }
 }

@@ -1,37 +1,13 @@
+// src/hooks/use-import-progress.ts
 "use client"
-
-/**
- * Hook para monitorar progresso de importação de atendentes
- */
 
 import { useQuery } from "@tanstack/react-query"
 import { getImportProgress } from "@/actions/jobs/get-import-progress"
+import type { ImportProgress } from "@/types/import-job.types"
+import type { ImportJobStatus } from "@prisma/client"
 
-export interface ImportProgress {
-    id: string
-    total: number
-    processed: number
-    succeeded: number
-    failedCount: number
-    status: "pending" | "running" | "done" | "error"
-    failed: Array<{
-        identity: string
-        email: string
-        reason: string
-        timestamp?: Date
-    }>
-    metadata?: {
-        deduplicatedCount?: number
-        batchSize?: number
-        totalSucceeded?: number
-        totalFailed?: number
-        completedAt?: string
-        error?: string
-    }
-    createdAt: Date
-    startedAt?: Date | null
-    completedAt?: Date | null
-}
+// ⚠️ REMOVER a interface ImportProgress daqui
+// ✅ Agora usa o tipo importado de @/types/import-job.types
 
 interface UseImportProgressOptions {
     jobId: string | null
@@ -42,35 +18,38 @@ interface UseImportProgressOptions {
 export const useImportProgress = ({
     jobId,
     enabled = true,
-    refetchInterval = 1000, // Atualiza a cada 1 segundo
+    refetchInterval = 1000,
 }: UseImportProgressOptions) => {
     const query = useQuery<ImportProgress | null>({
         queryKey: ["import-progress", jobId],
         queryFn: () => (jobId ? getImportProgress(jobId) : null),
         enabled: enabled && !!jobId,
-        refetchInterval: (query) => {
-            // Para de atualizar quando concluído ou com erro
-            const data = query.state.data
-            if (!data || data.status === "done" || data.status === "error") {
+        refetchInterval: (data) => {
+            const jobData = data.state.data
+            
+            if (!jobData || 
+                jobData.status === "COMPLETED" || 
+                jobData.status === "FAILED" ||
+                jobData.status === "CANCELLED"
+            ) {
                 return false
             }
+            
             return refetchInterval
         },
-        staleTime: 0, // Sempre busca dados frescos
+        staleTime: 0,
     })
 
-    // Calcula porcentagem
     const progress = query.data
         ? Math.round((query.data.processed / query.data.total) * 100)
         : 0
 
-    // Verifica se está completo (acessa do data, não do query)
-    const isComplete = query.data?.status === "done"
-    const hasError = query.data?.status === "error"
-    const isRunning = query.data?.status === "running"
-    const isPending = query.data?.status === "pending"
+    const isComplete = query.data?.status === "COMPLETED"
+    const hasFailed = query.data?.status === "FAILED"
+    const isRunning = query.data?.status === "RUNNING"
+    const isPending = query.data?.status === "PENDING"
+    const isCancelled = query.data?.status === "CANCELLED"
 
-    // Tempo estimado restante (aproximado)
     const estimatedTimeRemaining = (() => {
         if (!query.data || !query.data.startedAt) return null
 
@@ -79,35 +58,31 @@ export const useImportProgress = ({
         if (processed === 0) return null
 
         const elapsed = Date.now() - new Date(startedAt).getTime()
-        const rate = processed / elapsed // itens por ms
+        const rate = processed / elapsed
         const remaining = total - processed
         const estimatedMs = remaining / rate
 
-        return Math.ceil(estimatedMs / 1000) // retorna em segundos
+        return Math.ceil(estimatedMs / 1000)
     })()
 
     return {
-        // Propriedades do React Query (renomeadas para evitar conflito)
         isLoading: query.isLoading,
         isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         refetch: query.refetch,
-
-        // Propriedades customizadas
         progress,
         isComplete,
-        hasError,
+        hasFailed,
         isRunning,
         isPending,
+        isCancelled,
         estimatedTimeRemaining,
         data: query.data,
     }
 }
 
-/**
- * Formata tempo restante para exibição
- */
+// Helpers
 export function formatTimeRemaining(seconds: number | null): string {
     if (seconds === null || seconds <= 0) return ""
 
@@ -126,4 +101,45 @@ export function formatTimeRemaining(seconds: number | null): string {
     const mins = minutes % 60
 
     return `${hours}h ${mins}m`
+}
+
+export function formatDuration(startedAt: Date | null, completedAt: Date | null): string {
+    if (!startedAt || !completedAt) return ""
+
+    const durationMs = new Date(completedAt).getTime() - new Date(startedAt).getTime()
+    const seconds = Math.floor(durationMs / 1000)
+
+    return formatTimeRemaining(seconds)
+}
+
+export function isJobActive(status: ImportJobStatus): boolean {
+    return status === "PENDING" || status === "RUNNING"
+}
+
+export function isJobFinished(status: ImportJobStatus): boolean {
+    return status === "COMPLETED" || status === "FAILED" || status === "CANCELLED"
+}
+
+export function getStatusColor(status: ImportJobStatus): string {
+    const colors = {
+        PENDING: "text-gray-500",
+        RUNNING: "text-blue-500",
+        COMPLETED: "text-green-500",
+        FAILED: "text-red-500",
+        CANCELLED: "text-orange-500",
+    }
+
+    return colors[status] || "text-gray-500"
+}
+
+export function getStatusLabel(status: ImportJobStatus): string {
+    const labels = {
+        PENDING: "Pendente",
+        RUNNING: "Em andamento",
+        COMPLETED: "Concluído",
+        FAILED: "Falhou",
+        CANCELLED: "Cancelado",
+    }
+
+    return labels[status] || status
 }

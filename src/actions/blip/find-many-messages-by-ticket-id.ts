@@ -1,16 +1,18 @@
 "use server"
 
+import { env } from "@/env"
 import { api } from "@/lib/axios"
 import { BodyBlib } from "@/types/index.types"
-import { randomUUID } from "node:crypto"
-import { z } from "zod"
-import { env } from "@/env"
 import {
     LimeThreadMessagesResponse
 } from "@/types/lime-thread-messages-response.types"
+import { randomUUID } from "node:crypto"
+import { z } from "zod"
 
 const findMessagesByTicketIdSchema = z.object({
-    BLIP_DESK_API_KEY: z.string().min(1, "A chave do roteador é obrigatória."),
+    BLIP_DESK_API_KEY: z
+        .string()
+        .nonempty("A BLIP_DESK_API_KEY é obrigatória."),
 })
 
 export async function findMessagesByTicketId(ticketId: string) {

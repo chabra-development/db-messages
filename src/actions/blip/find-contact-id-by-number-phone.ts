@@ -1,20 +1,22 @@
 "use server"
 
+import { env } from "@/env"
 import { api } from "@/lib/axios"
-import { BodyBlib } from "@/types/index.types"
 import type { BlipAccountResponse } from "@/types/blip-account-response.types"
+import { BodyBlib } from "@/types/index.types"
 import { randomUUID } from "node:crypto"
 import { z } from "zod"
-import { env } from "@/env"
 
 const findContactIdByNumberPhoneSchema = z.object({
-  ROUTER_API_KEY: z.string().min(1, "A chave do roteador é obrigatória."),
+  ROUTER_API_KEY: z
+    .string()
+    .nonempty("A ROUTER_API_KEY é obrigatória."),
   numberPhone: z
     .string()
     .trim()
     .transform((value) => value.replace(/\D/g, ""))
     .superRefine((value, ctx) => {
-      
+
       const phone = value.startsWith("55") ? value.slice(2) : value
 
       if (![10, 11].includes(phone.length)) {

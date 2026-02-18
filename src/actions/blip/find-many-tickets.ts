@@ -1,14 +1,16 @@
 "use server"
 
+import { env } from "@/env"
 import { api } from "@/lib/axios"
 import { BodyBlib } from "@/types/index.types"
 import { LimeCollectionResponse } from "@/types/lime-ticket-response.types"
 import { randomUUID } from "node:crypto"
 import { z } from "zod"
-import { env } from "@/env"
 
 const findContactIdByNumberPhoneSchema = z.object({
-    BLIP_DESK_API_KEY: z.string().min(1, "A chave do roteador é obrigatória."),
+    BLIP_DESK_API_KEY: z
+        .string()
+        .nonempty("A BLIP_DESK_API_KEY é obrigatória."),
 })
 
 export async function findManyTickets() {

@@ -1,9 +1,9 @@
+import { Role } from "@prisma/client"
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js"
-import { prisma } from "./prisma"
-import { Role } from "@prisma/client"
 import { randomUUID } from "node:crypto"
+import { prisma } from "./prisma"
 
 export const auth = betterAuth({
 	session: {
@@ -21,8 +21,7 @@ export const auth = betterAuth({
 		accountLinking: {
 			enabled: true,
 		},
-	},
-	// ✅ MOVIDO PARA O NÍVEL RAIZ (fora do user)
+	},	
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: false,
@@ -37,23 +36,29 @@ export const auth = betterAuth({
 		additionalFields: {
 			identity: {
 				type: "string",
+				required: false,      
+				defaultValue: "",         
+				input: true,       
 			},
 			teams: {
 				type: "string[]",
+				defaultValue: [],         
 			},
 			role: {
 				type: ["USER", "SUPERVISOR", "ADMIN"],
 				defaultValue: Role.USER,
-				input: false
+				input: false,      
 			},
 			isActive: {
 				type: "boolean",
 				required: false,
 				defaultValue: true,
+				input: false,
 			},
 			banner: {
 				type: "string",
 				required: false,
+				input: false,
 			}
 		},
 	},

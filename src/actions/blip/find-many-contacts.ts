@@ -1,13 +1,15 @@
 "use server"
 
-import { api } from "@/lib/axios"
-import { randomUUID } from "node:crypto"
-import { LimeCollectionResponse } from "@/types/lime-collection-response.types"
-import z from "zod"
 import { env } from "@/env"
+import { api } from "@/lib/axios"
+import { LimeCollectionResponse } from "@/types/lime-collection-response.types"
+import { randomUUID } from "node:crypto"
+import z from "zod"
 
 const findManyContactsSchema = z.object({
-    ROUTER_API_KEY: z.string().min(1, "A chave do roteador é obrigatória."),
+    ROUTER_API_KEY: z
+        .string()
+        .nonempty("A ROUTER_API_KEY é obrigatória.")
 })
 
 export async function findManyContacts() {

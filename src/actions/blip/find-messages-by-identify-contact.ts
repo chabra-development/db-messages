@@ -3,14 +3,16 @@
 import { env } from "@/env"
 import { api } from "@/lib/axios"
 import {
-    LimeThreadMessagesResponse,
-    LimeThreadMessage
+    LimeThreadMessage,
+    LimeThreadMessagesResponse
 } from "@/types/lime-thread-messages-response.types"
 import { randomUUID, type UUID } from "node:crypto"
 import z from "zod"
 
 const findManyContactsSchema = z.object({
-    ROUTER_API_KEY: z.string().min(1, "A chave do roteador é obrigatória."),
+    ROUTER_API_KEY: z
+        .string()
+        .nonempty("A ROUTER_API_KEY é obrigatória."),
 })
 
 interface FindMessagesOptions {
@@ -45,7 +47,7 @@ export async function findMessagesByIdentifyContact(
     let responseTo = ""
 
     try {
-        
+
         while (allMessages.length < limit) {
 
             const currentTake = Math.min(TAKE, limit - allMessages.length)

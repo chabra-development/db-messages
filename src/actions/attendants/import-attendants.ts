@@ -1,15 +1,5 @@
 "use server"
 
-/**
- * Importação de atendentes com melhorias:
- * - Processamento em lotes (batches)
- * - Melhor tratamento de erros
- * - Rate limiting
- * - Validação de dados
- * - Logging estruturado
- * - Deduplicação automática
- */
-
 import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -24,13 +14,6 @@ interface ImportResult {
     jobId: string
     total: number
     message: string
-}
-
-interface FailedImport {
-    identity: string
-    email: string
-    reason: string
-    timestamp: Date
 }
 
 /**
@@ -64,8 +47,9 @@ function isValidEmail(email: string): boolean {
  */
 async function processAttendant(
     jobId: string,
-    attendant: { identity: string; email: string; teams?: string[] }
+    attendant: { identity: string; email: string; teams: string[] }
 ): Promise<{ success: boolean; error?: string }> {
+    
     const { identity, email, teams } = attendant
 
     try {
@@ -105,7 +89,7 @@ async function processAttendant(
                 name: extractNameFromBlipIdentity(identity),
                 password: "Chabra@123", // TODO: Gerar senha aleatória
                 identity,
-                teams: teams || []
+                teams: teams ?? []
             },
         })
 
@@ -141,8 +125,9 @@ async function processAttendant(
  */
 async function processBatch(
     jobId: string,
-    batch: Array<{ identity: string; email: string; teams?: string[] }>
+    batch: Array<{ identity: string; email: string; teams: string[] }>
 ): Promise<{ succeeded: number; failed: number }> {
+    
     let succeeded = 0
     let failed = 0
 
@@ -197,7 +182,7 @@ export async function importAttendants({
             processed: 0,
             succeeded: 0,
             failedCount: 0,
-            status: "pending",
+            status: "PENDING",
             metadata: {
                 deduplicatedCount,
                 batchSize: BATCH_SIZE,
@@ -213,7 +198,7 @@ export async function importAttendants({
                 await prisma.importJob.update({
                     where: { id: job.id },
                     data: {
-                        status: "running",
+                        status: "RUNNING",
                         startedAt: new Date()
                     },
                 })
@@ -243,7 +228,7 @@ export async function importAttendants({
                 await prisma.importJob.update({
                     where: { id: job.id },
                     data: {
-                        status: "done",
+                        status: "COMPLETED",
                         completedAt: new Date(),
                         metadata: {
                             deduplicatedCount,
@@ -262,7 +247,7 @@ export async function importAttendants({
                 await prisma.importJob.update({
                     where: { id: job.id },
                     data: {
-                        status: "error",
+                        status: "FAILED",
                         completedAt: new Date(),
                         metadata: {
                             error: error instanceof Error ? error.message : "Unknown error",

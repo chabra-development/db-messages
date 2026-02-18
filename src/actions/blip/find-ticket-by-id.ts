@@ -9,7 +9,9 @@ import { z } from "zod"
 
 const findTicketByIdSchema = z.object({
     id: z.uuid(),
-    BLIP_DESK_API_KEY: z.string().min(1, "A chave do roteador é obrigatória.")
+    BLIP_DESK_API_KEY: z
+        .string()
+        .nonempty("A BLIP_DESK_API_KEY é obrigatória."),
 })
 
 export async function findTicketById(id: string) {
