@@ -12,16 +12,24 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { GoogleLoginButton } from "./google-sign-up-button"
 
 export const FormSign = () => {
+
+	const { push } = useRouter()
 
 	const [visible, setVisible] = useState(false)
 
 	const { mutate, isPending: isLoading } = useMutation({
 		mutationKey: ["sign-in-email"],
 		mutationFn: signInEmail,
+		onSuccess: (data) => {
+			console.log(data)
+			push("/contacts")
+		},
 		onError: (error) => {
 
 			console.log(error)
@@ -101,6 +109,10 @@ export const FormSign = () => {
 				<Button asChild type="button" variant={"link"} className="w-full">
 					<Link href="/sign-up">Criar uma conta</Link>
 				</Button>
+				<span className="block mx-auto">
+					ou
+				</span>
+				<GoogleLoginButton className="w-2/3 mx-auto" />
 				<Button
 					type="submit"
 					className="w-1/2 self-end mt-4"

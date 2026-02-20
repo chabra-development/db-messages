@@ -6,6 +6,22 @@ import { randomUUID } from "node:crypto"
 import { prisma } from "./prisma"
 
 export const auth = betterAuth({
+	baseURL: process.env.BETTER_AUTH_URL as string,
+	database: prismaAdapter(prisma, {
+		provider: "postgresql",
+	}),
+	socialProviders: {
+		google: {
+			clientId: process.env.GOOGLE_CLIENT_ID as string,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+		},
+	},
+	account: {
+		accountLinking: {
+			enabled: true,
+			trustedProviders: ["google"],  // ✅ Já está configurado!
+		},
+	},
 	session: {
 		expiresIn: 60 * 60 * 24 * 7,
 		updateAge: 60 * 60 * 24,
@@ -14,14 +30,6 @@ export const auth = betterAuth({
 			maxAge: 5 * 60,
 		},
 	},
-	database: prismaAdapter(prisma, {
-		provider: "postgresql",
-	}),
-	account: {
-		accountLinking: {
-			enabled: true,
-		},
-	},	
 	emailAndPassword: {
 		enabled: true,
 		requireEmailVerification: false,
@@ -36,18 +44,18 @@ export const auth = betterAuth({
 		additionalFields: {
 			identity: {
 				type: "string",
-				required: false,      
-				defaultValue: "",         
-				input: true,       
+				required: false,
+				defaultValue: "",
+				input: true,
 			},
 			teams: {
 				type: "string[]",
-				defaultValue: [],         
+				defaultValue: [],
 			},
 			role: {
 				type: ["USER", "SUPERVISOR", "ADMIN"],
 				defaultValue: Role.USER,
-				input: false,      
+				input: false,
 			},
 			isActive: {
 				type: "boolean",
@@ -62,9 +70,7 @@ export const auth = betterAuth({
 			}
 		},
 	},
-	trustedOrigins: [
-		process.env.VERCEL_URL || "http://localhost:3000",
-	],
+	trustedOrigins: [process.env.BETTER_AUTH_URL as string],
 	advanced: {
 		database: {
 			generateId: () => randomUUID(),

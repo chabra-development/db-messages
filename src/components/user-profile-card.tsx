@@ -1,12 +1,14 @@
 "use client"
 
 import { findAttendantsById } from "@/actions/attendants/find-attendants-by-id"
+import { LinkGoogleAccount } from "@/app/(pages)/(private)/settings/link-google-account"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
 import { getInitials } from "@/functions/get-initials"
 import { useQuery } from "@tanstack/react-query"
 import { Ellipsis } from "lucide-react"
 import Image from "next/image"
+import { Separator } from "./ui/separator"
 import { Skeleton } from "./ui/skeleton"
 
 export function UserProfileCard({ id }: { id: string }) {
@@ -55,7 +57,6 @@ export function UserProfileCard({ id }: { id: string }) {
                                 alt="Banner"
                                 fill
                                 className="object-cover"
-                                priority
                             />
                         )
                         : (
@@ -66,8 +67,8 @@ export function UserProfileCard({ id }: { id: string }) {
             <div className="w-full gap-0 -translate-y-16 px-6 space-y-4">
                 <Avatar className="size-20 border">
                     <AvatarImage
-                        src={image || undefined}
-                        alt={`Avatar de ${name}`}
+                        src={image ? image : undefined}
+                        alt={`Avatar do usuário ${name}`}
                         className="object-cover"
                     />
                     <AvatarFallback className="scale-250">
@@ -83,6 +84,10 @@ export function UserProfileCard({ id }: { id: string }) {
                     </CardDescription>
                 </div>
             </div>
+            <Separator className="data-[orientation=horizontal]:w-[94%] mx-auto" />
+            <CardFooter className="px-0">
+                <LinkGoogleAccount />
+            </CardFooter>
         </Card>
     )
 }

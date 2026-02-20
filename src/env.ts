@@ -9,7 +9,8 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z
     .string()
     .min(32, "BETTER_AUTH_SECRET deve ter no mínimo 32 caracteres"),
-
+  BETTER_AUTH_URL: z
+    .string("BETTER_AUTH_URL deve ser uma URL válida"),
   // Supabase
   SUPABASE_URL: z
     .url("SUPABASE_URL deve ser uma URL válida"),
@@ -26,6 +27,8 @@ const envSchema = z.object({
     .string()
     .min(1, "BLIP_DESK_API_KEY é obrigatória"),
 
+  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID é obrigatória"),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET é obrigatória"),
   // Node Environment
   NODE_ENV: z
     .enum(["development", "production", "test"])

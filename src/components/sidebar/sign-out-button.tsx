@@ -1,7 +1,9 @@
 "use client"
 
+import { toast } from "@/components/toast"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { authClient } from "@/lib/auth-client"
+import { useMutation } from "@tanstack/react-query"
 import { LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -9,18 +11,28 @@ export const SignOutButton = () => {
 
 	const { push } = useRouter()
 
-	async function SignOut() {
-		await authClient.signOut({
-			fetchOptions: {
-				onRequest: () => push("/sign-in")
-			},
+	const { mutate, isPending } = useMutation({
+		mutationKey: ["sign-out"],
+		mutationFn: async () => {
+			await authClient.signOut()
+		},
+		onSuccess: () => push("/sign-in"),
+		onError: (error) => toast({
+			title: "Erro ao sair",
+			description: error.message,
+			variant: "destructive",
 		})
-	}
+	})
 
 	return (
-		<DropdownMenuItem onClick={SignOut}>
+		<DropdownMenuItem
+			onClick={() => mutate()}
+			disabled={isPending}
+		>
 			<LogOut />
-			<span>Sair</span>
+			<span>
+				Sair
+			</span>
 		</DropdownMenuItem>
 	)
 }

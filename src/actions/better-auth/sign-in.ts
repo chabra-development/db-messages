@@ -13,7 +13,6 @@ export async function signInEmail({ email, password }: SignInEmailInput) {
         body: {
             email,
             password,
-            callbackURL: "/",
         },
     })
 

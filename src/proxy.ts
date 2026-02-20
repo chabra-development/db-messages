@@ -2,25 +2,48 @@ import { type NextRequest, NextResponse } from "next/server"
 import { auth } from "./lib/auth"
 
 export async function proxy(request: NextRequest) {
-  
+
+  const { pathname } = request.nextUrl
+
+  // ✅ IMPORTANTE: Rotas da API do Better Auth (não verificar sessão)
+  const authApiRoutes = [
+    "/api/auth",           // Todas as rotas de auth
+  ]
+  const isAuthApiRoute = authApiRoutes.some(route => pathname.startsWith(route))
+
+  if (isAuthApiRoute) {
+    return NextResponse.next()
+  }
+
+  // Busca sessão para outras rotas
   const session = await auth.api.getSession({
     headers: request.headers,
   })
 
-  const { pathname } = request.nextUrl
-
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ["/sign-in", "/sign-up"]
+  const publicRoutes = [
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/reset-password",
+  ]
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   // Se for rota pública, permite acesso
   if (isPublicRoute) {
+    // Se tiver sessão e tentar acessar sign-in/sign-up, redireciona para contacts
+    if (session && (pathname === "/sign-in" || pathname === "/sign-up")) {
+      return NextResponse.redirect(new URL("/contacts", request.url))
+    }
     return NextResponse.next()
   }
 
   // Se não houver sessão, redireciona para login
   if (!session) {
-    return NextResponse.redirect(new URL("/sign-in", request.url))
+    // Salva URL de retorno para redirecionar após login
+    const redirectUrl = new URL("/sign-in", request.url)
+    redirectUrl.searchParams.set("callbackUrl", pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
   // Se for a raiz e tiver sessão, redireciona para contacts
@@ -40,6 +63,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api routes (handled separately)
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],

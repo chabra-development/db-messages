@@ -31,7 +31,6 @@ export default async function UploadPage() {
 
 	return (
 		<main className="h-dvh w-full flex items-center justify-center px-8 py-4">
-
 			<Card className={cn(
 				"w-4/5 justify-between border-primary mx-auto",
 				"lg:w-3/5"
