@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
-import { addDays, formatDate } from "date-fns"
+import { addDays } from "date-fns"
 import { type DateRange } from "react-day-picker"
 import { ptBR } from "date-fns/locale"
 

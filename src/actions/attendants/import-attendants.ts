@@ -20,7 +20,9 @@ interface ImportResult {
  * Divide array em lotes menores
  */
 function chunkArray<T>(array: T[], size: number): T[][] {
+    
     const chunks: T[][] = []
+    
     for (let i = 0; i < array.length; i += size) {
         chunks.push(array.slice(i, i + size))
     }
@@ -265,7 +267,6 @@ export async function importAttendants({
                         await prisma.importJob.delete({
                             where: { id: job.id },
                         })
-                        console.log(`Job ${job.id} cleaned up`)
                     } catch (error) {
                         console.error(`Failed to cleanup job ${job.id}:`, error)
                     }

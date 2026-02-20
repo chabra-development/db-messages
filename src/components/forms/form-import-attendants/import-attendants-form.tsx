@@ -28,7 +28,7 @@ import {
 } from "@/functions/extract-name-from-blip-identity"
 import { useQueryClient } from "@tanstack/react-query"
 import { Import, ListChecks, ListX, X } from "lucide-react"
-import { ImportProgressToast } from "./import-attendants-display"
+import { ImportProgressToast } from "../../import-data-toast"
 import { useFormImportAttendants } from "./use-form-import-attendants"
 
 export type ImportFailedItem = {
@@ -163,6 +163,7 @@ export const ImportAttendantsForm = () => {
                 {
                     jobId && (
                         <ImportProgressToast
+                            message="atendentes"
                             jobId={jobId}
                             onComplete={() => {
                                 queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] })

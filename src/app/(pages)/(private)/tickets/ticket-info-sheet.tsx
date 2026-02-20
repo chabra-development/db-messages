@@ -7,7 +7,6 @@ import { toast } from "@/components/toast"
 import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import {
     Sheet,
@@ -37,8 +36,6 @@ export const TicketInfoSheet = ({ ticket }: { ticket: LimeTicket }) => {
             </SheetTrigger>
             <SheetContent className="sm:max-w-5xl sm:w-full p-4 overflow-y-auto scrollbar-hover">
                 <Card>
-
-
                     <SheetHeader>
                         <SheetTitle>
                             {id}
@@ -170,8 +167,6 @@ export const TicketInfoSheetItens = ({ id }: { id: string }) => {
             })
         )
     }
-
-    console.log(ticketMessageResponse)
 
     const { resource } = ticketMessageResponse
 

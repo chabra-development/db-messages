@@ -8,10 +8,7 @@ import {
 } from "@/components/ui/collapsible"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-    formatTimeRemaining,
-    useImportProgress
-} from "@/hooks/use-import-progress"
+import { formatTimeRemaining, useImportProgress } from "@/hooks/use-import-progress"
 import {
     AlertTriangle,
     CheckCircle2,
@@ -25,6 +22,7 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 
 interface ImportProgressToastProps {
+    message: string
     jobId: string
     onComplete?: () => void
 }
@@ -32,6 +30,7 @@ interface ImportProgressToastProps {
 export function ImportProgressToast({
     jobId,
     onComplete,
+    message
 }: ImportProgressToastProps) {
 
     const {
@@ -57,6 +56,7 @@ export function ImportProgressToast({
             toast.custom(
                 (t) => (
                     <ImportToastContent
+                        message={message}
                         data={data}
                         progress={progress}
                         isRunning={isRunning}
@@ -120,6 +120,7 @@ export function ImportProgressToast({
 // TOAST DE PROGRESSO
 // ============================================
 interface ImportToastContentProps {
+    message: string
     data: any
     progress: number
     isRunning: boolean
@@ -129,6 +130,7 @@ interface ImportToastContentProps {
 }
 
 function ImportToastContent({
+    message,
     data,
     progress,
     isRunning,
@@ -154,7 +156,7 @@ function ImportToastContent({
                     )}
                     <div>
                         <p className="font-semibold text-sm">
-                            {isPending ? "Preparando importação..." : "Importando atendentes"}
+                            {isPending ? "Preparando importação..." : `Importando ${message}`}
                         </p>
                         {data.metadata?.deduplicatedCount > 0 && (
                             <p className="text-xs text-muted-foreground">
@@ -319,7 +321,9 @@ function ErrorToastContent({ data, onDismiss }: ErrorToastContentProps) {
                     <XCircle className="size-5 text-destructive" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">Erro na importação</p>
+                    <p className="font-semibold text-sm">
+                        Erro na importação
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1 wrap-break-word">
                         {metadata?.error || "Ocorreu um erro durante a importação"}
                     </p>

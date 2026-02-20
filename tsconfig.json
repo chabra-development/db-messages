@@ -28,6 +28,9 @@
       ],
       "@/contacts/*": [
         "./src/app/(pages)/(private)/contacts/[contact]/*",
+      ],
+      "@/forms/*": [
+        "./src/components/forms/*",
       ]
     }
   },

@@ -1,3 +1,4 @@
+import { ChooseBackground } from "@/components/choose-background"
 import { ChooseATheme } from "@/components/choose-theme"
 import { FormUpdateUser } from "@/components/forms/form-update-user"
 import {
@@ -47,7 +48,17 @@ export default async function UploadPage() {
 					<UserProfileCard id={id} />
 					<FormUpdateUser className="w-1/2" />
 				</div>
-				<CardContent className="size-full flex gap-2">
+				<CardContent className="size-full flex flex-col gap-2">
+					<Card>
+						<CardHeader>
+							<CardTitle className="text-lg truncate">
+								Escolha o background
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<ChooseBackground />
+						</CardContent>
+					</Card>
 					<Card className="w-full h-max">
 						<CardHeader>
 							<CardTitle className="text-lg truncate">

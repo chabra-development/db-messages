@@ -21,7 +21,7 @@ export interface LimeContact {
     source: string
     lastMessageDate?: string
     lastUpdateDate?: string
-    phoneNumber?: string
+    phoneNumber: string
     email?: string
     taxDocument?: string
     group?: string

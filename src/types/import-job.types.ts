@@ -1,4 +1,3 @@
-// src/types/import-job.types.ts
 import type { ImportJobStatus } from "@prisma/client"
 
 export interface ImportProgress {

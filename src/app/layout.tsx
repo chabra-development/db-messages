@@ -1,10 +1,10 @@
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+import { BackgroundProvider } from "@/providers/background-provider"
 import { ThemeProvider } from "@/providers/theme-provider"
+import { Analytics } from "@vercel/analytics/next"
 import { Roboto_Mono } from "next/font/google"
 import { ReactNode } from "react"
-import { Background } from "@/components/background"
-import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
 const roboto = Roboto_Mono({
@@ -26,9 +26,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           attribute="class"
           defaultTheme="system"
         >
-          <Background>
+          <BackgroundProvider>
             {children}
-          </Background>
+          </BackgroundProvider>
         </ThemeProvider>
         <Analytics />
         <Toaster />

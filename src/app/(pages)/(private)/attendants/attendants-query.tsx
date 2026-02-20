@@ -1,8 +1,5 @@
 "use client"
 
-import {
-    ImportAttendantsForm
-} from "@/components/forms/form-import-attendants/import-attendants-form"
 import { Pagination } from "@/components/pagination"
 import { SearchInput } from "@/components/seach-input"
 import {
@@ -16,10 +13,13 @@ import {
     Card,
     CardAction,
     CardContent,
+    CardDescription,
     CardFooter,
-    CardHeader
+    CardHeader,
+    CardTitle
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ImportAttendantsForm } from "@/forms/form-import-attendants/import-attendants-form"
 import { Filter } from "lucide-react"
 import { AttendantCard } from "./attendant-card"
 import { AttendantsQueryLoading } from "./attendants-query-loading"
@@ -53,6 +53,14 @@ export const AttendantsQuery = () => {
 
     return (
         <Card className="flex-1 border-none rounded-none gap-0">
+            <CardHeader className="mb-4">
+                <CardTitle className="text-2xl">
+                    Atendentes
+                </CardTitle>
+                <CardDescription>
+                    Gerencie e visualize todos os atendentes do sistema. Busque por nome, filtre por listas e importe novos atendentes em massa.
+                </CardDescription>
+            </CardHeader>
             <CardHeader className="border-b py-4">
                 <div className="flex flex-col gap-3 min-w-0">
                     <SearchInput

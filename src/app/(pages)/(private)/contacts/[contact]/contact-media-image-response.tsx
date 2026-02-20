@@ -61,8 +61,6 @@ export const ContactImageResponse = ({
     const [typeSplited] = type.split("/")
     const Icon = typeSplited === "video" ? FileVideo : FileImage
 
-    console.log({ typeSplited, thumb })
-
     return (
         <a
             href={`#${id}`}

@@ -1,13 +1,9 @@
-// src/hooks/use-import-progress.ts
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
 import { getImportProgress } from "@/actions/jobs/get-import-progress"
 import type { ImportProgress } from "@/types/import-job.types"
 import type { ImportJobStatus } from "@prisma/client"
-
-// ⚠️ REMOVER a interface ImportProgress daqui
-// ✅ Agora usa o tipo importado de @/types/import-job.types
 
 interface UseImportProgressOptions {
     jobId: string | null

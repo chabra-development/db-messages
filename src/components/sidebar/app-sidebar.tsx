@@ -70,8 +70,6 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 		},
 	] as const
 
-	console.log(pathname)
-
 	return (
 		<Sidebar
 			variant="floating"

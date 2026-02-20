@@ -1,17 +1,29 @@
 "use client"
 
-/**
- * Hook para obter a cor dos LightRays baseado no tema
- * Versão atualizada com cores mais visíveis no modo claro
- */
-
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
-type Variant = "muted" | "primary" | "accent" | "ring"
+export type Variant = "muted" | "primary" | "accent" | "ring"
+
+export const colors = {
+  light: {
+    // Opções para tema claro (mais visíveis)
+    muted: "rgba(156, 163, 175, 0.35)",      // Cinza suave mais visível
+    primary: "rgba(36, 36, 41, 0.18)",       // Primary mais visível
+    accent: "rgba(99, 102, 241, 0.25)",      // Roxo/Azul mais visível
+    ring: "rgba(180, 183, 194, 0.4)",        // Ring mais visível
+  },
+  dark: {
+    // Opções para tema escuro (mantém suave)
+    muted: "rgba(255, 255, 255, 0.05)",      // Branco suave
+    primary: "rgba(235, 235, 240, 0.08)",    // Primary suave
+    accent: "rgba(124, 58, 237, 0.15)",      // Roxo suave
+    ring: "rgba(141, 145, 167, 0.2)",        // Ring suave
+  }
+}
 
 export const useLightRaysColor = (value: Variant) => {
-  
+
   const { theme, systemTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -28,22 +40,6 @@ export const useLightRaysColor = (value: Variant) => {
   const currentTheme = theme === "system" ? systemTheme : theme
 
   // Cores que casam com shadcn-ui
-  const colors = {
-    light: {
-      // Opções para tema claro (mais visíveis)
-      muted: "rgba(156, 163, 175, 0.35)",      // Cinza suave mais visível
-      primary: "rgba(36, 36, 41, 0.18)",       // Primary mais visível
-      accent: "rgba(99, 102, 241, 0.25)",      // Roxo/Azul mais visível
-      ring: "rgba(180, 183, 194, 0.4)",        // Ring mais visível
-    },
-    dark: {
-      // Opções para tema escuro (mantém suave)
-      muted: "rgba(255, 255, 255, 0.05)",      // Branco suave
-      primary: "rgba(235, 235, 240, 0.08)",    // Primary suave
-      accent: "rgba(124, 58, 237, 0.15)",      // Roxo suave
-      ring: "rgba(141, 145, 167, 0.2)",        // Ring suave
-    }
-  }
 
   // Retorna a cor baseada no tema
   return currentTheme === "dark" ? colors.dark[value] : colors.light[value]
@@ -62,7 +58,7 @@ export const LIGHT_RAYS_COLORS = {
     ring: "rgba(180, 183, 194, 0.4)",        // Ring mais visível
     border: "rgba(229, 231, 235, 0.5)",      // Border
   },
-  
+
   // Tema Escuro (suave)
   dark: {
     muted: "rgba(255, 255, 255, 0.05)",      // Branco suave
