@@ -46,7 +46,6 @@ export const Aside = () => {
         activeContactId
     } = useAside
 
-    // Error state com toast
     if (error) {
         toast({
             title: error.name,

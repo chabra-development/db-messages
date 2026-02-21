@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import type { ImportProgress } from "@/types/import-job.types"
 
 export async function getImportProgress(jobId: string): Promise<ImportProgress | null> {
+    
     const job = await prisma.importJob.findUnique({
         where: { id: jobId },
     })

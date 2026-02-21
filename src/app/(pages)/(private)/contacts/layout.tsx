@@ -1,4 +1,4 @@
-import { ContactsLayoutWrapper } from "@/contacts/contacts-layout-wrapper"
+import { ContactsLayoutWrapper } from "@/app/(pages)/(private)/contacts/contacts-layout-wrapper"
 import { LayoutProps } from "@/types/index.types"
 import { Metadata } from "next"
 

@@ -31,8 +31,10 @@ export const SignOutButton = () => {
 		>
 			<LogOut />
 			<span>
-				Sair
+				{
+					isPending ? "Saindo..." : "Sair"
+				}
 			</span>
-		</DropdownMenuItem>
+		</DropdownMenuItem >
 	)
 }

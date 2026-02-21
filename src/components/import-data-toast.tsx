@@ -7,7 +7,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Progress } from "@/components/ui/progress"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { formatTimeRemaining, useImportProgress } from "@/hooks/use-import-progress"
 import {
     AlertTriangle,
@@ -41,7 +41,6 @@ export function ImportProgressToast({
         isRunning,
         isPending,
         estimatedTimeRemaining,
-        isLoading,
     } = useImportProgress({ jobId })
 
     useEffect(() => {
@@ -50,7 +49,7 @@ export function ImportProgressToast({
         }
     }, [isComplete, onComplete])
 
-    // Toast de loading inicial
+    // Toast de progresso
     useEffect(() => {
         if (isPending || isRunning) {
             toast.custom(
@@ -67,7 +66,10 @@ export function ImportProgressToast({
                 ),
                 {
                     id: `import-${jobId}`,
-                    duration: Infinity, // Não fecha automaticamente
+                    duration: Infinity,
+                    style: {
+                        width: "33vw",
+                    },
                 }
             )
         }
@@ -87,7 +89,10 @@ export function ImportProgressToast({
                 ),
                 {
                     id: `import-success-${jobId}`,
-                    duration: 10000, // 10 segundos
+                    duration: 10000,
+                    style: {
+                        width: "33vw",
+                    },
                 }
             )
         }
@@ -107,7 +112,10 @@ export function ImportProgressToast({
                 ),
                 {
                     id: `import-error-${jobId}`,
-                    duration: Infinity, // Fica até fechar manualmente
+                    duration: Infinity,
+                    style: {
+                        width: "33vw",
+                    },
                 }
             )
         }
@@ -136,7 +144,6 @@ function ImportToastContent({
     isRunning,
     isPending,
     estimatedTimeRemaining,
-    onDismiss,
 }: ImportToastContentProps) {
 
     if (!data) return null
@@ -144,7 +151,7 @@ function ImportToastContent({
     const { total, processed, succeeded, failedCount } = data
 
     return (
-        <div className="w-full max-w-xl border bg-background rounded-lg shadow-lg p-4 space-y-3">
+        <div className="size-full border bg-background rounded-lg shadow-lg p-4 space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -221,84 +228,85 @@ function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
     const { succeeded, failedCount, failed } = data
 
     return (
-        <div className="w-full max-w-xl bg-background border rounded-lg shadow-lg p-4 space-y-3">
-            {/* Header */}
-            <div className="flex items-center gap-2">
-                <div className="size-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <CheckCircle2 className="size-5 text-green-600" />
-                </div>
-                <div className="flex-1">
-                    <p className="font-semibold text-sm">Importação concluída!</p>
-                    <p className="text-xs text-muted-foreground">
-                        {succeeded} atendente(s) importado(s)
-                    </p>
-                </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={onDismiss}
-                >
-                    <XCircle className="size-4" />
-                </Button>
-            </div>
-
-            {/* Stats resumidos */}
-            <div className="flex items-center gap-4 p-3 rounded-md bg-green-500/5">
+        <ScrollArea className="h-100 max-h-120 border shadow-lg p-4 rounded-lg">
+            <ScrollBar />
+            <div className="size-full space-y-4">
+                {/* Header */}
                 <div className="flex items-center gap-2">
-                    <Users className="size-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">
-                        {succeeded} sucesso
-                    </span>
+                    <div className="size-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="size-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                        <p className="font-semibold text-sm">Importação concluída!</p>
+                        <p className="text-xs text-muted-foreground">
+                            {succeeded} item(s) importado(s) com sucesso
+                        </p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0"
+                        onClick={onDismiss}
+                    >
+                        <XCircle className="size-4" />
+                    </Button>
                 </div>
-                {failedCount > 0 && (
+
+                {/* Stats */}
+                <div className="flex items-center gap-4 p-3 rounded-md bg-green-500/5">
                     <div className="flex items-center gap-2">
-                        <AlertTriangle className="size-4 text-destructive" />
-                        <span className="text-sm font-medium text-destructive">
-                            {failedCount} falha(s)
+                        <Users className="size-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-700">
+                            {succeeded} sucesso
                         </span>
                     </div>
-                )}
-            </div>
-
-            {/* Lista de erros colapsável */}
-            {failed && failed.length > 0 && (
-                <Collapsible>
-                    <CollapsibleTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-between"
-                        >
-                            <span className="flex items-center gap-2">
-                                <AlertTriangle className="size-4" />
-                                Ver erros ({failed.length})
+                    {failedCount > 0 && (
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="size-4 text-destructive" />
+                            <span className="text-sm font-medium text-destructive">
+                                {failedCount} falha(s)
                             </span>
-                            <ChevronDown className="size-4" />
-                        </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2">
-                        <ScrollArea className="h-32">
-                            <div className="space-y-2">
+                        </div>
+                    )}
+                </div>
+
+                {/* Lista de erros colapsável com scroll */}
+                {failed && failed.length > 0 && (
+                    <Collapsible>
+                        <CollapsibleTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="size-full justify-between"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <AlertTriangle className="size-4" />
+                                    Ver erros ({failed.length})
+                                </span>
+                                <ChevronDown className="size-4" />
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2">
+                            <div className="space-y-2 pr-3">
                                 {failed.map((error: any, index: number) => (
                                     <div
                                         key={`${error.identity}-${index}`}
                                         className="p-2 rounded-md bg-destructive/5 border border-destructive/20"
                                     >
                                         <p className="text-xs font-medium text-destructive truncate">
-                                            {error.email}
+                                            {error.identity}
                                         </p>
-                                        <p className="text-xs text-muted-foreground line-clamp-1">
+                                        <p className="text-xs text-muted-foreground line-clamp-2">
                                             {error.reason}
                                         </p>
                                     </div>
                                 ))}
                             </div>
-                        </ScrollArea>
-                    </CollapsibleContent>
-                </Collapsible>
-            )}
-        </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                )}
+            </div>
+        </ScrollArea>
     )
 }
 
@@ -315,18 +323,18 @@ function ErrorToastContent({ data, onDismiss }: ErrorToastContentProps) {
     const { metadata } = data
 
     return (
-        <div className="w-full max-w-xl bg-background border border-destructive rounded-lg shadow-lg p-4 space-y-3">
+        <div className="size-full bg-background border border-destructive rounded-lg shadow-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
                 <div className="size-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
                     <XCircle className="size-5 text-destructive" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">
-                        Erro na importação
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 wrap-break-word">
-                        {metadata?.error || "Ocorreu um erro durante a importação"}
-                    </p>
+                    <p className="font-semibold text-sm">Erro na importação</p>
+                    <ScrollArea className="h-20 mt-1">
+                        <p className="text-xs text-muted-foreground wrap-break-word pr-3">
+                            {metadata?.error || "Ocorreu um erro durante a importação"}
+                        </p>
+                    </ScrollArea>
                 </div>
                 <Button
                     variant="ghost"
@@ -341,7 +349,7 @@ function ErrorToastContent({ data, onDismiss }: ErrorToastContentProps) {
             <Button
                 variant="outline"
                 size="sm"
-                className="w-full"
+                className="size-full"
                 onClick={onDismiss}
             >
                 Fechar

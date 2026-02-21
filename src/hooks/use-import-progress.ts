@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { getImportProgress } from "@/actions/jobs/get-import-progress"
+import { getImportProgress } from "@/actions/import-job/get-import-progress"
 import type { ImportProgress } from "@/types/import-job.types"
 import type { ImportJobStatus } from "@prisma/client"
 
