@@ -19,6 +19,7 @@ import { AsideLoading } from "./aside-loading"
 import { ContactCardItem } from "./contact-card-item"
 import { UseAside } from "./use-aside"
 import { ImportAllContactsButton } from "./import-all-contacts-button"
+import { ImportContactMessagesButton } from "./Import-contact-messages-button"
 
 export const Aside = () => {
 
@@ -135,8 +136,9 @@ export const Aside = () => {
                     )}
                 </CardContent>
             </ScrollArea>
-            <CardFooter className="px-2">
+            <CardFooter className="px-2 flex-col gap-2">
                 <ImportAllContactsButton />
+                <ImportContactMessagesButton />
             </CardFooter>
         </Card>
     )

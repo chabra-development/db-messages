@@ -1,41 +1,39 @@
 "use server"
 
+import { generateNameFile } from "@/actions/supabase/generate-file-name"
+import { BUCKET_NAME } from "@/constraints/bucket"
 import { supabase } from "@/lib/supabase"
-
-export function getPublicUrl(path: string) {
-
-    const { data } = supabase.storage.from("db-message").getPublicUrl(path)
-
-    const publicUrl = data.publicUrl
-
-    return publicUrl
-}
-
-export function generateNameFile(filename: string) {
-    return `${new Date()}_${filename}`
-}
+import { getPublicUrl } from "./get-public-url"
 
 export async function deleteFile(filename: string) {
 
-    const removeFile = await supabase.storage.from("db-message").remove([filename])
+    const removeFile = await supabase.storage.from(BUCKET_NAME).remove([filename])
 
     if (removeFile.error) throw new Error("Não foi possivel excluir o arquivo")
 }
 
 export async function updateFile(file: File) {
 
-    const filename = generateNameFile(file.name)
+    const filename = generateNameFile({
+        filename: file.name,
+        type: file.type
+    })
 
     const { data, error } = await supabase
         .storage
-        .from("db-message")
+        .from(BUCKET_NAME)
         .upload(filename, file, {
             cacheControl: "0",
             upsert: true,
             contentType: file.type,
         })
 
-    if (error) throw new Error("Não foi possivel atualizar a imagem")
+    if (error) {
+
+        console.log(error)
+
+        throw new Error(error.message)
+    }
 
     return data
 }

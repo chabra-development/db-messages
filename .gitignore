@@ -45,4 +45,4 @@ next-env.d.ts
 integracao_black_blip_api.md
 integracao_black_blip_api.txt
 
-seed/
+seed.ts

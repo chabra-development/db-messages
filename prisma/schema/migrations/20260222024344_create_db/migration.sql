@@ -73,7 +73,6 @@ CREATE TABLE "import_jobs" (
     "completed_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "created_by_id" TEXT NOT NULL,
 
     CONSTRAINT "import_jobs_pkey" PRIMARY KEY ("id")
 );
@@ -254,9 +253,6 @@ CREATE UNIQUE INDEX "contact_user_preferences_contact_id_user_id_key" ON "contac
 
 -- CreateIndex
 CREATE INDEX "import_jobs_status_idx" ON "import_jobs"("status");
-
--- CreateIndex
-CREATE INDEX "import_jobs_created_by_id_idx" ON "import_jobs"("created_by_id");
 
 -- CreateIndex
 CREATE INDEX "import_jobs_created_at_idx" ON "import_jobs"("created_at");
