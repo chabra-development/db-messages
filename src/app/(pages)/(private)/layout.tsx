@@ -23,7 +23,7 @@ export default async function PrivateLayout({ children }: LayoutProps) {
 			className="size-full"
 		>
 			<AppSidebar user={session.user as unknown as AuthenticatedUser} />
-			{children}
+				{children}
 		</SidebarProvider>
 	)
 }

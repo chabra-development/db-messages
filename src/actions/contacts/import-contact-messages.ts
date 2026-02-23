@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { createImportJob } from "../import-job/create-import-job"
 import { deleteImportJob } from "../import-job/delete-import-job"
 import { updateImportJobStatus } from "../import-job/update-import-job-status"
+import { createImportLog } from "../import-logs/create-import-log"
 import { processBatch } from "../messages/process-batch"
 
 // Configurações de importação
@@ -39,6 +40,8 @@ export async function importContactMessages(): Promise<ImportResult> {
         orderBy: { lastMessageDate: "desc" },
     })
 
+    const payloadSize = Buffer.byteLength(JSON.stringify(contacts), "utf-8")
+
     const job = await createImportJob({
         total: contacts.length,
         metadata: {
@@ -49,6 +52,8 @@ export async function importContactMessages(): Promise<ImportResult> {
 
         // Processa em background (não bloqueia a resposta)
         ; (async () => {
+            const startedAt = Date.now()
+
             try {
                 await updateImportJobStatus(job.id, "RUNNING")
 
@@ -77,6 +82,15 @@ export async function importContactMessages(): Promise<ImportResult> {
                     totalFailed,
                     totalMessagesCreated,
                     completedAt: new Date().toISOString(),
+                })
+
+                await createImportLog({
+                    type: "MESSAGES",
+                    total: contacts.length,
+                    succeeded: totalSucceeded,
+                    failed: totalFailed,
+                    duration: Date.now() - startedAt,
+                    payloadSize,
                 })
 
             } catch (error) {

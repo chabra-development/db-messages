@@ -1,151 +1,165 @@
 "use client"
 
-import { Pagination } from "@/components/pagination"
-import { SearchInput } from "@/components/seach-input"
+import { findManyAttendants } from "@/actions/attendants/find-many-attendants"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger
-} from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle
-} from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ImportAttendantsForm } from "@/forms/form-import-attendants/import-attendants-form"
-import { Filter } from "lucide-react"
-import { AttendantCard } from "./attendant-card"
-import { AttendantsQueryLoading } from "./attendants-query-loading"
-import { UseAttendantsQuery } from "./use-attendants"
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { Search, X } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { AttendantsDataTable } from "./data-table"
 
-export const AttendantsQuery = () => {
+export function AttendantsTableContainer() {
 
-    const useAttendantsQuery = UseAttendantsQuery()
+    const router = useRouter()
+    const searchParams = useSearchParams()
 
-    if (!useAttendantsQuery) {
-        return (
-            <AttendantsQueryLoading />
-        )
+    const take = Number(searchParams.get("take") ?? 10)
+    const skip = Number(searchParams.get("skip") ?? 0)
+
+    const [search, setSearch] = useState("")
+    const [teamFilter, setTeamFilter] = useState("all")
+    const [debouncedSearch, setDebouncedSearch] = useState("")
+
+    // Debounce de 1 segundo para o campo de pesquisa
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search)
+        }, 1000)
+
+        return () => clearTimeout(timer)
+    }, [search])
+
+    const { data, isLoading, isFetching } = useQuery({
+        queryKey: ["find-many-attendants", take, skip, debouncedSearch, teamFilter],
+        queryFn: () => findManyAttendants({
+            take: String(take),
+            skip: String(skip),
+            search: debouncedSearch || null,
+            team: teamFilter !== "all" ? teamFilter : undefined,
+            orderBy: { name: "asc" },
+        }),
+        placeholderData: keepPreviousData,
+        staleTime: 1000 * 60,
+        refetchOnWindowFocus: false,
+    })
+
+    const attendants = data?.data ?? []
+    const total = data?.count ?? 0
+    const totalPages = data?.totalPages ?? 1
+    const currentPage = data?.page ?? 1
+
+    // Extrai os times únicos dos dados retornados
+    const allTeams = Array.from(
+        new Set(attendants.flatMap((u) => u.teams))
+    ).sort()
+
+    function updateParams(params: Record<string, string>) {
+
+        const current = new URLSearchParams(searchParams.toString())
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (value) {
+                current.set(key, value)
+            } else {
+                current.delete(key)
+            }
+        })
+
+        router.replace(`?${current.toString()}`)
     }
 
-    const {
-        search,
-        setSearch,
-        uniqueTeams,
-        selectedTeams,
-        toggleTeam,
-        filteredAttendants,
-        role,
-        term,
-        hasTeamFilter,
-        page,
-        take,
-        totalPages,
-        count
-    } = useAttendantsQuery
+    function handlePageSize(value: string) {
+        updateParams({ take: value, skip: "0" })
+    }
+
+    function handlePreviousPage() {
+        updateParams({ skip: String(Math.max(0, skip - take)) })
+    }
+
+    function handleNextPage() {
+        updateParams({ skip: String(skip + take) })
+    }
+
+    function handleClearFilters() {
+        setSearch("")
+        setTeamFilter("all")
+    }
+
+    const hasFilters = search !== "" || teamFilter !== "all"
 
     return (
-        <Card className="flex-1 border-none rounded-none gap-0">
-            <CardHeader className="mb-4">
-                <CardTitle className="text-2xl">
-                    Atendentes
-                </CardTitle>
-                <CardDescription>
-                    Gerencie e visualize todos os atendentes do sistema. Busque por nome, filtre por listas e importe novos atendentes em massa.
-                </CardDescription>
-            </CardHeader>
-            <CardHeader className="border-b py-4">
-                <div className="flex flex-col gap-3 min-w-0">
-                    <SearchInput
-                        placeholder="Pesquisar atendente..."
-                        className="w-2/3"
+        <div className="space-y-4">
+            {/* Filtros */}
+            <div className="flex items-center gap-2">
+                <div className="relative max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Pesquisar por nome..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        className="pl-8"
                     />
-                    {uniqueTeams.length > 0 && (
-                        <Accordion type="single" collapsible className="w-full">
-                            <AccordionItem value="teams-filter">
-                                <AccordionTrigger
-                                    className="w-2/3 px-4 flex-none"
-                                >
-                                    <div className="flex gap-2 items-center">
-                                        <Filter className="size-4" />
-                                        Filtrar por lista
-                                    </div>
-                                    {/* <ChevronDown /> */}
-                                    {selectedTeams.size > 0 && (
-                                        <span className="ml-2 text-muted-foreground">
-                                            ({selectedTeams.size} selecionada
-                                            {selectedTeams.size === 1 ? "" : "s"})
-                                        </span>
-                                    )}
-                                </AccordionTrigger>
-                                <AccordionContent className="pt-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        {uniqueTeams.map((team) => (
-                                            <Badge
-                                                key={team}
-                                                variant={selectedTeams.has(team) ? "default" : "secondary"}
-                                                className="cursor-pointer px-3 py-1.5 rounded-md transition-colors hover:opacity-90"
-                                                onClick={() => toggleTeam(team)}
-                                                role="button"
-                                                tabIndex={0}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" || e.key === " ") {
-                                                        e.preventDefault()
-                                                        toggleTeam(team)
-                                                    }
-                                                }}
-                                            >
-                                                {team}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
-                    )}
                 </div>
-                {
-                    role === "ADMIN" && (
-                        <CardAction>
-                            <ImportAttendantsForm />
-                        </CardAction>
-                    )
-                }
-            </CardHeader>
-            <ScrollArea className="min-h-0 flex-1 py-6">
-                <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
-                    {filteredAttendants.length === 0 ? (
-                        <p className="col-span-2 text-center text-muted-foreground py-8">
-                            {term || hasTeamFilter
-                                ? "Nenhum atendente encontrado para os filtros aplicados."
-                                : "Nenhum atendente cadastrado."}
-                        </p>
-                    ) : (
-                        filteredAttendants.map((attendant, index) => (
-                            <AttendantCard
-                                key={attendant.id}
-                                attendant={attendant}
-                                index={index}
-                            />
-                        ))
-                    )}
-                </CardContent>
-            </ScrollArea>
-            <CardFooter className="border-t">
-                <Pagination
-                    paginationData={{ page, take, totalPages, count }}
-                    countLabel="Total de atendentes"
-                />
-            </CardFooter>
-        </Card>
+
+                <Select
+                    value={teamFilter}
+                    onValueChange={setTeamFilter}
+                >
+                    <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Filtrar por time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">
+                            Todos os times
+                        </SelectItem>
+                        {
+                            allTeams.map((team) => (
+                                <SelectItem
+                                    key={team}
+                                    value={team}
+                                >
+                                    {team}
+                                </SelectItem>
+                            ))
+                        }
+                    </SelectContent>
+                </Select>
+
+                {hasFilters && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearFilters}
+                        className="text-muted-foreground"
+                    >
+                        <X className="mr-1 size-4" />
+                        Limpar
+                    </Button>
+                )}
+            </div>
+
+            {/* Tabela */}
+            <AttendantsDataTable
+                data={attendants}
+                total={total}
+                totalPages={totalPages}
+                currentPage={currentPage}
+                isLoading={isLoading}
+                isFetching={isFetching}
+                take={take}
+                skip={skip}
+                onPreviousPage={handlePreviousPage}
+                onNextPage={handleNextPage}
+                onPageSize={handlePageSize}
+            />
+        </div>
     )
-}  
+}

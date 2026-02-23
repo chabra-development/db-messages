@@ -1,5 +1,6 @@
 "use server"
 
+import { delay } from "@/functions/delay"
 import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -26,15 +27,10 @@ function chunkArray<T>(array: T[], size: number): T[][] {
     for (let i = 0; i < array.length; i += size) {
         chunks.push(array.slice(i, i + size))
     }
+
     return chunks
 }
 
-/**
- * Aguarda um tempo determinado
- */
-function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 /**
  * Valida e-mail básico

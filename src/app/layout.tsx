@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { BackgroundProvider } from "@/providers/background-provider"
 import { ThemeProvider } from "@/providers/theme-provider"
@@ -22,14 +23,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <head />
       <body className={cn(roboto.className, "antialiased")}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-        >
-          <BackgroundProvider>
-            {children}
-          </BackgroundProvider>
-        </ThemeProvider>
+        <TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+          >
+            <BackgroundProvider>
+              {children}
+            </BackgroundProvider>
+          </ThemeProvider>
+        </TooltipProvider>
         <Analytics />
         <Toaster />
       </body>

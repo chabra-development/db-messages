@@ -37,6 +37,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.2",
+    "@tanstack/react-table": "^8.21.3",
     "@untitledui/icons": "^0.0.21",
     "@vercel/analytics": "^1.6.1",
     "axios": "^1.13.2",

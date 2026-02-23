@@ -40,3 +40,9 @@ enum ImportJobStatus {
 
   @@map("import_job_status")
 }
+
+enum ImportLogType {
+  CONTACTS
+  ATTENDANTS
+  MESSAGES
+}
