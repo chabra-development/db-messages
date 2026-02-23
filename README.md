@@ -536,3 +536,4 @@ Se este projeto foi útil, dê uma ⭐ no GitHub!
 Made with ❤️ using React 19, Next.js 16, and React Compiler
 
 </div>
+
