@@ -462,136 +462,6 @@ export async function myServerAction() {
 
 ---
 
-## 🗄️ Banco de Dados
-
-### Schema Principal
-
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  sessions  Session[]
-  accounts  Account[]
-}
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  expiresAt DateTime
-  
-  user      User     @relation(fields: [userId], references: [id])
-}
-
-model Account {
-  id        String   @id @default(cuid())
-  userId    String
-  provider  String
-  
-  user      User     @relation(fields: [userId], references: [id])
-}
-
-model ImportJob {
-  id        String   @id @default(cuid())
-  status    String
-  progress  Int      @default(0)
-  total     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
-
-### Migrações
-
-```bash
-# Criar nova migração
-npx prisma migrate dev --name minha_migracao
-
-# Reset database (cuidado!)
-npx prisma migrate reset
-
-# Deploy em produção
-npx prisma migrate deploy
-```
-
----
-
-## 🧪 Testes
-
-```bash
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Coverage
-npm run test:coverage
-```
-
-### Exemplo de teste
-
-```typescript
-import { render, screen } from "@testing-library/react"
-import { MyComponent } from "./my-component"
-
-describe("MyComponent", () => {
-  it("should render correctly", () => {
-    render(<MyComponent />)
-    expect(screen.getByText("Hello")).toBeInTheDocument()
-  })
-})
-```
-
----
-
-## 📦 Build e Deploy
-
-### Build para produção
-
-```bash
-npm run build
-```
-
-### Deploy na Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/db-messages)
-
-1. Conecte seu repositório GitHub
-2. Configure as variáveis de ambiente
-3. Deploy automático em cada push
-
-### Variáveis de ambiente necessárias
-
-```env
-DATABASE_URL
-BETTER_AUTH_SECRET
-BETTER_AUTH_URL
-BLIP_API_KEY
-BLIP_AUTHORIZATION
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
----
-
-## 🔍 Debugging
-
-### React DevTools
-
-```bash
-npm install -D @react-devtools/core
-```
-
-### Prisma Studio
-
-```bash
-npx prisma studio
-```
-
 ### TanStack Query DevTools
 
 Já incluído no projeto! Acesse no modo desenvolvimento.
@@ -617,16 +487,6 @@ Já incluído no projeto! Acesse no modo desenvolvimento.
 
 ---
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Siga estes passos:
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
 ### Padrões de Código
 
 - ✅ Use **TypeScript** em todos os arquivos
@@ -634,18 +494,6 @@ Contribuições são bem-vindas! Siga estes passos:
 - ✅ Escreva testes para novas features
 - ✅ Documente mudanças significativas
 - ✅ Use **Conventional Commits**
-
-### Conventional Commits
-
-```bash
-feat: adiciona nova funcionalidade
-fix: corrige bug
-docs: atualiza documentação
-style: mudanças de formatação
-refactor: refatoração de código
-test: adiciona ou atualiza testes
-chore: tarefas de manutenção
-```
 
 ---
 
@@ -661,28 +509,6 @@ chore: tarefas de manutenção
 
 ---
 
-## 🗺️ Roadmap
-
-### Q1 2025
-- [ ] Suporte a anexos (imagens, PDFs)
-- [ ] Notificações em tempo real
-- [ ] Tema customizável por usuário
-- [ ] Export de conversas (CSV, JSON)
-
-### Q2 2025
-- [ ] App mobile (React Native)
-- [ ] Integração com WhatsApp Business
-- [ ] Dashboard de analytics
-- [ ] API pública (REST + GraphQL)
-
-### Q3 2025
-- [ ] IA para sugestões de resposta
-- [ ] Chatbot customizável
-- [ ] Multi-tenancy
-- [ ] Webhooks
-
----
-
 ## 📄 Licença
 
 Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
@@ -693,28 +519,7 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 
 Desenvolvido com ❤️ por:
 
-- **Seu Nome** - [@seu-github](https://github.com/seu-usuario)
-
----
-
-## 🙏 Agradecimentos
-
-- [Vercel](https://vercel.com) - Hospedagem
-- [Blip](https://blip.ai) - Plataforma de mensagens
-- [shadcn/ui](https://ui.shadcn.com) - Componentes UI
-- [Radix UI](https://www.radix-ui.com) - Primitivos acessíveis
-- Comunidade React e Next.js
-
----
-
-## 📞 Suporte
-
-Precisa de ajuda? 
-
-- 📧 Email: suporte@db-messages.com
-- 💬 Discord: [Link do servidor](https://discord.gg/seu-servidor)
-- 🐛 Issues: [GitHub Issues](https://github.com/seu-usuario/db-messages/issues)
-- 📖 Docs: [Documentação completa](https://docs.db-messages.com)
+- **Nathan Ferreira** - [@N7thz](https://github.com/N7thz)
 
 ---
 
