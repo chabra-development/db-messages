@@ -1,17 +1,17 @@
 "use client"
 
+import { LinkPreviewCard } from "@/components/link-preview-card"
 import {
     Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
     CardHeader,
     CardTitle,
-    CardFooter,
-    CardDescription,
-    CardContent,
 } from "@/components/ui/card"
-
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { format } from "date-fns"
-import { LinkPreviewCard } from "@/components/link-preview-card"
 import { z } from "zod"
 
 const URL_REGEX = /https?:\/\/[^\s]+/g
@@ -129,18 +129,20 @@ export const ContactMessageWithLink = ({
     content,
     date,
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
     content: string
-    date: string
+    date: Date
 }) => {
 
     const { parts, urls } = parseMessageContent(content)
+
+    const isSent = direction === MessageDirection.SENT
 
     return (
         <Card
             className={cn(
                 "max-w-1/2 w-full text-sm py-2 gap-2",
-                direction === "sent"
+                isSent
                     ? "ml-auto bg-message rounded-tr-none"
                     : "mr-auto bg-muted rounded-tl-none"
             )}
@@ -166,7 +168,7 @@ export const ContactMessageWithLink = ({
                                 rel="noopener noreferrer"
                                 className={cn(
                                     "underline underline-offset-2 transition-colors",
-                                    direction === "sent"
+                                    isSent
                                         ? "text-primary-foreground/90 hover:text-primary-foreground"
                                         : "text-primary hover:text-primary/80"
                                 )}

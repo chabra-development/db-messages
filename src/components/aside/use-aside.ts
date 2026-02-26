@@ -1,89 +1,91 @@
-import { findManyContacts } from "@/actions/blip/find-many-contacts"
-import {
-    normalizeWhatsAppIdentify
-} from "@/functions/normalize-whatsapp-identify"
+// use-aside.ts
+import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { useDebounce } from "@/hooks/use-debounce"
 import { LimeContact } from "@/types/lime-collection-response.types"
-import { useQuery } from "@tanstack/react-query"
+import { Contact } from "@prisma/client"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
+
+const TAKE = 20
 
 export function UseAside() {
 
     const [searchQuery, setSearchQuery] = useState("")
     const [activeContactId, setActiveContactId] = useState<string | null>(null)
 
-    // Debounce da pesquisa para melhor performance
     const debouncedSearch = useDebounce(searchQuery, 500)
-
-    // Indica se está digitando (diferença entre query e debounced)
     const isSearching = searchQuery !== debouncedSearch
+    const hasSearch = debouncedSearch.trim().length > 0
 
-    const {
-        data,
-        isLoading,
-        error,
-        refetch,
-        isFetching
-    } = useQuery({
-        queryKey: ["find-many-contacts"],
-        queryFn: () => findManyContacts(),
+    // ── Scroll infinito (sem busca) ──────────────────────────────
+    const infiniteQuery = useInfiniteQuery({
+        queryKey: ["contacts"],
+        queryFn: ({ pageParam }) =>
+            findManyContacts({ cursor: pageParam, take: TAKE }),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        enabled: !hasSearch,
     })
 
-    // Filtra e busca contatos (memoizado para performance)
-    const filteredContacts = (() => {
-        
-        if (!data) return []
+    // ── Busca server-side ────────────────────────────────────────
+    const searchQuery_ = useQuery({
+        queryKey: ["contacts-search", debouncedSearch],
+        queryFn: () =>
+            findManyContacts({
+                where: {
+                    OR: [
+                        { name: { contains: debouncedSearch, mode: "insensitive" } },
+                        { identity: { contains: debouncedSearch, mode: "insensitive" } },
+                    ],
+                },
+            }),
+        enabled: hasSearch,
+    })
 
-        const uniqueItems = data.resource.items
+    const isLoading = hasSearch
+        ? searchQuery_.isLoading
+        : infiniteQuery.isLoading
 
-        if (!debouncedSearch.trim()) {
-            return uniqueItems
-        }
+    const isFetching = hasSearch
+        ? searchQuery_.isFetching
+        : infiniteQuery.isFetching
 
-        const query = debouncedSearch.toLowerCase().trim()
+    const error = hasSearch
+        ? searchQuery_.error
+        : infiniteQuery.error
 
-        return uniqueItems.filter((contact) => {
-            const name = contact.name?.toLowerCase() ?? ""
-            const identity = normalizeWhatsAppIdentify(contact.identity).toLowerCase()
-            const extras = contact.extras
-                ? JSON.stringify(contact.extras).toLowerCase()
-                : ""
+    const refetch = hasSearch
+        ? searchQuery_.refetch
+        : infiniteQuery.refetch
 
-            return (
-                name.includes(query) ||
-                identity.includes(query) ||
-                extras.includes(query)
-            )
-        })
-    })()
+    const contacts = hasSearch
+        ? (searchQuery_.data?.data ?? [])
+        : (infiniteQuery.data?.pages.flatMap((p) => p.data) ?? [])
 
+    const totalContacts = hasSearch
+        ? (searchQuery_.data?.data.length ?? 0)
+        : (infiniteQuery.data?.pages[0]?.data.length ?? 0) // placeholder até ter count
 
-    // Handler para limpar pesquisa
-    const handleClearSearch = () => setSearchQuery("")
-
-    // Handler para selecionar contato
-    const handleSelectContact = (contact: LimeContact) => setActiveContactId(contact.identity)
-
-    if (!data || isLoading) return
-
-    const totalContacts = data.resource.total
-    const filteredCount = filteredContacts.length
-    const hasSearch = debouncedSearch.trim().length > 0
+    if (isLoading) return undefined
 
     return {
         error,
         refetch,
         searchQuery,
         setSearchQuery,
-        handleClearSearch,
+        handleClearSearch: () => setSearchQuery(""),
+        handleSelectContact: (contact: Contact) => setActiveContactId(contact.identity),
         isSearching,
         hasSearch,
-        filteredCount,
-        totalContacts,
         isFetching,
-        filteredContacts,
         debouncedSearch,
-        handleSelectContact,
-        activeContactId
+        activeContactId,
+        contacts,
+        totalContacts,
+        filteredCount: contacts.length,
+        // scroll infinito
+        fetchNextPage: infiniteQuery.fetchNextPage,
+        hasNextPage: infiniteQuery.hasNextPage,
+        isFetchingNextPage: infiniteQuery.isFetchingNextPage,
     }
 }

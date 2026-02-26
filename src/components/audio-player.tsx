@@ -1,8 +1,6 @@
 "use client"
 
-import { Car, PauseIcon, PlayIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import {
     AudioPlayerButton,
     AudioPlayerDuration,
@@ -13,8 +11,9 @@ import {
     useAudioPlayer,
     useAudioPlayerTime,
 } from "@/components/ui/audio-player"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ComponentProps } from "react"
+import { Card, CardContent, CardDescription, CardFooter } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 type Track = {
@@ -27,8 +26,8 @@ type AudioPlayerProps = & {
     url: string
     name?: string
     id?: string
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
 }
 
 export function AudioPlayer({
@@ -49,11 +48,13 @@ export function AudioPlayer({
 }
 
 type PlayerProps = {
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
 }
 
 const Player = ({ direction, date }: PlayerProps) => {
+
+    const isSent = direction === MessageDirection.SENT
 
     const player = useAudioPlayer<Track>()
 
@@ -63,7 +64,7 @@ const Player = ({ direction, date }: PlayerProps) => {
         <Card className={cn(
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
-            direction === "sent"
+            isSent
                 ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none",
         )}>

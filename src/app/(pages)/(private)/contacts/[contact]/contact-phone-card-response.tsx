@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 import { CircleUserRound } from "lucide-react"
 
@@ -16,15 +17,18 @@ export const ContactPhoneCardResponse = ({
     title,
     response
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
+    date: Date
     title: string
-    date: string,
     response: string
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card className={cn(
             "w-1/3 max-w-7/10 text-sm  py-1 gap-2",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "bg-muted rounded-tl-none"
         )}>

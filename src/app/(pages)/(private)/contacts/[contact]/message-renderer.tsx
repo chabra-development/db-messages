@@ -7,7 +7,6 @@ import { ContactImageResponse } from "@/contacts/contact-media-image-response"
 import { ContactMediaSticker } from "@/contacts/contact-media-sticker"
 import { ContactMediaVideo } from "@/contacts/contact-media-video"
 import { ContactMessage } from "@/contacts/contact-message"
-import { ContactMessageWithLink } from "./contact-message-with-link"
 import { ContactPhoneCard } from "@/contacts/contact-phone-card"
 import {
     ContactPhoneCardResponse
@@ -38,20 +37,36 @@ import {
     isLimeSelectContent,
     isLimeTicketContent,
 } from "@/guards/lime-thread-messages.guards"
-import { LimeThreadMessage } from "@/types/lime-thread-messages-response.types"
+import { Message, MessageDirection } from "@prisma/client"
+import { ContactMessageWithLink } from "./contact-message-with-link"
 
 export type MessageRendererProps = {
-    message: LimeThreadMessage
+    message: Message
 }
 
 export const MessageRenderer = ({ message }: MessageRendererProps) => {
-    const { id, direction, content, date } = message
+
+    const { id, direction, content, sentAt } = message
+
+    const isSent = direction === MessageDirection.SENT
 
     // ── TEXT ──────────────────────────────────────────────
     if (typeof content === "string") {
         return isSafePublicUrl(content)
-            ? <ContactMessageWithLink date={date} content={content} direction={direction} />
-            : <ContactMessage date={date} content={content} direction={direction} />
+            ? (
+                <ContactMessageWithLink
+                    date={sentAt}
+                    content={content}
+                    direction={direction}
+                />
+            )
+            : (
+                <ContactMessage
+                    date={sentAt}
+                    content={content}
+                    direction={direction}
+                />
+            )
     }
 
     // ── TICKET ────────────────────────────────────────────
@@ -68,7 +83,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     if (isLimeEmojiReaction(content)) {
         return (
             <ContactMessage
-                date={date}
+                date={sentAt}
                 direction={direction}
                 content={renderEmoji(content.emoji)}
             />
@@ -77,22 +92,40 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
 
     // ── CONTACT ───────────────────────────────────────────
     if (isLimeContactPayload(content)) {
-        return <ContactPhoneCard content={content} date={date} direction={direction} />
+        return (
+            <ContactPhoneCard
+                content={content}
+                date={sentAt}
+                direction={direction}
+            />
+        )
     }
 
     // ── MEDIA ─────────────────────────────────────────────
     if (isLimeMediaContent(content)) {
         if (content.type === "audio/ogg") {
-            return <AudioPlayer url={content.uri} date={date} direction={direction} />
+            return (
+                <AudioPlayer
+                    url={content.uri}
+                    date={sentAt}
+                    direction={direction}
+                />
+            )
         }
         if (content.type.includes("video/mp4")) {
-            return <ContactMediaVideo date={date} direction={direction} uri={content.uri} />
+            return (
+                <ContactMediaVideo
+                    date={sentAt}
+                    direction={direction}
+                    uri={content.uri}
+                />
+            )
         }
         if (content.type.includes("image/jpeg")) {
             return (
                 <ContactMediaImage
                     id={id}
-                    date={date}
+                    date={sentAt}
                     direction={direction}
                     uri={content.uri}
                     type={content.type}
@@ -102,7 +135,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
         if (content.type.includes("sticker/webp")) {
             return (
                 <ContactMediaSticker
-                    date={date}
+                    date={sentAt}
                     direction={direction}
                     uri={content.uri}
                     type={content.type}
@@ -112,8 +145,14 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     }
 
     // ── SELECT ────────────────────────────────────────────
-    if (isLimeSelectContent(content) && !content.scope && direction === "sent") {
-        return <ContactScopeAvaliation content={content} date={date} direction={direction} />
+    if (isLimeSelectContent(content) && !content.scope && isSent) {
+        return (
+            <ContactScopeAvaliation
+                content={content}
+                date={sentAt}
+                direction={direction}
+            />
+        )
     }
 
     // ── INTERACTIVE (OUTBOUND) ────────────────────────────
@@ -121,7 +160,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
         if (isLimeInteractiveList(content.interactive)) {
             return (
                 <ContactInterativeList
-                    date={date}
+                    date={sentAt}
                     direction={direction}
                     sections={content.interactive.action.sections}
                     title={content.interactive.body.text}
@@ -133,7 +172,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
                 <ContactInterative
                     title={content.interactive.body.text}
                     buttons={content.interactive.action.buttons}
-                    date={date}
+                    date={sentAt}
                     direction={direction}
                 />
             )
@@ -145,24 +184,24 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
         return (
             <>
                 <ContactScopeTextResponse
-                    date={date}
+                    date={sentAt}
                     direction={direction}
                     title={content.replied.value}
                     content={content}
                 />
-                {isLimeInteractiveList(content.inReplyTo.value.interactive) && direction === "sent" && (
+                {isLimeInteractiveList(content.inReplyTo.value.interactive) && isSent && (
                     <ContactInterativeList
                         title={content.inReplyTo.value.interactive.body.text}
                         sections={content.inReplyTo.value.interactive.action.sections}
-                        date={date}
+                        date={sentAt}
                         direction={direction}
                     />
                 )}
-                {isLimeInteractiveButton(content.inReplyTo.value.interactive) && direction === "sent" && (
+                {isLimeInteractiveButton(content.inReplyTo.value.interactive) && isSent && (
                     <ContactInterative
                         title={content.inReplyTo.value.interactive.body.text}
                         buttons={content.inReplyTo.value.interactive.action.buttons}
-                        date={date}
+                        date={sentAt}
                         direction={direction}
                     />
                 )}
@@ -174,7 +213,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     if (isLimeReplyToText(content)) {
         return (
             <ContactReplyToText
-                date={date}
+                date={sentAt}
                 direction={direction}
                 title={content.replied.value}
                 response={content.inReplyTo.value}
@@ -186,7 +225,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     if (isLimeReplyToSelect(content)) {
         return (
             <ContactReplyToSelectResponse
-                date={date}
+                date={sentAt}
                 direction={direction}
                 response={content.inReplyTo.value.text}
                 title={content.replied.value}
@@ -198,7 +237,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     if (isLimeReplyToMedia(content)) {
         return (
             <ContactImageResponse
-                date={date}
+                date={sentAt}
                 direction={direction}
                 uri={content.inReplyTo.value.uri}
                 type={content.inReplyTo.value.type}
@@ -212,7 +251,7 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     if (isLimeReplyToContact(content)) {
         return (
             <ContactPhoneCardResponse
-                date={date}
+                date={sentAt}
                 direction={direction}
                 response={content.inReplyTo.value.name}
                 title={content.replied.value}

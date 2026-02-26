@@ -1,32 +1,36 @@
 'use client'
 
-import {
-    normalizeWhatsAppIdentify
-} from "@/functions/normalize-whatsapp-identify"
-import { cn } from "@/lib/utils"
-import { LimeContact } from "@/types/lime-collection-response.types"
-import { Phone } from "lucide-react"
-import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import Link from "next/link"
 import { phoneNumberBRSchema } from "@/functions/validate-phone-number"
+import { cn } from "@/lib/utils"
+import { Phone } from "lucide-react"
+import Link from "next/link"
+import { toast } from "sonner"
+import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { Contact } from "@prisma/client"
+
 interface ContactCardItemProps {
-    limeContact: LimeContact
+    contact: Contact
     searchQuery?: string
     onClick?: () => void
     isActive?: boolean
 }
 
 export function ContactCardItem({
-    limeContact,
+    contact,
     searchQuery,
     onClick,
     isActive = false
 }: ContactCardItemProps) {
 
-    const identity = normalizeWhatsAppIdentify(limeContact.identity)
-    const name = limeContact.name || "Sem nome"
+    const name = contact.name || "Sem nome"
 
-    const phoneNumber = phoneNumberBRSchema.parse(limeContact.phoneNumber)
+    const { data: phoneNumber, error } = phoneNumberBRSchema.safeParse(contact.phoneNumber)
+
+    if (error) {
+        toast.error(error.message)
+
+        return
+    }
 
     // Função para destacar o texto da busca
     const highlightText = (text: string) => {
@@ -61,7 +65,7 @@ export function ContactCardItem({
     return (
         <Link
             onNavigate={onClick}
-            href={`/contacts/${identity}`}
+            href={`/contacts/${contact.id}`}
             prefetch
         >
             <Card className={cn(

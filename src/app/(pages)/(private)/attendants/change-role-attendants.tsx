@@ -70,7 +70,6 @@ export const ChangeRoleUserDialog = ({ user }: { user: User }) => {
                         ) : null}
                         {isActive ? "Desativar atendente" : "Ativar atendente"}
                     </DropdownMenuItem>
-
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>

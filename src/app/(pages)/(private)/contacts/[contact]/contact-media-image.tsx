@@ -1,5 +1,6 @@
 import { Card, CardDescription, CardFooter } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 import Image from "next/image"
 import { useState } from "react"
@@ -11,8 +12,8 @@ export const ContactMediaImage = ({
     type,
     id
 }: {
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
     uri: string
     type: string
     id: string
@@ -21,12 +22,14 @@ export const ContactMediaImage = ({
     const [loaded, setLoaded] = useState(false)
     const [dimensions, setDimensions] = useState({ width: 400, height: 400 })
 
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card
             id={id}
             className={cn(
                 "relative w-full max-w-1/2 border-none shadow-none p-2",
-                direction === "sent"
+                isSent
                     ? "bg-message"
                     : "dark:bg-muted bg-zinc-100"
             )}

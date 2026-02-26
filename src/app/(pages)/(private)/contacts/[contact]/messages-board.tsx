@@ -1,25 +1,23 @@
 import { Card, CardContent, CardDescription } from "@/components/ui/card"
 import { isUnknownContent } from "@/guards/lime-thread-messages.guards"
 import { cn } from "@/lib/utils"
-import { useRef, useEffect } from "react"
+import { Message } from "@prisma/client"
+import { useEffect, useRef } from "react"
 import { MessageRenderer } from "./message-renderer"
 import { SystemInfoDate } from "./system-info-date"
-import { 
-    LimeThreadMessagesResource 
-} from "@/types/lime-thread-messages-response.types"
 
-type MessagesBoardProps = { resource: LimeThreadMessagesResource }
+type MessagesBoardProps = { messages: Message[] }
 
 // messages-board.tsx
-export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
+export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
 
     const bottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" })
-    }, [resource.items.length])
+    }, [messages.length])
 
-    if (resource.items.length === 0) {
+    if (messages.length === 0) {
         return (
             <Card className="flex-1 h-full bg-transparent border-none">
                 <CardContent className="size-full flex justify-center">
@@ -32,7 +30,7 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
     }
 
     // ✅ valida uma vez, fora do map
-    const unknownMessage = resource.items.find(
+    const unknownMessage = messages.find(
         ({ content }) => isUnknownContent(content)
     )
 
@@ -44,7 +42,7 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
     }
 
     // ✅ toReversed() não muta o original
-    const itemsReversed = resource.items.toReversed()
+    const itemsReversed = messages.toReversed()
 
     return (
         <CardContent className="space-y-2 px-2">
@@ -53,10 +51,14 @@ export const MessagesBoard = ({ resource }: MessagesBoardProps) => {
                     key={message.id}
                     className={cn(
                         "w-full max-w-full min-w-0 flex flex-col",
-                        message.direction === "sent" ? "items-end" : "items-start"
+                        message.direction === "SENT" ? "items-end" : "items-start"
                     )}
                 >
-                    <SystemInfoDate index={index} array={array} date={message.date} />
+                    <SystemInfoDate
+                        index={index}
+                        array={array}
+                        date={message.sentAt}
+                    />
                     <MessageRenderer message={message} />
                 </div>
             ))}

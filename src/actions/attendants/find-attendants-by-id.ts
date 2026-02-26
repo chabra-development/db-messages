@@ -3,16 +3,9 @@
 import { prisma } from "@/lib/prisma"
 
 export async function findAttendantsById(id: string) {
-
-    const user = await prisma.user.findUnique({
+    return await prisma.user.findUniqueOrThrow({
         where: {
             id
         }
     })
-
-    if (!user) {
-        throw new Error("O usuário não foi encontrado.")
-    }
-
-    return user
 }

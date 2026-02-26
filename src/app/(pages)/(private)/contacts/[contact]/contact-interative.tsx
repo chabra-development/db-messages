@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import {
     LimeInteractiveReplyButton
 } from "@/types/lime-thread-messages-response.types"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 export const ContactInterative = ({
@@ -20,16 +21,19 @@ export const ContactInterative = ({
     date,
     buttons
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
+    date: Date
     title: string
-    date: string
     buttons: LimeInteractiveReplyButton[]
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card className={cn(
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none",
         )}>

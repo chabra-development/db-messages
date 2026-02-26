@@ -1,12 +1,13 @@
-import { 
-    Card, 
-    CardDescription, 
-    CardFooter, 
-    CardHeader, 
-    CardTitle 
+import {
+    Card,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
 } from "@/components/ui/card"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 export const ContactScopeTextResponse = ({
@@ -15,19 +16,20 @@ export const ContactScopeTextResponse = ({
     title,
     content
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
+    date: Date
     title: string
-    date: string,
     content: any
 }) => {
 
     const response = content.inReplyTo.value.interactive.body.text
+    const isSent = direction === MessageDirection.SENT
 
     return (
         <Card className={cn(
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10 py-1 gap-2",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "bg-muted rounded-tl-none"
         )}>

@@ -1,12 +1,6 @@
 "use client"
 
-import {
-    findContactIdByNumberPhone
-} from "@/actions/blip/find-contact-id-by-number-phone"
-import {
-    findMessagesByIdentifyContact
-} from "@/actions/blip/find-messages-by-identify-contact"
-import { MessagesBoard } from "@/contacts/messages-board"
+import { findContactById } from "@/actions/contacts/find-contact-by-id"
 import { toast } from "@/components/toast"
 import {
     Card,
@@ -16,35 +10,35 @@ import {
     CardTitle
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-    normalizeWhatsAppIdentify
-} from "@/functions/normalize-whatsapp-identify"
+import { MessagesBoard } from "@/contacts/messages-board"
 import { useQuery } from "@tanstack/react-query"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
+import { Prisma } from "@prisma/client"
 
-export const ContactsQuery = ({ identity }: { identity: string }) => {
+export type ContactWithRelations = Prisma.ContactGetPayload<{
+    include: {
+        messages: true
+        tags: true
+    }
+}>
 
-    const numberPhone = normalizeWhatsAppIdentify(identity).slice(0, 13)
-
-    const {
-        data: contact,
-        isLoading: contactIsLoading
-    } = useQuery({
-        queryKey: ["find-contact-id-by-number-phone", identity],
-        queryFn: () => findContactIdByNumberPhone(numberPhone),
-    })
+export const ContactsQuery = ({ id }: { id: string }) => {
 
     const {
-        data,
-        isLoading,
         error,
+        data: contact,
+        isLoading,
         refetch
     } = useQuery({
-        queryKey: ["find-many-messages-by-identify", identity],
-        queryFn: () => findMessagesByIdentifyContact(identity),
+        queryKey: ["find-many-contacts", id],
+        queryFn: () => findContactById<ContactWithRelations>(id, {
+            include: {
+                messages: true,
+                tags: true,
+            }
+        }),
     })
 
     if (error) {
@@ -59,42 +53,34 @@ export const ContactsQuery = ({ identity }: { identity: string }) => {
             }
         })
 
-        return null
+        return
     }
 
-    if (isLoading || !data) {
+    if (isLoading || !contact) {
         return <ContactsQueryLoading />
     }
 
-    const { resource } = data
+    const { name, phoneNumber, messages } = contact
 
     return (
         <Card className="size-full border-none rounded-none gap-0">
             {contact && (
                 <CardHeader className="border-b pb-3 gap-0">
                     <CardTitle className="text-2xl mb-1.25 truncate">
-                        {contactIsLoading ? (
-                            <Skeleton className="h-8 w-1/2 rounded-full" />
-                        ) : (
-                            contact.resource.fullName
-                        )}
+                        {name}
                     </CardTitle>
                     <CardDescription className="truncate">
-                        {contactIsLoading ? (
-                            <Skeleton className="h-6 w-full rounded-full" />
-                        ) : (
-                            contact.resource.phoneNumber
-                        )}
+                        {phoneNumber && phoneNumber}
                     </CardDescription>
                     <CardAction className="flex items-center gap-2">
                         <ContactHeaderSearch />
-                        <ContactHeaderDropMenu />
+                        <ContactHeaderDropMenu contactId={id} />
                     </CardAction>
                 </CardHeader>
             )}
             <ScrollArea className="flex-1 min-h-1 py-8">
                 <ScrollBar />
-                <MessagesBoard resource={resource} />
+                <MessagesBoard messages={messages} />
             </ScrollArea>
         </Card>
     )

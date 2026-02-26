@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils"
 import { formatDate } from "date-fns"
 import { ContactInterativeListRow } from "./contact-interative-list-row"
 import { stringToHTML } from "@/functions/string-to-HTML"
+import { MessageDirection } from "@prisma/client"
 
 type ContactInterativeListProps = {
-    direction: "sent" | "received"
+    direction: MessageDirection
+    date: Date
     title: string
-    date: string
     sections: {
         title: string;
         rows: {
@@ -31,11 +32,14 @@ export const ContactInterativeList = ({
     date,
     sections
 }: ContactInterativeListProps) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card className={cn(
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
@@ -51,7 +55,7 @@ export const ContactInterativeList = ({
                             key={title}
                             className={cn(
                                 "w-full text-sm",
-                                direction === "sent"
+                                isSent
                                     ? "dark:bg-[#144d37] bg-[#d9fdd3]"
                                     : "dark:bg-muted bg-zinc-100"
                             )}

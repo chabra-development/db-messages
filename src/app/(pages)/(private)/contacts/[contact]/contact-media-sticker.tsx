@@ -1,5 +1,6 @@
 import { Card, CardDescription, CardFooter } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 import Image from "next/image"
 
@@ -9,11 +10,14 @@ export const ContactMediaSticker = ({
     uri,
     type
 }: {
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
     uri: string
     type: string
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card className="bg-transparent border-none shadow-none gap-1">
             <Image
@@ -26,7 +30,7 @@ export const ContactMediaSticker = ({
             <CardFooter
                 className={cn(
                     "w-fit ml-auto rounded-sm p-1",
-                    direction === "sent"
+                    isSent
                         ? "bg-message"
                         : "dark:bg-muted bg-zinc-100"
                 )}

@@ -10,6 +10,7 @@ import {
 import { generateVideoThumbnail } from "@/functions/generate-video-thumbnail"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 import { FileImage, FileVideo } from "lucide-react"
 import Image from "next/image"
@@ -23,8 +24,8 @@ export const ContactImageResponse = ({
     response,
     id
 }: {
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
     uri: string
     type: string
     response: string
@@ -33,6 +34,8 @@ export const ContactImageResponse = ({
 
     const [thumb, setThumb] = useState<string | null>(null)
     const [imageLoaded, setImageLoaded] = useState(false)
+
+    const isSent = direction === MessageDirection.SENT
 
     useEffect(() => {
 
@@ -71,7 +74,7 @@ export const ContactImageResponse = ({
             <Card className={cn(
                 "w-full text-sm",
                 "py-1 gap-1.5",
-                direction === "sent"
+                isSent
                     ? "bg-message rounded-tr-none"
                     : "bg-muted rounded-tl-none"
             )}>

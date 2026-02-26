@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 export const ContactReplyToText = ({
@@ -15,17 +16,20 @@ export const ContactReplyToText = ({
     response,
     title
 }: {
-    direction: "sent" | "received"
-    date: string
+    direction: MessageDirection
+    date: Date
     response: string
     title: string
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card
             className={cn(
                 "w-full max-w-md text-sm",
                 "@max-5xl/chat:max-w-[90%] pt-1 pb-2 gap-2",
-                direction === "sent"
+                isSent
                     ? "bg-message rounded-tr-none"
                     : "bg-muted rounded-tl-none"
             )}

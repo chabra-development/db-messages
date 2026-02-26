@@ -1,14 +1,15 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
-export async function findContactById(id: string) {
+type FindContactByIdProps = Omit<Prisma.ContactFindUniqueArgs, "where">
 
-    const contact = await prisma.contact.findUnique({
+export async function findContactById<T>(id: string, props: FindContactByIdProps = {}) {
+    return await prisma.contact.findUniqueOrThrow({
         where: {
             id
-        }
-    })
-
-    return contact
+        },
+        ...props,
+    }) as T
 }

@@ -5,6 +5,7 @@ import { BackgroundProvider } from "@/providers/background-provider"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { Analytics } from "@vercel/analytics/next"
 import { Roboto_Mono } from "next/font/google"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { ReactNode } from "react"
 import "./globals.css"
 
@@ -29,7 +30,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             defaultTheme="system"
           >
             <BackgroundProvider>
-              {children}
+              <NuqsAdapter>
+                {children}
+              </NuqsAdapter>
             </BackgroundProvider>
           </ThemeProvider>
         </TooltipProvider>

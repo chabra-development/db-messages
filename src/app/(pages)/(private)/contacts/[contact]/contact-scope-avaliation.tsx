@@ -10,6 +10,7 @@ import {
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
 import { LimeSelectContent } from "@/types/lime-thread-messages-response.types"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 export const ContactScopeAvaliation = ({
@@ -17,15 +18,18 @@ export const ContactScopeAvaliation = ({
     date,
     content: { options, text }
 }: {
-    direction: "sent" | "received"
     content: LimeSelectContent
-    date: string
+    direction: MessageDirection
+    date: Date
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Card className={cn(
             "w-1/2 text-sm",
             "@max-5xl/chat:w-9/10",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>

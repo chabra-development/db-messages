@@ -4,6 +4,15 @@ export const phoneNumberBRSchema = z
     .string()
     .transform(value => value.replace(/\D/g, "")) // só números
     .transform(digits => {
+
+        if (
+            digits === "" || 
+            digits === undefined || 
+            digits === null
+        ) {
+            return ""
+        }
+
         // remove 55 duplicado (5555...)
         if (digits.startsWith("5555")) {
             return digits.slice(2)
@@ -17,10 +26,6 @@ export const phoneNumberBRSchema = z
         }
         return digits
     })
-    .refine(
-        digits => digits.length === 10 || digits.length === 11,
-        { message: "Número de telefone brasileiro inválido" }
-    )
     .transform(digits => {
         const ddd = digits.slice(0, 2)
         const number = digits.slice(2)

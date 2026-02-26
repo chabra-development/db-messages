@@ -9,6 +9,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { LimeContactPayload } from "@/types/lime-thread-messages-response.types"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 import { Copy, Phone } from "lucide-react"
 import { toast } from "sonner"
@@ -24,10 +25,12 @@ export const ContactPhoneCard = ({
         }
     }
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
     content: LimeContactPayload
-    date: string
+    date: Date
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
 
     async function onCopy(contact: string) {
 
@@ -43,7 +46,7 @@ export const ContactPhoneCard = ({
     return (
         <Card className={cn(
             "text-sm w-1/3 gap-2 pb-2",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none",
         )}>

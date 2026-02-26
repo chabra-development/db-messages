@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { stringToHTML } from "@/functions/string-to-HTML"
 import { cn } from "@/lib/utils"
+import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
 
 export const ContactMessage = ({
@@ -8,15 +9,18 @@ export const ContactMessage = ({
     content,
     date,
 }: {
-    direction: "sent" | "received"
+    direction: MessageDirection
     content: string
-    date: string
+    date: Date
 }) => {
+
+    const isSent = direction === MessageDirection.SENT
+
     return (
         <Alert className={cn(
             "max-w-[70%] w-fit text-sm text-foreground shadow-2xl space-y-2",
             "@max-5xl/chat:max-w-9/10",
-            direction === "sent"
+            isSent
                 ? "bg-message rounded-tr-none"
                 : "dark:bg-muted bg-zinc-100 rounded-tl-none"
         )}>
