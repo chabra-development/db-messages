@@ -171,6 +171,7 @@ export const TicketInfoSheetItens = ({ id }: { id: string }) => {
     const { resource } = ticketMessageResponse
 
     return (
-        <MessagesBoard resource={resource} />
+        <div></div>
+        // <MessagesBoard resource={resource} />
     )
 }

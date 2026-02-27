@@ -16,6 +16,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Spinner } from "@/components/ui/spinner"
+import { useMutationState } from "@tanstack/react-query"
 import {
     Bookmark,
     Heart,
@@ -29,6 +31,11 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
 
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
+
+    const [status] = useMutationState({
+        filters: { mutationKey: ["create-contact-tag"] },
+        select: (mutation) => mutation.state.status
+    })
 
     return (
         <>
@@ -58,9 +65,16 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
                         <Button
                             form="form-create-contact-tags"
                             type="submit"
+                            disabled={status === "pending"}
                             className="w-1/3"
                         >
-                            Salvar
+                            {
+                                status === "pending"
+                                    ? (
+                                        <Spinner />
+                                    )
+                                    : "Salvar"
+                            }
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

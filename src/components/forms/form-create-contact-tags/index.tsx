@@ -1,4 +1,5 @@
 import { createContactTags } from "@/actions/contact-tag/create-contact-tag"
+import { toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,9 +13,21 @@ import { useFieldArray, useForm } from "react-hook-form"
 
 export const FormCreateContactTags = ({ contactId }: { contactId: string }) => {
 
-    const { mutate, isPending } = useMutation({
+    const { mutate } = useMutation({
         mutationKey: ["create-contact-tag"],
-        mutationFn: createContactTags
+        mutationFn: createContactTags,
+        onSuccess: () => {
+            toast({
+                title: "Tag adicionada com sucesso"
+            })
+        },
+        onError: (error) => {
+            toast({
+                title: "Erro ao adicionar tag",
+                description: error.message,
+                variant: "destructive"
+            })
+        }
     })
 
     const [
