@@ -8,7 +8,7 @@ type IsUriAccessibleProps = {
 /**
  * Verifica se a URI está acessível via HEAD com a BLIP_DESK_API_KEY
  */
-async function isUriAccessible({
+export async function isUriAccessible({
     uri, deskApiKey
 }: IsUriAccessibleProps): Promise<boolean> {
     try {

@@ -1,6 +1,7 @@
 "use server"
 
 import { refreshMediaUri } from "./refresh-media-uri"
+import { isUriAccessible } from "./is-uri-acessible"
 
 type ResolveMediaUriProps = {
     uri: string,
