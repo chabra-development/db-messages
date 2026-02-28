@@ -12,8 +12,12 @@ export async function findManyContactsTagByContactId(contactId: string) {
             contactId
         },
         select: {
-            id: true,
-            tag: true,
+            tag: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
         }
     })
 }

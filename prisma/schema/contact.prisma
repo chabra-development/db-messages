@@ -50,19 +50,27 @@ model Contact {
 // ============================================
 // TAG — Global (qualquer usuário pode ver)
 // ============================================
-model ContactTag {
+model Tag {
   id        String   @id @default(uuid())
-  tag       String
+  name      String   @unique
+  color     String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  contactId   String  @map("contact_id")
-  createdById String  @map("created_by_id")
-  contact     Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdById String @map("created_by_id")
 
-  @@unique([contactId, tag])
-  @@index([contactId])
-  @@index([tag])
-  @@index([createdById])
+  contacts ContactTag[]
+
+  @@index([name])
+  @@map("tags")
+}
+
+model ContactTag {
+  contactId String  @map("contact_id")
+  tagId     String  @map("tag_id")
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, tagId])
   @@map("contact_tags")
 }
 

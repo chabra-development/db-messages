@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createTagsObjetc, CreateTagsProps, createTagsSchema } from "@/schemas/create-tags-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ContactTag } from "@prisma/client"
+import { ContactTag, Tag } from "@prisma/client"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
@@ -15,7 +15,7 @@ import { useFieldArray, useForm } from "react-hook-form"
 
 type FormCreateContactTagsProps = {
     contactId: string
-    tags: Pick<ContactTag, "id" | "tag">[]
+    tags: Pick<Tag, "id" | "name">[]
     setDialogOpen: Dispatch<SetStateAction<boolean>>
     setDropdownOpen: Dispatch<SetStateAction<boolean>>
 }
@@ -60,7 +60,7 @@ export const FormCreateContactTags = ({
     } = useForm<CreateTagsProps>({
         resolver: zodResolver(createTagsSchema),
         defaultValues: {
-            tags: tags.map(tag => ({ name: tag.tag }))
+            tags
         }
     })
 

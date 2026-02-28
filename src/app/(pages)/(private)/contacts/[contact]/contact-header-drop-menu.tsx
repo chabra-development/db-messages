@@ -63,7 +63,7 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
                         <CardContent className="px-4">
                             <FormCreateContactTags
                                 contactId={contactId}
-                                tags={tags}
+                                tags={tags.map(({ tag }) => tag)}
                                 setDialogOpen={setDialogOpen}
                                 setDropdownOpen={setDropdownOpen}
                             />

@@ -24,32 +24,43 @@ export async function createContactTags({ tags, contactId }: CreateContactTagsPr
 
     await findContactById(contactId)
 
-    const existingTags = await prisma.contactTag.findMany({
+    // busca as tags já associadas ao contato
+    const existingContactTags = await prisma.contactTag.findMany({
         where: { contactId },
-        select: { id: true, tag: true }
+        include: { tag: true }
     })
 
     const newTagNames = tags.map(({ name }) => name)
-    const existingTagNames = existingTags.map(({ tag }) => tag)
+    const existingTagNames = existingContactTags.map(({ tag }) => tag.name)
 
-    const tagsToDelete = existingTags
-        .filter(({ tag }) => !newTagNames.includes(tag))
-        .map(({ id }) => id)
+    // tagIds a desassociar do contato
+    const tagIdsToDelete = existingContactTags
+        .filter(({ tag }) => !newTagNames.includes(tag.name))
+        .map(({ tagId }) => tagId)
 
+    // nomes de tags novas a criar/associar
     const tagsToCreate = tags.filter(({ name }) => !existingTagNames.includes(name))
 
-    const [deletedTags, createdTags] = await prisma.$transaction([
+    const [deletedTags, ...createdTags] = await prisma.$transaction([
         prisma.contactTag.deleteMany({
-            where: { id: { in: tagsToDelete } }
-        }),
-        prisma.contactTag.createMany({
-            skipDuplicates: true,
-            data: tagsToCreate.map(({ name: tag }) => ({
+            where: {
                 contactId,
-                createdById,
-                tag,
-            }))
-        })
+                tagId: { in: tagIdsToDelete }
+            }
+        }),
+        ...tagsToCreate.map(({ name }) =>
+            prisma.contactTag.create({
+                data: {
+                    contact: { connect: { id: contactId } },
+                    tag: {
+                        connectOrCreate: {
+                            where: { name },
+                            create: { name, createdById }
+                        }
+                    }
+                }
+            })
+        )
     ])
 
     return { deletedTags, createdTags }

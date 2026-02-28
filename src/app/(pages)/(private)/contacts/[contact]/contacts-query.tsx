@@ -20,8 +20,12 @@ import { ContactsQueryLoading } from "./contacts-query-loading"
 
 export type ContactWithRelations = Prisma.ContactGetPayload<{
     include: {
-        messages: true
-        tags: true
+        messages: true,
+        tags: {
+            include: {
+                tag: true,
+            }
+        },
     }
 }>
 
@@ -36,10 +40,19 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         queryKey: ["find-contact-by-id", id],
         queryFn: () => findContactById<ContactWithRelations>(id, {
             include: {
-                messages: true,
+                messages: {
+                    omit: {
+                        contactId: true,
+                        type: true,
+                        createdAt: true,
+                        metadata: true,         
+                    },
+                    orderBy: {
+                        sentAt: "desc",
+                    }
+                },
                 tags: {
-                    select: {
-                        id: true,
+                    include: {
                         tag: true,
                     }
                 },
@@ -80,12 +93,12 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardDescription>
                     <CardDescription className="truncate flex items-center gap-2 mt-2">
                         {
-                            tags.map(({ id, tag }) => (
+                            tags.map(({ tag: { id, name } }) => (
                                 <Badge
                                     key={id}
                                     className="capitalize"
                                 >
-                                    {tag}
+                                    {name}
                                 </Badge>
                             ))
                         }
