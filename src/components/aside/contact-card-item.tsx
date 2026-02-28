@@ -66,7 +66,6 @@ export function ContactCardItem({
         <Link
             onNavigate={onClick}
             href={`/contacts/${contact.id}`}
-            prefetch
         >
             <Card className={cn(
                 "w-full",

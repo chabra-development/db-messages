@@ -6,12 +6,25 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createTagsObjetc, CreateTagsProps, createTagsSchema } from "@/schemas/create-tags-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation } from "@tanstack/react-query"
+import { ContactTag } from "@prisma/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
+import { Dispatch, SetStateAction } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 
-export const FormCreateContactTags = ({ contactId }: { contactId: string }) => {
+type FormCreateContactTagsProps = {
+    contactId: string
+    tags: Pick<ContactTag, "id" | "tag">[]
+    setDialogOpen: Dispatch<SetStateAction<boolean>>
+    setDropdownOpen: Dispatch<SetStateAction<boolean>>
+}
+
+export const FormCreateContactTags = ({
+    contactId, tags, setDialogOpen, setDropdownOpen
+}: FormCreateContactTagsProps) => {
+
+    const queryClient = useQueryClient()
 
     const { mutate } = useMutation({
         mutationKey: ["create-contact-tag"],
@@ -19,6 +32,11 @@ export const FormCreateContactTags = ({ contactId }: { contactId: string }) => {
         onSuccess: () => {
             toast({
                 title: "Tag adicionada com sucesso"
+            })
+            setDialogOpen(false)
+            setDropdownOpen(false)
+            queryClient.invalidateQueries({
+                queryKey: ["find-many-contacts-tag-by-contact-id", contactId]
             })
         },
         onError: (error) => {
@@ -42,7 +60,7 @@ export const FormCreateContactTags = ({ contactId }: { contactId: string }) => {
     } = useForm<CreateTagsProps>({
         resolver: zodResolver(createTagsSchema),
         defaultValues: {
-            tags: []
+            tags: tags.map(tag => ({ name: tag.tag }))
         }
     })
 

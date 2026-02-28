@@ -49,7 +49,7 @@ export const ContactImageResponse = ({
             return
         }
 
-        generateVideoThumbnail(uri).then((image) => {
+        generateVideoThumbnail(uri).then(image => {
 
             if (!isMounted) return
 

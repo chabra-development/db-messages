@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { CreateTagsProps } from "@/schemas/create-tags-schema"
+import { headers } from "next/headers"
 import { findContactById } from "../contacts/find-contact-by-id"
 
 type CreateContactTagsProps = CreateTagsProps & {
@@ -11,7 +12,9 @@ type CreateContactTagsProps = CreateTagsProps & {
 
 export async function createContactTags({ tags, contactId }: CreateContactTagsProps) {
 
-    const session = await auth.api.getSession()
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
 
     if (!session) {
         throw new Error("Sessão inválida, tente conectar novamente.")
@@ -21,13 +24,33 @@ export async function createContactTags({ tags, contactId }: CreateContactTagsPr
 
     await findContactById(contactId)
 
-    const tagsCreated = await prisma.contactTag.createManyAndReturn({
-        data: tags.map(({ name: tag }) => ({
-            contactId,
-            createdById,
-            tag,
-        }))
+    const existingTags = await prisma.contactTag.findMany({
+        where: { contactId },
+        select: { id: true, tag: true }
     })
 
-    return tagsCreated
+    const newTagNames = tags.map(({ name }) => name)
+    const existingTagNames = existingTags.map(({ tag }) => tag)
+
+    const tagsToDelete = existingTags
+        .filter(({ tag }) => !newTagNames.includes(tag))
+        .map(({ id }) => id)
+
+    const tagsToCreate = tags.filter(({ name }) => !existingTagNames.includes(name))
+
+    const [deletedTags, createdTags] = await prisma.$transaction([
+        prisma.contactTag.deleteMany({
+            where: { id: { in: tagsToDelete } }
+        }),
+        prisma.contactTag.createMany({
+            skipDuplicates: true,
+            data: tagsToCreate.map(({ name: tag }) => ({
+                contactId,
+                createdById,
+                tag,
+            }))
+        })
+    ])
+
+    return { deletedTags, createdTags }
 }

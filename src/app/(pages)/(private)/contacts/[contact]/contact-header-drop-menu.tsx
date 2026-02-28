@@ -1,3 +1,4 @@
+import { findManyContactsTagByContactId } from "@/actions/contact-tag/find-many-contacts-tag-by-contact-id"
 import { FormCreateContactTags } from "@/components/forms/form-create-contact-tags"
 import {
     AlertDialog,
@@ -17,7 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Spinner } from "@/components/ui/spinner"
-import { useMutationState } from "@tanstack/react-query"
+import { useMutationState, useQuery } from "@tanstack/react-query"
 import {
     Bookmark,
     Heart,
@@ -29,6 +30,11 @@ import { useState } from "react"
 
 export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
 
+    const { data: tags, isLoading } = useQuery({
+        queryKey: ["find-many-contacts-tag-by-contact-id", contactId],
+        queryFn: () => findManyContactsTagByContactId(contactId)
+    })
+
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -36,6 +42,10 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
         filters: { mutationKey: ["create-contact-tag"] },
         select: (mutation) => mutation.state.status
     })
+
+    if (!tags || isLoading) {
+        return
+    }
 
     return (
         <>
@@ -51,7 +61,12 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
                     </AlertDialogHeader>
                     <Card className="pt-4">
                         <CardContent className="px-4">
-                            <FormCreateContactTags contactId={contactId} />
+                            <FormCreateContactTags
+                                contactId={contactId}
+                                tags={tags}
+                                setDialogOpen={setDialogOpen}
+                                setDropdownOpen={setDropdownOpen}
+                            />
                         </CardContent>
                     </Card>
                     <AlertDialogFooter>

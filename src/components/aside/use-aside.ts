@@ -1,7 +1,6 @@
 // use-aside.ts
 import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { useDebounce } from "@/hooks/use-debounce"
-import { LimeContact } from "@/types/lime-collection-response.types"
 import { Contact } from "@prisma/client"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
@@ -19,7 +18,7 @@ export function UseAside() {
 
     // ── Scroll infinito (sem busca) ──────────────────────────────
     const infiniteQuery = useInfiniteQuery({
-        queryKey: ["contacts"],
+        queryKey: ["find-infinity-contacts"],
         queryFn: ({ pageParam }) =>
             findManyContacts({ cursor: pageParam, take: TAKE }),
         initialPageParam: undefined as string | undefined,

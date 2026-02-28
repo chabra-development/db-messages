@@ -1,11 +1,12 @@
 import z from "zod"
+import { zString } from "./z-string"
 
 export const createTagsObjetc = z
     .object({
-        name: z
-            .string()
+        name: zString()
             .nonempty("O nome da tag é obrigatório")
-            .trim(),
+            .trim()
+            .lowercase(),
     })
 
 export const createTagsSchema = z.object({

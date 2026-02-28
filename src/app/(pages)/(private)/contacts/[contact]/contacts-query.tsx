@@ -2,6 +2,7 @@
 
 import { findContactById } from "@/actions/contacts/find-contact-by-id"
 import { toast } from "@/components/toast"
+import { Badge } from "@/components/ui/badge"
 import {
     Card,
     CardAction,
@@ -11,11 +12,11 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { MessagesBoard } from "@/contacts/messages-board"
+import { Prisma } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
-import { Prisma } from "@prisma/client"
 
 export type ContactWithRelations = Prisma.ContactGetPayload<{
     include: {
@@ -32,11 +33,16 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         isLoading,
         refetch
     } = useQuery({
-        queryKey: ["find-many-contacts", id],
+        queryKey: ["find-contact-by-id", id],
         queryFn: () => findContactById<ContactWithRelations>(id, {
             include: {
                 messages: true,
-                tags: true,
+                tags: {
+                    select: {
+                        id: true,
+                        tag: true,
+                    }
+                },
             }
         }),
     })
@@ -60,7 +66,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         return <ContactsQueryLoading />
     }
 
-    const { name, phoneNumber, messages } = contact
+    const { name, phoneNumber, messages, tags } = contact
 
     return (
         <Card className="size-full border-none rounded-none gap-0">
@@ -71,6 +77,18 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardTitle>
                     <CardDescription className="truncate">
                         {phoneNumber && phoneNumber}
+                    </CardDescription>
+                    <CardDescription className="truncate flex items-center gap-2 mt-2">
+                        {
+                            tags.map(({ id, tag }) => (
+                                <Badge
+                                    key={id}
+                                    className="capitalize"
+                                >
+                                    {tag}
+                                </Badge>
+                            ))
+                        }
                     </CardDescription>
                     <CardAction className="flex items-center gap-2">
                         <ContactHeaderSearch />
