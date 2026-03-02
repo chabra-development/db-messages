@@ -1,17 +1,31 @@
 "use client"
 
+import { toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { ComponentProps } from "react"
 
 export function GoogleLoginButton({ className, ...props }: ComponentProps<typeof Button>) {
+
     async function onSignIn() {
-        await authClient.signIn.social({
+
+        const { data, error } = await authClient.signIn.social({
             callbackURL: "/contacts",
             provider: "google",
-
         })
+
+        if (error) {
+            console.error("Error signing in with Google:", error)
+
+            toast({
+                title: "Erro ao entrar com Google",
+                description: error.message,
+                variant: "destructive",
+            })
+
+            return
+        }
     }
 
     return (

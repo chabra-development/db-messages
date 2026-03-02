@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "seed": "tsx --env-file=.env src/seed.ts",
+  "seed": "bun --env-file=.env src/seed.ts",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
