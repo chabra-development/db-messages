@@ -17,7 +17,7 @@ export interface AttendantRow {
     name: string
     email: string
     image?: string | null
-    role: Role
+    role: string | null
     isActive: boolean
     teams: string[]
     createdAt: Date

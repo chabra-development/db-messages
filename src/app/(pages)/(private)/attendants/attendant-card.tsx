@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { User } from "@prisma/client"
 import { motion } from "framer-motion"
 import { ChangeRoleUserDialog } from "./change-role-attendants"
-import { Role, User } from "@prisma/client"
 
 type AttendantCardProps = {
     index: number
@@ -40,7 +40,12 @@ export const AttendantCard = ({
         teams
     } = attendant
 
-    function translateRole(role: Role) {
+    function translateRole(role: string | null) {
+
+        if (!role) return {
+            title: "",
+            className: ""
+        }
 
         if (role === "ADMIN") {
             return {

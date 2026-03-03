@@ -1,4 +1,5 @@
-// use-aside.ts
+"use client"
+
 import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Contact } from "@prisma/client"

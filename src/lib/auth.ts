@@ -1,8 +1,9 @@
-import { Role } from "@prisma/client"
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js"
+import { admin } from "better-auth/plugins"
 import { randomUUID } from "node:crypto"
+import { ac, roles } from "./permissions"
 import { prisma } from "./prisma"
 
 export const auth = betterAuth({
@@ -19,7 +20,7 @@ export const auth = betterAuth({
 	account: {
 		accountLinking: {
 			enabled: true,
-			trustedProviders: ["google"],  // ✅ Já está configurado!
+			trustedProviders: ["google"],
 		},
 	},
 	session: {
@@ -52,11 +53,6 @@ export const auth = betterAuth({
 				type: "string[]",
 				defaultValue: [],
 			},
-			role: {
-				type: ["USER", "SUPERVISOR", "ADMIN"],
-				defaultValue: Role.USER,
-				input: false,
-			},
 			isActive: {
 				type: "boolean",
 				required: false,
@@ -67,7 +63,7 @@ export const auth = betterAuth({
 				type: "string",
 				required: false,
 				input: false,
-			}
+			},
 		},
 	},
 	trustedOrigins: [process.env.BETTER_AUTH_URL as string],
@@ -78,5 +74,13 @@ export const auth = betterAuth({
 		useSecureCookies: process.env.NODE_ENV === "production",
 		cookieSameSite: "lax",
 	},
-	plugins: [nextCookies()]
+	plugins: [
+		nextCookies(),
+		admin({
+			ac,
+			roles,
+			defaultRole: "USER",
+			adminRoles: ["ADMIN"],
+		}),
+	],
 })

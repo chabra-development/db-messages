@@ -1,16 +1,19 @@
 model User {
-  id            String   @id @default(uuid())
-  identity      String   @unique
-  email         String   @unique
+  id            String    @id @default(uuid())
+  identity      String    @unique
+  email         String    @unique
   name          String
-  teams         String[]
   image         String?
   banner        String?
-  role          Role     @default(USER)
-  isActive      Boolean  @default(true) @map("is_active")
-  emailVerified Boolean  @default(false) @map("email_verified")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  role          String?
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  teams         String[]  @default([])
+  isActive      Boolean   @default(true) @map("is_active")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   accounts               Account[]
   sessions               Session[]

@@ -1,24 +1,19 @@
 "use client"
 
-import { findAttendantsById } from "@/actions/attendants/find-attendants-by-id"
 import { LinkGoogleAccount } from "@/app/(pages)/(private)/settings/link-google-account"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getInitials } from "@/functions/get-initials"
-import { useQuery } from "@tanstack/react-query"
+import { authClient } from "@/lib/auth-client"
 import { Ellipsis } from "lucide-react"
-import Image from "next/image"
-import { Separator } from "./ui/separator"
-import { Skeleton } from "./ui/skeleton"
 
-export function UserProfileCard({ id }: { id: string }) {
+export function UserProfileCard() {
 
-    const { data: user, isLoading } = useQuery({
-        queryKey: ["find-user-by-id", id],
-        queryFn: () => findAttendantsById(id)
-    })
+    const { data: session } = authClient.useSession()
 
-    if (!user || isLoading) {
+    if (!session) {
         return (
             <Card className="w-1/2 rounded-2xl pt-0 overflow-hidden">
                 <div className="w-full h-64 border-b flex relative">
@@ -44,25 +39,14 @@ export function UserProfileCard({ id }: { id: string }) {
         )
     }
 
-    const { banner, image, name, email } = user
+    const { user } = session
+
+    const { image, name, email } = user
 
     return (
         <Card className="w-1/2 rounded-2xl pt-0 overflow-hidden">
             <div className="w-full h-32 border-b flex relative ">
-                {
-                    banner
-                        ? (
-                            <Image
-                                src={banner}
-                                alt="Banner"
-                                fill
-                                className="object-cover"
-                            />
-                        )
-                        : (
-                            <div className="size-full bg-secondary" />
-                        )
-                }
+                <div className="size-full bg-secondary" />
             </div>
             <div className="w-full gap-0 -translate-y-16 px-6 space-y-4">
                 <Avatar className="size-20 border">

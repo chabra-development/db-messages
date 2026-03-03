@@ -16,16 +16,22 @@ import { ContactCardItem } from "./contact-card-item"
 import { ImportAllContactsButton } from "./import-all-contacts-button"
 import { ImportContactMessagesButton } from "./Import-contact-messages-button"
 import { UseAside } from "./use-aside"
+import { authClient } from "@/lib/auth-client"
 
 export const Aside = () => {
 
     const useAside = UseAside()
     const sentinelRef = useRef<HTMLDivElement>(null)
 
+    const { data: session } = authClient.useSession()
+
     // Sentinela: dispara fetchNextPage quando entra na viewport
     useEffect(() => {
+
         if (!useAside) return
+
         const { fetchNextPage, hasNextPage, isFetchingNextPage, hasSearch } = useAside
+
         if (hasSearch) return // busca server-side não usa scroll infinito
 
         const observer = new IntersectionObserver(
@@ -38,10 +44,11 @@ export const Aside = () => {
         )
 
         if (sentinelRef.current) observer.observe(sentinelRef.current)
+
         return () => observer.disconnect()
     }, [useAside])
 
-    if (!useAside) return <AsideLoading />
+    if (!useAside || !session) return <AsideLoading />
 
     const {
         error,
@@ -63,6 +70,7 @@ export const Aside = () => {
     } = useAside
 
     if (error) {
+
         toast({
             title: error.name,
             duration: Infinity,
@@ -70,8 +78,13 @@ export const Aside = () => {
             variant: "destructive",
             action: { label: "Tentar novamente", onClick: () => refetch() },
         })
+
         return null
     }
+
+    console.log(session.user)
+
+    const isAdmin = session.user.role === "ADMIN"
 
     return (
         <Card className="size-full rounded-none border-0 shadow-none">
@@ -154,11 +167,14 @@ export const Aside = () => {
                     )}
                 </CardContent>
             </ScrollArea>
-
-            <CardFooter className="px-2 flex-col gap-2">
-                <ImportAllContactsButton />
-                <ImportContactMessagesButton />
-            </CardFooter>
+            {
+                isAdmin && (
+                    <CardFooter className="px-2 flex-col gap-2">
+                        <ImportAllContactsButton />
+                        <ImportContactMessagesButton />
+                    </CardFooter>
+                )
+            }
         </Card>
     )
 }

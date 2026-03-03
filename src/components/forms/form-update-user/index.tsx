@@ -23,7 +23,6 @@ export const FormUpdateUser = (props: ComponentProps<"form">) => {
 		form,
 		handleSubmit,
 		onSubmit,
-		session,
 		register, 
 		errors,
 		visible,
@@ -38,7 +37,7 @@ export const FormUpdateUser = (props: ComponentProps<"form">) => {
 				onSubmit={handleSubmit(onSubmit)}
 				{...props}
 			>
-				<Card className="w-full">
+				<Card className="size-full">
 					<CardHeader>
 						<CardTitle className="text-lg">Editar informações</CardTitle>
 						<CardDescription>Editar informações pessoais</CardDescription>

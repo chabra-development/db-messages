@@ -45,7 +45,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         contactId: true,
                         type: true,
                         createdAt: true,
-                        metadata: true,         
+                        metadata: true,
                     },
                     orderBy: {
                         sentAt: "desc",

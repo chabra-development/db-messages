@@ -155,7 +155,7 @@ export function DropdownMenuItemAlert({
           </AlertDialogHeader>
           <div className="space-y-6">
             <Select
-              defaultValue={user.role}
+              defaultValue={user.role ?? undefined}
               onValueChange={(value) => setValue("newRole", value as Role)}
             >
               <SelectTrigger className="w-full">
