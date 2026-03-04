@@ -1,13 +1,24 @@
 import { createContactTags } from "@/actions/contact-tag/create-contact-tag"
+import { findManyTags } from "@/actions/tags/find-many-tags"
 import { toast } from "@/components/toast"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 import { createTagsObjetc, CreateTagsProps, createTagsSchema } from "@/schemas/create-tags-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ContactTag, Tag } from "@prisma/client"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Tag } from "@prisma/client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
 import { Dispatch, SetStateAction } from "react"
@@ -26,6 +37,17 @@ export const FormCreateContactTags = ({
 
     const queryClient = useQueryClient()
 
+    const { data: allTags, isLoading } = useQuery({
+        queryKey: ["find-many-tags"],
+        queryFn: () => findManyTags({
+            select: {
+                id: true,
+                name: true,
+                color: true
+            }
+        })
+    })
+
     const { mutate } = useMutation({
         mutationKey: ["create-contact-tag"],
         mutationFn: createContactTags,
@@ -35,8 +57,9 @@ export const FormCreateContactTags = ({
             })
             setDialogOpen(false)
             setDropdownOpen(false)
+
             queryClient.invalidateQueries({
-                queryKey: ["find-many-contacts-tag-by-contact-id", contactId]
+                queryKey: ["find-contact-by-id", contactId]
             })
         },
         onError: (error) => {
@@ -54,6 +77,7 @@ export const FormCreateContactTags = ({
     ] = useQueryState("name", parseAsString.withDefault(''))
 
     const {
+        watch,
         control,
         handleSubmit,
         formState: { errors }
@@ -73,9 +97,15 @@ export const FormCreateContactTags = ({
         control
     })
 
+    if (!allTags || isLoading) {
+        return <div />
+    }
+
     if (errors.tags) {
         console.log(errors.tags)
     }
+
+    const watchTags = watch("tags")
 
     function addContactTag(contactTag: string) {
 
@@ -102,6 +132,10 @@ export const FormCreateContactTags = ({
         setCurrentContactTag("")
     }
 
+    function addContactTagByClick(contactTag: string) {
+        append({ name: contactTag })
+    }
+
     function onSubmit({ tags }: CreateTagsProps) {
         mutate({ tags, contactId })
     }
@@ -117,6 +151,45 @@ export const FormCreateContactTags = ({
                     type="always"
                     className="h-32"
                 >
+                    <Card className="py-2 mx-2 gap-2 border-none shadow-none">
+                        <CardHeader>
+                            <CardTitle>
+                                Tags disponíveis:
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 py-0 flex items-center flex-wrap gap-2">
+                            {
+                                allTags.length === 0
+                                    ? (
+                                        <CardDescription className="text-sm">
+                                            Nenhuma tag disponível. Crie tags para organizar melhor seus contatos.
+                                        </CardDescription>
+                                    )
+                                    : allTags.map(({ id, name, color }) => {
+
+                                        const isSelected = watchTags.some(tag => tag.name === name)
+
+                                        return (
+                                            <Badge
+                                                key={id}
+                                                style={{
+                                                    background: color ?? undefined
+                                                }}
+                                                className={cn(
+                                                    "text-sm",
+                                                    isSelected && "cursor-not-allowed opacity-50"
+                                                )}
+                                                variant={isSelected ? "secondary" : "default"}
+                                                onClick={() => addContactTagByClick(name)}
+                                            >
+                                                {name}
+                                            </Badge>
+                                        )
+                                    })
+                            }
+                        </CardContent>
+                    </Card>
+                    <Separator className="my-4" />
                     <CardContent className="p-4 flex items-center flex-wrap gap-2">
                         {
                             fields.length === 0

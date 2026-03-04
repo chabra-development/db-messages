@@ -1,11 +1,15 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
-export async function findAttendantsById(id: string) {
+type FindAttendantsByIdProps = Omit<Prisma.UserFindUniqueArgs, "where">
+
+export async function findAttendantsById<T>(id: string, props: FindAttendantsByIdProps = {}) {
     return await prisma.user.findUniqueOrThrow({
         where: {
             id
-        }
-    })
+        },
+        ...props
+    }) as T
 }

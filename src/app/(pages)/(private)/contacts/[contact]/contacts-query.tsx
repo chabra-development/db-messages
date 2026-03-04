@@ -93,9 +93,12 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardDescription>
                     <CardDescription className="truncate flex items-center gap-2 mt-2">
                         {
-                            tags.map(({ tag: { id, name } }) => (
+                            tags.map(({ tag: { id, name, color } }) => (
                                 <Badge
                                     key={id}
+                                    style={{
+                                        background: color ?? undefined
+                                    }}
                                     className="capitalize"
                                 >
                                     {name}

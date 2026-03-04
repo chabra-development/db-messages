@@ -29,7 +29,7 @@ import {
 import { useState } from "react"
 
 export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
-
+    
     const { data: tags, isLoading } = useQuery({
         queryKey: ["find-many-contacts-tag-by-contact-id", contactId],
         queryFn: () => findManyContactsTagByContactId(contactId)
