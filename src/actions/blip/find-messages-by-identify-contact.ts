@@ -36,35 +36,35 @@ export async function findMessagesByIdentifyContact(
     const { ROUTER_API_KEY } = result.data
 
     const TAKE = 100
-
     const { limit = Infinity } = options
 
-    let skip = 0
     let allMessages: LimeThreadMessage[] = []
-    let total = 0
-    let responseId = randomUUID()
+    let responseId = "" as unknown as UUID
     let responseFrom = ""
     let responseTo = ""
+    let lastStorageDate: string | undefined = undefined
+    let isFirstRequest = true
 
     try {
-
         while (allMessages.length < limit) {
-
             const currentTake = Math.min(TAKE, limit - allMessages.length)
+
+            const uri: string = lastStorageDate
+                ? `/threads/${identify}?$take=${currentTake}&direction=desc&storageDate=${lastStorageDate}&refreshExpiredMedia=true`
+                : `/threads/${identify}?$take=${currentTake}&refreshExpiredMedia=true`
 
             const body = {
                 id: randomUUID(),
                 method: "get",
-                uri: `/threads/${identify}?$skip=${skip}&$take=${currentTake}&refreshExpiredMedia=true`
+                uri,
             }
-
+            
             const response = await api.post<LimeThreadMessagesResponse>(url, body, {
                 headers: {
                     Authorization: `Key ${ROUTER_API_KEY}`,
                 },
             })
 
-            // Verificar status
             if (response.data.status !== "success") {
                 throw new Error(
                     `Falha ao buscar mensagens: ${response.data.status}`
@@ -73,36 +73,35 @@ export async function findMessagesByIdentifyContact(
 
             const { resource, id, from, to } = response.data
 
-            // Salvar informações da primeira resposta
-            if (skip === 0) {
+            if (isFirstRequest) {
                 responseId = id as UUID
                 responseFrom = from
                 responseTo = to
+                isFirstRequest = false
             }
 
-            // Capturar total na primeira iteração
-            if (total === 0) {
-                total = resource.total
-            }
+            const items = resource.items
 
-            allMessages.push(...resource.items)
+            if (items.length === 0) break
 
-            if (
-                (resource.items.length < currentTake) ||
-                (allMessages.length >= total)
-            ) {
-                break
-            }
+            const lastItem = items[items.length - 1]
+            const lastItemCursorDate = lastItem.date
 
-            skip += currentTake
+            if (!lastItemCursorDate) break
 
-            await new Promise(resolve => setTimeout(resolve, 300))
+            if (lastStorageDate === lastItemCursorDate) break
+
+            allMessages.push(...items)
+
+            if (items.length < currentTake) break
+
+            lastStorageDate = lastItemCursorDate
+
+            await new Promise(resolve => setTimeout(resolve, 100))
         }
 
-        // Limitar array ao limite especificado
         const limitedMessages = allMessages.slice(0, limit)
 
-        // Retornar no formato LimeThreadMessagesResponse
         return {
             type: "application/vnd.lime.collection+json",
             method: "get",
@@ -113,12 +112,11 @@ export async function findMessagesByIdentifyContact(
             resource: {
                 total: limitedMessages.length,
                 itemType: "application/vnd.iris.thread-message+json",
-                items: limitedMessages
-            }
+                items: limitedMessages,
+            },
         }
-
     } catch (error) {
-        console.error('Erro ao buscar mensagens:', error)
+        console.error("Erro ao buscar mensagens:", error)
         throw error
     }
 }
