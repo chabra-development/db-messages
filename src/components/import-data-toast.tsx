@@ -19,6 +19,7 @@ import {
     XCircle,
 } from "lucide-react"
 import { useEffect } from "react"
+import { createPortal } from "react-dom"
 import { toast } from "sonner"
 
 interface ImportProgressToastProps {
@@ -120,6 +121,17 @@ export function ImportProgressToast({
             )
         }
     }, [hasFailed, data, jobId])
+
+    // Overlay de bloqueio durante importação ativa
+    if ((isPending || isRunning) && typeof window !== "undefined") {
+        return createPortal(
+            <div
+                className="fixed inset-0 z-9999 bg-black/40 backdrop-blur-sm"
+                aria-hidden="true"
+            />,
+            document.body
+        )
+    }
 
     return null
 }
@@ -270,7 +282,7 @@ function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
                     )}
                 </div>
 
-                {/* Lista de erros colapsável com scroll */}
+                {/* Lista de erros colapsável */}
                 {failed && failed.length > 0 && (
                     <Collapsible>
                         <CollapsibleTrigger asChild>

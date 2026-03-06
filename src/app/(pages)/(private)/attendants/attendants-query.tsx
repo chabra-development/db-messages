@@ -12,30 +12,32 @@ import {
 } from "@/components/ui/select"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { Search, X } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs"
 import { useEffect, useState } from "react"
 import { AttendantsDataTable } from "./data-table"
 
 export function AttendantsTableContainer() {
 
-    const router = useRouter()
-    const searchParams = useSearchParams()
-
-    const take = Number(searchParams.get("take") ?? 10)
-    const skip = Number(searchParams.get("skip") ?? 0)
+    const [take, setTake] = useQueryState("take", parseAsInteger.withDefault(10))
+    const [skip, setSkip] = useQueryState("skip", parseAsInteger.withDefault(0))
 
     const [search, setSearch] = useState("")
-    const [teamFilter, setTeamFilter] = useState("all")
-    const [debouncedSearch, setDebouncedSearch] = useState("")
+    const [teamFilter, setTeamFilter] = useQueryState("team", parseAsString.withDefault("all"))
+    const [debouncedSearch, setDebouncedSearch] = useQueryState("search", parseAsString.withDefault(""))
 
     // Debounce de 1 segundo para o campo de pesquisa
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedSearch(search)
+            setDebouncedSearch(search || null)
         }, 1000)
 
         return () => clearTimeout(timer)
     }, [search])
+
+    // Sincroniza o input com o search param no carregamento inicial
+    useEffect(() => {
+        if (debouncedSearch) setSearch(debouncedSearch)
+    }, [])
 
     const { data, isLoading, isFetching } = useQuery({
         queryKey: ["find-many-attendants", take, skip, debouncedSearch, teamFilter],
@@ -61,36 +63,23 @@ export function AttendantsTableContainer() {
         new Set(attendants.flatMap((u) => u.teams))
     ).sort()
 
-    function updateParams(params: Record<string, string>) {
-
-        const current = new URLSearchParams(searchParams.toString())
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value) {
-                current.set(key, value)
-            } else {
-                current.delete(key)
-            }
-        })
-
-        router.replace(`?${current.toString()}`)
-    }
-
     function handlePageSize(value: string) {
-        updateParams({ take: value, skip: "0" })
+        setTake(Number(value))
+        setSkip(0)
     }
 
     function handlePreviousPage() {
-        updateParams({ skip: String(Math.max(0, skip - take)) })
+        setSkip(Math.max(0, skip - take))
     }
 
     function handleNextPage() {
-        updateParams({ skip: String(skip + take) })
+        setSkip(skip + take)
     }
 
     function handleClearFilters() {
         setSearch("")
-        setTeamFilter("all")
+        setDebouncedSearch(null)
+        setTeamFilter(null)
     }
 
     const hasFilters = search !== "" || teamFilter !== "all"
@@ -120,16 +109,11 @@ export function AttendantsTableContainer() {
                         <SelectItem value="all">
                             Todos os times
                         </SelectItem>
-                        {
-                            allTeams.map((team) => (
-                                <SelectItem
-                                    key={team}
-                                    value={team}
-                                >
-                                    {team}
-                                </SelectItem>
-                            ))
-                        }
+                        {allTeams.map((team) => (
+                            <SelectItem key={team} value={team}>
+                                {team}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
 

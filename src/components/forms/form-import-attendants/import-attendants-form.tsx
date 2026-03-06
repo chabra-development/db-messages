@@ -1,3 +1,5 @@
+"use client"
+
 import { SpanErrorMessage } from "@/components/span-error"
 import {
     AlertDialog,
@@ -87,7 +89,7 @@ export const ImportAttendantsForm = () => {
                     Importar atendentes
                 </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="w-4/5">
+            <AlertDialogContent className="w-2/3 data-[size=default]:sm:max-w-none">
                 <AlertDialogHeader className="flex justify-between">
                     <div>
                         <AlertDialogTitle>

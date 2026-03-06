@@ -25,5 +25,5 @@ export async function uploadMediaFromUri({
         throw new Error(`Tipo de mídia não permitido: ${blob.type}`)
     }
 
-    return await uploadFile(file)
+    return await uploadFile(file, messageId)
 }
