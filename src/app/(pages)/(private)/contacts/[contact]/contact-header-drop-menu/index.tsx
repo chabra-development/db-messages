@@ -1,9 +1,7 @@
 import {
     findManyContactsTagByContactId
 } from "@/actions/contact-tag/find-many-contacts-tag-by-contact-id"
-import { toggleFavoriteContact } from "@/actions/user-preference/toggle-favorite-contact"
 import { FormCreateContactTags } from "@/components/forms/form-create-contact-tags"
-import { toast } from "@/components/toast"
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -19,27 +17,26 @@ import {
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
-import { queryClient } from "@/providers/theme-provider"
 import { ContactUserPreference } from "@prisma/client"
-import { useMutation, useMutationState, useQuery } from "@tanstack/react-query"
+import { useMutationState, useQuery } from "@tanstack/react-query"
 import {
     Bookmark,
-    Heart,
-    HeartMinus,
     MoreVertical,
-    Pin,
     RefreshCcw
 } from "lucide-react"
 import { useState } from "react"
+import { FavoriteContactButton } from "./favorite-contact-button"
+import { PinnedButton } from "./pinned-button"
 
-type ContactHeaderDropMenuProps = {
+export type ContactHeaderDropMenuProps = {
     contactId: string
-    preferences: ContactUserPreference[]
+    preferences: ContactUserPreference
 }
 
 export const ContactHeaderDropMenu = ({
@@ -61,37 +58,19 @@ export const ContactHeaderDropMenu = ({
         select: (mutation) => mutation.state.status
     })
 
-    const { mutate } = useMutation({
-        mutationKey: ["toggle-favorite-contact"],
-        mutationFn: toggleFavoriteContact,
-        onSuccess: ({ favorite }) => {
-            toast({
-                title: `Contato ${favorite
-                    ? "retirado dos"
-                    : "adicionado aos"} 
-                    favoritos`
-            })
-
-            queryClient.invalidateQueries({
-                queryKey: ["find-contact-by-id", contactId]
-            })
-        }
-    })
-
     if (!tags || isLoading || !session) {
-        return
+        return (
+            <Button
+                size={"icon"}
+                variant="ghost"
+                disabled
+            >
+                <MoreVertical className="size-5" />
+            </Button>
+        )
     }
 
-    const { user } = session
-
-    const myPreferences = preferences.find(preference => preference.userId === user.id)
-    const myPreferencesExist = (myPreferences && myPreferences.favorite) ?? false
-
-    const IconHeart = myPreferencesExist ? HeartMinus : Heart
-
-    function handleToggleFavoriteContact() {
-        mutate(contactId)
-    }
+    const isAdmin = session.user.role === "ADMIN"
 
     return (
         <>
@@ -158,37 +137,38 @@ export const ContactHeaderDropMenu = ({
                         onOpenChange={setDropdownOpen}
                     >
                         <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={handleToggleFavoriteContact}>
-                                <IconHeart className={cn(
-                                    "text-red-500",
-                                    !myPreferencesExist && "fill-red-500"
-                                )} />
-                                {
-                                    myPreferencesExist
-                                        ? "Remover dos favoritos"
-                                        : "Adicionar aos favoritos"
-                                }
-                            </DropdownMenuItem>
+                            <FavoriteContactButton
+                                contactId={contactId}
+                                preferences={preferences}
+                            />
+                            <PinnedButton
+                                contactId={contactId}
+                                preferences={preferences}
+                            />
                             <DropdownMenuItem>
                                 <RefreshCcw />
                                 Sincronizar mensagens
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Pin />
-                                Fixar contato
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={e => {
-                                e.preventDefault()
-                                setDialogOpen(true)
-                            }}>
-                                <Bookmark />
-                                Adicionar tag
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <RefreshCcw />
-                                Importar mensagens
-                            </DropdownMenuItem>
                         </DropdownMenuGroup>
+                        {
+                            isAdmin && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel className="text-muted-foreground">
+                                            Admin
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuItem onSelect={e => {
+                                            e.preventDefault()
+                                            setDialogOpen(true)
+                                        }}>
+                                            <Bookmark />
+                                            Adicionar tag
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+                                </>
+                            )
+                        }
                     </DropdownMenu>
                 </DropdownMenuContent>
             </DropdownMenu>

@@ -13,13 +13,14 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { MessagesBoard } from "@/contacts/messages-board"
 import { getTextColorFromBackground } from "@/functions/get-text-color-from-background"
+import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
-import { Prisma } from "@prisma/client"
+import { Message, Prisma } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
+import { Pin } from "lucide-react"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
-import { Message } from "@prisma/client"
 
 export type ContactWithRelations = Prisma.ContactGetPayload<{
     include: {
@@ -44,6 +45,8 @@ export type ContactWithRelations = Prisma.ContactGetPayload<{
 }>
 
 export const ContactsQuery = ({ id }: { id: string }) => {
+
+    const { data: session } = authClient.useSession()
 
     const {
         error,
@@ -70,7 +73,16 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         tag: true,
                     }
                 },
-                preferences: true
+                preferences: {
+                    where: {
+                        userId: session?.user.id
+                    },
+                    select: {
+                        id: true,
+                        favorite: true,
+                        pinned: true,
+                    }
+                }
             }
         }),
     })
@@ -96,12 +108,21 @@ export const ContactsQuery = ({ id }: { id: string }) => {
 
     const { name, phoneNumber, messages, tags, preferences } = contact
 
+    const [preference] = preferences
+
     return (
         <Card className="size-full border-none rounded-none gap-0">
             {contact && (
                 <CardHeader className="border-b pb-3 gap-0">
                     <CardTitle className="text-2xl mb-1.25 truncate">
-                        {name}
+                        <div className="flex items-center gap-2">
+                            {
+                                preference.pinned && (
+                                    <Pin className="fill-primary -rotate-45" />
+                                )
+                            }
+                            {name}
+                        </div>
                     </CardTitle>
                     <CardDescription className="truncate">
                         {phoneNumber && phoneNumber}
@@ -128,7 +149,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         <ContactHeaderSearch />
                         <ContactHeaderDropMenu
                             contactId={id}
-                            preferences={preferences}
+                            preferences={preference}
                         />
                     </CardAction>
                 </CardHeader>
