@@ -82,8 +82,6 @@ export const Aside = () => {
         return null
     }
 
-    console.log(session.user)
-
     const isAdmin = session.user.role === "ADMIN"
 
     return (

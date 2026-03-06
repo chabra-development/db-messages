@@ -4,13 +4,14 @@ import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Contact } from "@prisma/client"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { parseAsString, useQueryState } from "nuqs"
 import { useState } from "react"
 
 const TAKE = 20
 
 export function UseAside() {
 
-    const [searchQuery, setSearchQuery] = useState("")
+    const [searchQuery, setSearchQuery] = useQueryState("contact-name", parseAsString.withDefault(""))
     const [activeContactId, setActiveContactId] = useState<string | null>(null)
 
     const debouncedSearch = useDebounce(searchQuery, 500)

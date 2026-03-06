@@ -1,5 +1,9 @@
-import { findManyContactsTagByContactId } from "@/actions/contact-tag/find-many-contacts-tag-by-contact-id"
+import {
+    findManyContactsTagByContactId
+} from "@/actions/contact-tag/find-many-contacts-tag-by-contact-id"
+import { toggleFavoriteContact } from "@/actions/user-preference/toggle-favorite-contact"
 import { FormCreateContactTags } from "@/components/forms/form-create-contact-tags"
+import { toast } from "@/components/toast"
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -18,18 +22,32 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Spinner } from "@/components/ui/spinner"
-import { useMutationState, useQuery } from "@tanstack/react-query"
+import { authClient } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
+import { queryClient } from "@/providers/theme-provider"
+import { ContactUserPreference } from "@prisma/client"
+import { useMutation, useMutationState, useQuery } from "@tanstack/react-query"
 import {
     Bookmark,
     Heart,
+    HeartMinus,
     MoreVertical,
     Pin,
     RefreshCcw
 } from "lucide-react"
 import { useState } from "react"
 
-export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
-    
+type ContactHeaderDropMenuProps = {
+    contactId: string
+    preferences: ContactUserPreference[]
+}
+
+export const ContactHeaderDropMenu = ({
+    contactId, preferences
+}: ContactHeaderDropMenuProps) => {
+
+    const { data: session } = authClient.useSession()
+
     const { data: tags, isLoading } = useQuery({
         queryKey: ["find-many-contacts-tag-by-contact-id", contactId],
         queryFn: () => findManyContactsTagByContactId(contactId)
@@ -43,8 +61,36 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
         select: (mutation) => mutation.state.status
     })
 
-    if (!tags || isLoading) {
+    const { mutate } = useMutation({
+        mutationKey: ["toggle-favorite-contact"],
+        mutationFn: toggleFavoriteContact,
+        onSuccess: ({ favorite }) => {
+            toast({
+                title: `Contato ${favorite
+                    ? "retirado dos"
+                    : "adicionado aos"} 
+                    favoritos`
+            })
+
+            queryClient.invalidateQueries({
+                queryKey: ["find-contact-by-id", contactId]
+            })
+        }
+    })
+
+    if (!tags || isLoading || !session) {
         return
+    }
+
+    const { user } = session
+
+    const myPreferences = preferences.find(preference => preference.userId === user.id)
+    const myPreferencesExist = (myPreferences && myPreferences.favorite) ?? false
+
+    const IconHeart = myPreferencesExist ? HeartMinus : Heart
+
+    function handleToggleFavoriteContact() {
+        mutate(contactId)
     }
 
     return (
@@ -112,9 +158,16 @@ export const ContactHeaderDropMenu = ({ contactId }: { contactId: string }) => {
                         onOpenChange={setDropdownOpen}
                     >
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
-                                <Heart />
-                                Adicionar aos favoritos
+                            <DropdownMenuItem onClick={handleToggleFavoriteContact}>
+                                <IconHeart className={cn(
+                                    "text-red-500",
+                                    !myPreferencesExist && "fill-red-500"
+                                )} />
+                                {
+                                    myPreferencesExist
+                                        ? "Remover dos favoritos"
+                                        : "Adicionar aos favoritos"
+                                }
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <RefreshCcw />

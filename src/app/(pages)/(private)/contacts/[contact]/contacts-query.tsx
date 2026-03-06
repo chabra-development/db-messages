@@ -12,20 +12,34 @@ import {
 } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { MessagesBoard } from "@/contacts/messages-board"
+import { getTextColorFromBackground } from "@/functions/get-text-color-from-background"
+import { cn } from "@/lib/utils"
 import { Prisma } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
+import { Message } from "@prisma/client"
 
 export type ContactWithRelations = Prisma.ContactGetPayload<{
     include: {
-        messages: true,
+        messages: {
+            omit: {
+                contactId: true,
+                type: true,
+                createdAt: true,
+                metadata: true,
+            },
+            orderBy: {
+                sentAt: "desc",
+            }
+        },
         tags: {
             include: {
                 tag: true,
             }
         },
+        preferences: true
     }
 }>
 
@@ -56,6 +70,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         tag: true,
                     }
                 },
+                preferences: true
             }
         }),
     })
@@ -79,7 +94,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         return <ContactsQueryLoading />
     }
 
-    const { name, phoneNumber, messages, tags } = contact
+    const { name, phoneNumber, messages, tags, preferences } = contact
 
     return (
         <Card className="size-full border-none rounded-none gap-0">
@@ -99,7 +114,10 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                                     style={{
                                         background: color ?? undefined
                                     }}
-                                    className="capitalize"
+                                    className={cn(
+                                        "capitalize",
+                                        getTextColorFromBackground(color)
+                                    )}
                                 >
                                     {name}
                                 </Badge>
@@ -108,13 +126,16 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardDescription>
                     <CardAction className="flex items-center gap-2">
                         <ContactHeaderSearch />
-                        <ContactHeaderDropMenu contactId={id} />
+                        <ContactHeaderDropMenu
+                            contactId={id}
+                            preferences={preferences}
+                        />
                     </CardAction>
                 </CardHeader>
             )}
             <ScrollArea className="flex-1 min-h-1 py-8">
                 <ScrollBar />
-                <MessagesBoard messages={messages} />
+                <MessagesBoard messages={messages as Message[]} />
             </ScrollArea>
         </Card>
     )

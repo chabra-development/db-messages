@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { getTextColorFromBackground } from "@/functions/get-text-color-from-background"
 import { cn } from "@/lib/utils"
 import { createTagsObjetc, CreateTagsProps, createTagsSchema } from "@/schemas/create-tags-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -177,7 +178,8 @@ export const FormCreateContactTags = ({
                                                 }}
                                                 className={cn(
                                                     "text-sm",
-                                                    isSelected && "cursor-not-allowed opacity-50"
+                                                    isSelected && "cursor-not-allowed opacity-50",
+                                                    getTextColorFromBackground(color)
                                                 )}
                                                 variant={isSelected ? "secondary" : "default"}
                                                 onClick={() => addContactTagByClick(name)}
