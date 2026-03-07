@@ -5,9 +5,10 @@ import { Message } from "@prisma/client"
 import { MessageRenderer } from "./message-renderer"
 import { SystemInfoDate } from "./system-info-date"
 
-type MessagesBoardProps = { messages: Message[] }
+type MessagesBoardProps = {
+    messages: Pick<Message, "id" | "direction" | "content" | "sentAt" | "status">[]
+}
 
-// messages-board.tsx
 export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
 
     if (messages.length === 0) {

@@ -2,22 +2,34 @@ import { findMessagesByContact } from "@/actions/messages/find-messages-by-conta
 import { useInfiniteQuery } from "@tanstack/react-query"
 
 export function useMessages(contactId: string) {
+
     const query = useInfiniteQuery({
-        queryKey: ["messages", contactId],
-        queryFn: ({ pageParam }) =>
-            findMessagesByContact({
+        queryKey: ["find-messages-infinte-scroll", contactId],
+        queryFn: ({ pageParam }) => {
+            return findMessagesByContact({
                 contactId,
                 take: 20,
-                cursor: pageParam,
-            }),
+                cursor: pageParam ?? undefined,
+            })
+        },
         initialPageParam: undefined as string | undefined,
-        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        getNextPageParam: (lastPage, allPages) => {
+            const loadedCount = allPages.flatMap((p) => p.messages).length
+            const total = allPages[0]?.total ?? 0
+            if (loadedCount < total) return lastPage.nextCursor ?? undefined
+            return undefined
+        },
         enabled: !!contactId,
     })
 
-    // Páginas em ordem desc (mais recentes primeiro)
-    // MessagesBoard chama toReversed() para exibir em ordem cronológica
-    const messages = query.data?.pages.flatMap((p) => p.messages) ?? []
+    const messages = query.data?.pages
+        .flatMap((p) => p.messages)
+        .reverse()
+        ?? []
 
-    return { ...query, messages }
+    const total = query.data?.pages[0]?.total ?? 0
+    const loadedCount = messages.length
+    const hasNextPage = loadedCount < total
+
+    return { ...query, messages, hasNextPage, total, loadedCount }
 }

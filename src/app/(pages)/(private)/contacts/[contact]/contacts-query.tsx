@@ -73,6 +73,8 @@ export const ContactsQuery = ({ id }: { id: string }) => {
     })
 
     const {
+        loadedCount,
+        total,
         messages,
         fetchNextPage,
         hasNextPage,
@@ -80,27 +82,18 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         isLoading: isMessagesLoading,
     } = useMessages(id)
 
-    // Reseta o controle de scroll inicial ao trocar de contato
     useEffect(() => {
-        isFirstLoad.current = true
-    }, [id])
+        if (messages.length === 0) return
+        if (!isFirstLoad.current) return
 
-    // Rola até o final na primeira carga de mensagens
-    useEffect(() => {
-        if (messages.length === 0 || !isFirstLoad.current) return
         bottomRef.current?.scrollIntoView({ behavior: "instant" })
         isFirstLoad.current = false
     }, [messages.length])
 
-    // Preserva a posição do scroll quando novas mensagens são pré-anexadas
-    useLayoutEffect(() => {
-        const container = containerRef.current
-        if (!container || prevScrollHeight.current === 0) return
-        container.scrollTop = container.scrollHeight - prevScrollHeight.current
-        prevScrollHeight.current = 0
-    }, [messages.length])
+    useEffect(() => {
+        isFirstLoad.current = true
+    }, [id])
 
-    // IntersectionObserver: carrega mais mensagens quando o sentinel do topo fica visível
     useEffect(() => {
         const sentinel = topRef.current
         const container = containerRef.current
@@ -119,6 +112,19 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         observer.observe(sentinel)
         return () => observer.disconnect()
     }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+    useLayoutEffect(() => {
+        
+        const container = containerRef.current
+        if (!container || prevScrollHeight.current === 0) return
+
+        container.scrollTo({
+            top: container.scrollHeight - prevScrollHeight.current,
+            behavior: "smooth"
+        })
+
+        prevScrollHeight.current = 0
+    }, [messages.length])
 
     if (error) {
         toast({
@@ -189,7 +195,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
             )}
             <div
                 ref={containerRef}
-                className="flex-1 min-h-0 overflow-y-auto py-8"
+                className="flex-1 min-h-0 overflow-y-auto py-8 scroll-smooth"
             >
                 {/* Sentinel para IntersectionObserver — dispara o fetch ao chegar no topo */}
                 <div ref={topRef} className="h-1" />
@@ -200,7 +206,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     )}
                     {!hasNextPage && messages.length > 0 && (
                         <span className="text-xs text-muted-foreground">
-                            Início da conversa
+                            Início da conversa · {loadedCount} de {total} mensagens
                         </span>
                     )}
                 </div>

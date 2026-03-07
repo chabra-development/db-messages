@@ -1,17 +1,18 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { Message } from "@prisma/client"
+import type { Message } from "@prisma/client"
+
+type Response = {
+    messages: Pick<Message, "id" | "direction" | "content" | "sentAt" | "status">[]
+    nextCursor: string | null
+    total: number
+}
 
 type Params = {
     contactId: string
     take?: number
-    cursor?: string
-}
-
-type Response = {
-    messages: Message[]
-    nextCursor: string | null
+    cursor?: string | null
 }
 
 export async function findMessagesByContact({
@@ -19,15 +20,39 @@ export async function findMessagesByContact({
     take = 20,
     cursor,
 }: Params): Promise<Response> {
-    const messages = await prisma.message.findMany({
-        where: { contactId },
-        take,
-        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-        orderBy: { sentAt: "desc" },
-    })
+
+    const [rawMessages, total] = await prisma.$transaction([
+        prisma.message.findMany({
+            where: { contactId },
+            take: take + 1,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            orderBy: [
+                { sentAt: "desc" },
+                { id: "desc" }, // desempate por id
+            ],
+            select: {
+                id: true,
+                direction: true,
+                content: true,
+                sentAt: true,
+                status: true,
+            },
+        }),
+        prisma.message.count({
+            where: { contactId },
+        }),
+    ])
+
+    const hasMore = rawMessages.length > take
+    const messages = hasMore ? rawMessages.slice(0, take) : rawMessages
+
+    console.log("📥 cursor recebido:", cursor)
+    console.log("📦 raw:", rawMessages.length, "hasMore:", hasMore)
+    console.log("📦 nextCursor:", hasMore ? messages.at(-1)!.id : null)
 
     return {
         messages,
-        nextCursor: messages.length === take ? messages.at(-1)!.id : null,
+        nextCursor: hasMore ? messages.at(-1)!.id : null,
+        total,
     }
 }

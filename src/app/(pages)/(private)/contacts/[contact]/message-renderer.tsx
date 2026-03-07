@@ -41,7 +41,7 @@ import { Message, MessageDirection } from "@prisma/client"
 import { ContactMessageWithLink } from "./contact-message-with-link"
 
 export type MessageRendererProps = {
-    message: Message
+    message: Pick<Message, "id" | "direction" | "content" | "sentAt" | "status">
 }
 
 export const MessageRenderer = ({ message }: MessageRendererProps) => {

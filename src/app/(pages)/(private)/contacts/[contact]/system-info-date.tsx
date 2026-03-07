@@ -7,7 +7,7 @@ import { isSameDay } from "date-fns"
 type SystemInfoDateProps = {
     date: Date
     index: number
-    array: Message[]
+    array: Pick<Message, "id" | "direction" | "content" | "sentAt" | "status">[]
 }
 
 export const SystemInfoDate = ({
