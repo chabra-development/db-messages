@@ -24,7 +24,7 @@ export function useMessages(contactId: string) {
 
     const messages = query.data?.pages
         .flatMap((p) => p.messages)
-        .reverse()
+        .sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime())
         ?? []
 
     const total = query.data?.pages[0]?.total ?? 0

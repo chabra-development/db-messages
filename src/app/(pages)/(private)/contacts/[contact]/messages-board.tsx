@@ -35,12 +35,9 @@ export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
         throw new Error(`tipo não tratado: ${JSON.stringify(unknownMessage.content)}`)
     }
 
-    // ✅ toReversed() não muta o original
-    const itemsReversed = messages.toReversed()
-
     return (
         <CardContent className="space-y-2 px-2">
-            {itemsReversed.map((message, index, array) => (
+            {messages.map((message, index, array) => (
                 <div
                     key={message.id}
                     className={cn(

@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { getTextColorFromBackground } from "@/functions/get-text-color-from-background"
 import { useMessages } from "@/hooks/use-messages"
 import { authClient } from "@/lib/auth-client"
@@ -35,12 +36,6 @@ export type ContactWithRelations = Prisma.ContactGetPayload<{
 }>
 
 export const ContactsQuery = ({ id }: { id: string }) => {
-
-    const containerRef = useRef<HTMLDivElement>(null)
-    const topRef = useRef<HTMLDivElement>(null)
-    const bottomRef = useRef<HTMLDivElement>(null)
-    const prevScrollHeight = useRef(0)
-    const isFirstLoad = useRef(true)
 
     const { data: session } = authClient.useSession()
 
@@ -72,29 +67,39 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         }),
     })
 
+    const containerRef = useRef<HTMLDivElement>(null)
+    const topRef = useRef<HTMLDivElement>(null)
+    const bottomRef = useRef<HTMLDivElement>(null)
+    const prevScrollHeight = useRef(0)
+    const isFirstLoad = useRef(true)
+
     const {
+        isLoading: isMessagesLoading,
         loadedCount,
         total,
         messages,
         fetchNextPage,
         hasNextPage,
-        isFetchingNextPage,
-        isLoading: isMessagesLoading,
+        isFetchingNextPage
     } = useMessages(id)
 
+    // 1. Scroll inicial para o fim
     useEffect(() => {
         if (messages.length === 0) return
         if (!isFirstLoad.current) return
-
         bottomRef.current?.scrollIntoView({ behavior: "instant" })
         isFirstLoad.current = false
     }, [messages.length])
 
+    // 2. Reseta ao trocar de contato
     useEffect(() => {
         isFirstLoad.current = true
     }, [id])
 
+    // 3. Observer — registrado após o scroll inicial
     useEffect(() => {
+        if (isFirstLoad.current) return // ainda não chegou no fim
+
         const sentinel = topRef.current
         const container = containerRef.current
         if (!sentinel || !container) return
@@ -111,18 +116,15 @@ export const ContactsQuery = ({ id }: { id: string }) => {
 
         observer.observe(sentinel)
         return () => observer.disconnect()
-    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+    }, [isFirstLoad.current, hasNextPage, isFetchingNextPage, fetchNextPage])
 
+    // 4. Restaura posição do scroll sem movimentação visível
     useLayoutEffect(() => {
-        
         const container = containerRef.current
         if (!container || prevScrollHeight.current === 0) return
 
-        container.scrollTo({
-            top: container.scrollHeight - prevScrollHeight.current,
-            behavior: "smooth"
-        })
-
+        const diff = container.scrollHeight - prevScrollHeight.current
+        container.scrollTop = container.scrollTop + diff
         prevScrollHeight.current = 0
     }, [messages.length])
 
@@ -193,10 +195,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardAction>
                 </CardHeader>
             )}
-            <div
-                ref={containerRef}
-                className="flex-1 min-h-0 overflow-y-auto py-8 scroll-smooth"
-            >
+            <ScrollArea viewportRef={containerRef} className="flex-1 min-h-0 py-8">
                 {/* Sentinel para IntersectionObserver — dispara o fetch ao chegar no topo */}
                 <div ref={topRef} className="h-1" />
 
@@ -220,7 +219,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                 )}
 
                 <div ref={bottomRef} className="h-1" />
-            </div>
+            </ScrollArea>
         </Card>
     )
 }

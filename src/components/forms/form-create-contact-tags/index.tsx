@@ -102,10 +102,6 @@ export const FormCreateContactTags = ({
         return <div />
     }
 
-    if (errors.tags) {
-        console.log(errors.tags)
-    }
-
     const watchTags = watch("tags")
 
     function addContactTag(contactTag: string) {

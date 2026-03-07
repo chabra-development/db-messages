@@ -28,7 +28,7 @@ export async function findMessagesByContact({
             ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
             orderBy: [
                 { sentAt: "desc" },
-                { id: "desc" }, // desempate por id
+                { id: "desc" },
             ],
             select: {
                 id: true,
@@ -45,10 +45,6 @@ export async function findMessagesByContact({
 
     const hasMore = rawMessages.length > take
     const messages = hasMore ? rawMessages.slice(0, take) : rawMessages
-
-    console.log("📥 cursor recebido:", cursor)
-    console.log("📦 raw:", rawMessages.length, "hasMore:", hasMore)
-    console.log("📦 nextCursor:", hasMore ? messages.at(-1)!.id : null)
 
     return {
         messages,
