@@ -10,31 +10,21 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { MessagesBoard } from "@/contacts/messages-board"
 import { getTextColorFromBackground } from "@/functions/get-text-color-from-background"
+import { useMessages } from "@/hooks/use-messages"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
-import { Message, Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
-import { Pin } from "lucide-react"
+import { Loader2, Pin } from "lucide-react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
+import { MessagesBoard } from "./messages-board"
 
 export type ContactWithRelations = Prisma.ContactGetPayload<{
     include: {
-        messages: {
-            omit: {
-                contactId: true,
-                type: true,
-                createdAt: true,
-                metadata: true,
-            },
-            orderBy: {
-                sentAt: "desc",
-            }
-        },
         tags: {
             include: {
                 tag: true,
@@ -45,6 +35,12 @@ export type ContactWithRelations = Prisma.ContactGetPayload<{
 }>
 
 export const ContactsQuery = ({ id }: { id: string }) => {
+
+    const containerRef = useRef<HTMLDivElement>(null)
+    const topRef = useRef<HTMLDivElement>(null)
+    const bottomRef = useRef<HTMLDivElement>(null)
+    const prevScrollHeight = useRef(0)
+    const isFirstLoad = useRef(true)
 
     const { data: session } = authClient.useSession()
 
@@ -57,17 +53,6 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         queryKey: ["find-contact-by-id", id],
         queryFn: () => findContactById<ContactWithRelations>(id, {
             include: {
-                messages: {
-                    omit: {
-                        contactId: true,
-                        type: true,
-                        createdAt: true,
-                        metadata: true,
-                    },
-                    orderBy: {
-                        sentAt: "desc",
-                    }
-                },
                 tags: {
                     include: {
                         tag: true,
@@ -86,6 +71,54 @@ export const ContactsQuery = ({ id }: { id: string }) => {
             }
         }),
     })
+
+    const {
+        messages,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: isMessagesLoading,
+    } = useMessages(id)
+
+    // Reseta o controle de scroll inicial ao trocar de contato
+    useEffect(() => {
+        isFirstLoad.current = true
+    }, [id])
+
+    // Rola até o final na primeira carga de mensagens
+    useEffect(() => {
+        if (messages.length === 0 || !isFirstLoad.current) return
+        bottomRef.current?.scrollIntoView({ behavior: "instant" })
+        isFirstLoad.current = false
+    }, [messages.length])
+
+    // Preserva a posição do scroll quando novas mensagens são pré-anexadas
+    useLayoutEffect(() => {
+        const container = containerRef.current
+        if (!container || prevScrollHeight.current === 0) return
+        container.scrollTop = container.scrollHeight - prevScrollHeight.current
+        prevScrollHeight.current = 0
+    }, [messages.length])
+
+    // IntersectionObserver: carrega mais mensagens quando o sentinel do topo fica visível
+    useEffect(() => {
+        const sentinel = topRef.current
+        const container = containerRef.current
+        if (!sentinel || !container) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    prevScrollHeight.current = container.scrollHeight
+                    fetchNextPage()
+                }
+            },
+            { root: container, threshold: 0.1 }
+        )
+
+        observer.observe(sentinel)
+        return () => observer.disconnect()
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
     if (error) {
         toast({
@@ -106,7 +139,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         return <ContactsQueryLoading />
     }
 
-    const { name, phoneNumber, messages, tags, preferences } = contact
+    const { name, phoneNumber, tags, preferences } = contact
 
     const [preference] = preferences
 
@@ -154,10 +187,34 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     </CardAction>
                 </CardHeader>
             )}
-            <ScrollArea className="flex-1 min-h-1 py-8">
-                <ScrollBar />
-                <MessagesBoard messages={messages as Message[]} />
-            </ScrollArea>
+            <div
+                ref={containerRef}
+                className="flex-1 min-h-0 overflow-y-auto py-8"
+            >
+                {/* Sentinel para IntersectionObserver — dispara o fetch ao chegar no topo */}
+                <div ref={topRef} className="h-1" />
+
+                <div className="py-2 flex justify-center">
+                    {isFetchingNextPage && (
+                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!hasNextPage && messages.length > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                            Início da conversa
+                        </span>
+                    )}
+                </div>
+
+                {isMessagesLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
+                    <MessagesBoard messages={messages} />
+                )}
+
+                <div ref={bottomRef} className="h-1" />
+            </div>
         </Card>
     )
 }
