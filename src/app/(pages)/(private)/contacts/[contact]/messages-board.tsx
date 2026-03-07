@@ -2,7 +2,6 @@ import { Card, CardContent, CardDescription } from "@/components/ui/card"
 import { isUnknownContent } from "@/guards/lime-thread-messages.guards"
 import { cn } from "@/lib/utils"
 import { Message } from "@prisma/client"
-import { useEffect, useRef } from "react"
 import { MessageRenderer } from "./message-renderer"
 import { SystemInfoDate } from "./system-info-date"
 
@@ -10,12 +9,6 @@ type MessagesBoardProps = { messages: Message[] }
 
 // messages-board.tsx
 export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
-
-    const bottomRef = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" })
-    }, [messages.length])
 
     if (messages.length === 0) {
         return (
@@ -62,7 +55,6 @@ export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
                     <MessageRenderer message={message} />
                 </div>
             ))}
-            <div ref={bottomRef} className="h-1" />
         </CardContent>
     )
 }
