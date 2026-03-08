@@ -1,16 +1,20 @@
 import { toggleFavoriteContact } from "@/actions/user-preference/toggle-favorite-contact"
 import { toast } from "@/components/toast"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { queryClient } from "@/providers/theme-provider"
+import { ContactUserPreference } from "@prisma/client"
 import { useMutation } from "@tanstack/react-query"
 import { Heart, HeartMinus } from "lucide-react"
-import { ContactHeaderDropMenuProps } from "."
+
+type FavoriteContactButtonProps = {
+    contactId: string
+    preferences: ContactUserPreference
+}
 
 export const FavoriteContactButton = ({
     contactId, preferences
-}: ContactHeaderDropMenuProps) => {
+}: FavoriteContactButtonProps) => {
 
     const { mutate } = useMutation({
         mutationKey: ["toggle-favorite-contact"],

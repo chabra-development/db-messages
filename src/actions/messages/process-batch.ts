@@ -10,6 +10,7 @@ export async function processBatch(
     jobId: string,
     batch: Array<{ id: string; identity: string }>
 ): Promise<{ succeeded: number; failed: number; messagesCreated: number }> {
+    
     let succeeded = 0
     let failed = 0
     let messagesCreated = 0

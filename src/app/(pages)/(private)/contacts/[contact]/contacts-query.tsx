@@ -191,6 +191,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         <ContactHeaderDropMenu
                             contactId={id}
                             preferences={preference}
+                            isFirstLoad={isFirstLoad}
                         />
                     </CardAction>
                 </CardHeader>

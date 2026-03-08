@@ -1,16 +1,20 @@
 import { togglePinnedContact } from "@/actions/user-preference/toggle-pinned-contact"
 import { toast } from "@/components/toast"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { queryClient } from "@/providers/theme-provider"
+import { ContactUserPreference } from "@prisma/client"
 import { useMutation } from "@tanstack/react-query"
 import { Pin, PinOff } from "lucide-react"
-import { ContactHeaderDropMenuProps } from "."
+
+type PinnedButtonProps = {
+    contactId: string
+    preferences: ContactUserPreference
+}
 
 export const PinnedButton = ({
     contactId, preferences
-}: ContactHeaderDropMenuProps) => {
+}: PinnedButtonProps) => {
 
     const { mutate } = useMutation({
         mutationKey: ["toggle-favorite-contact"],

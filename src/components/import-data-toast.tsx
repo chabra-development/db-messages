@@ -240,7 +240,7 @@ function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
     const { succeeded, failedCount, failed } = data
 
     return (
-        <ScrollArea className="h-100 max-h-120 border shadow-lg p-4 rounded-lg">
+        <ScrollArea className="h-fit max-h-120 border shadow-lg p-4 rounded-lg bg-background">
             <ScrollBar />
             <div className="size-full space-y-4">
                 {/* Header */}

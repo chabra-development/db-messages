@@ -32,7 +32,7 @@ export const Aside = () => {
 
         const { fetchNextPage, hasNextPage, isFetchingNextPage, hasSearch } = useAside
 
-        if (hasSearch) return // busca server-side não usa scroll infinito
+        if (hasSearch) return
 
         const observer = new IntersectionObserver(
             (entries) => {

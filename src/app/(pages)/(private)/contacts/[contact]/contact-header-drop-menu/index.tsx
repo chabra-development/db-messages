@@ -25,22 +25,20 @@ import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
 import { ContactUserPreference } from "@prisma/client"
 import { useMutationState, useQuery } from "@tanstack/react-query"
-import {
-    Bookmark,
-    MoreVertical,
-    RefreshCcw
-} from "lucide-react"
-import { useState } from "react"
+import { Bookmark, MoreVertical } from "lucide-react"
+import { RefObject, useState } from "react"
 import { FavoriteContactButton } from "./favorite-contact-button"
+import { ImportMessagesByContactIdButton } from "./import-messages-by-contact-id-button"
 import { PinnedButton } from "./pinned-button"
 
 export type ContactHeaderDropMenuProps = {
     contactId: string
     preferences: ContactUserPreference
+    isFirstLoad: RefObject<boolean>
 }
 
 export const ContactHeaderDropMenu = ({
-    contactId, preferences
+    contactId, preferences, isFirstLoad
 }: ContactHeaderDropMenuProps) => {
 
     const { data: session } = authClient.useSession()
@@ -145,10 +143,10 @@ export const ContactHeaderDropMenu = ({
                                 contactId={contactId}
                                 preferences={preferences}
                             />
-                            <DropdownMenuItem>
-                                <RefreshCcw />
-                                Sincronizar mensagens
-                            </DropdownMenuItem>
+                            <ImportMessagesByContactIdButton
+                                contactId={contactId}
+                                isFirstLoad={isFirstLoad}
+                            />
                         </DropdownMenuGroup>
                         {
                             isAdmin && (
