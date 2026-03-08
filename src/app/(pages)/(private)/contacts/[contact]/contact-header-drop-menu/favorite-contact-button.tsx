@@ -9,11 +9,11 @@ import { Heart, HeartMinus } from "lucide-react"
 
 type FavoriteContactButtonProps = {
     contactId: string
-    preferences: ContactUserPreference
+    preference: ContactUserPreference | null
 }
 
 export const FavoriteContactButton = ({
-    contactId, preferences
+    contactId, preference
 }: FavoriteContactButtonProps) => {
 
     const { mutate } = useMutation({
@@ -33,7 +33,7 @@ export const FavoriteContactButton = ({
         }
     })
 
-    const myPreferencesExist = (preferences && preferences.favorite) ?? false
+    const myPreferencesExist = preference?.favorite ?? false
 
     const IconHeart = myPreferencesExist ? HeartMinus : Heart
 

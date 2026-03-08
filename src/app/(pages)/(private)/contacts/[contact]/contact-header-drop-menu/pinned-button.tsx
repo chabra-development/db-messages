@@ -9,11 +9,11 @@ import { Pin, PinOff } from "lucide-react"
 
 type PinnedButtonProps = {
     contactId: string
-    preferences: ContactUserPreference
+    preference: ContactUserPreference | null
 }
 
 export const PinnedButton = ({
-    contactId, preferences
+    contactId, preference
 }: PinnedButtonProps) => {
 
     const { mutate } = useMutation({
@@ -33,9 +33,9 @@ export const PinnedButton = ({
         }
     })
 
-    const myPreferencesExist = (preferences && preferences.pinned) ?? false
+    const myPreferenceExist = preference?.pinned ?? false
 
-    const IconPin = myPreferencesExist ? PinOff : Pin
+    const IconPin = myPreferenceExist ? PinOff : Pin
 
     function handleTogglePinnedContact() {
         mutate(contactId)
@@ -43,9 +43,9 @@ export const PinnedButton = ({
 
     return (
         <DropdownMenuItem onClick={handleTogglePinnedContact}>
-            <IconPin className={cn(!myPreferencesExist && "fill-primary")} />
+            <IconPin className={cn(!myPreferenceExist && "fill-primary")} />
             {
-                myPreferencesExist
+                myPreferenceExist
                     ? "Retirar dos fixados"
                     : "Fixar contato"
             }

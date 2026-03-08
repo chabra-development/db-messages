@@ -33,12 +33,12 @@ import { PinnedButton } from "./pinned-button"
 
 export type ContactHeaderDropMenuProps = {
     contactId: string
-    preferences: ContactUserPreference
+    preference: ContactUserPreference | null
     isFirstLoad: RefObject<boolean>
 }
 
 export const ContactHeaderDropMenu = ({
-    contactId, preferences, isFirstLoad
+    contactId, preference, isFirstLoad
 }: ContactHeaderDropMenuProps) => {
 
     const { data: session } = authClient.useSession()
@@ -137,11 +137,11 @@ export const ContactHeaderDropMenu = ({
                         <DropdownMenuGroup>
                             <FavoriteContactButton
                                 contactId={contactId}
-                                preferences={preferences}
+                                preference={preference}
                             />
                             <PinnedButton
                                 contactId={contactId}
-                                preferences={preferences}
+                                preference={preference}
                             />
                             <ImportMessagesByContactIdButton
                                 contactId={contactId}

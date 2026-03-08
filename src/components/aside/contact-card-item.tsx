@@ -65,7 +65,7 @@ export function ContactCardItem({
     return (
         <Link
             onNavigate={onClick}
-            href={`/contacts/${contact.id}`}
+            href={`/contacts/${contact.id}?contact-name=${searchQuery}`}
         >
             <Card className={cn(
                 "w-full",

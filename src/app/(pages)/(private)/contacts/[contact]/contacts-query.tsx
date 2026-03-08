@@ -149,7 +149,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
 
     const { name, phoneNumber, tags, preferences } = contact
 
-    const [preference] = preferences
+    const preference = preferences.length !== 0 ? preferences[0] : null
 
     return (
         <Card className="size-full border-none rounded-none gap-0">
@@ -158,7 +158,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                     <CardTitle className="text-2xl mb-1.25 truncate">
                         <div className="flex items-center gap-2">
                             {
-                                preference.pinned && (
+                                preference?.pinned && (
                                     <Pin className="fill-primary -rotate-45" />
                                 )
                             }
@@ -190,7 +190,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         <ContactHeaderSearch />
                         <ContactHeaderDropMenu
                             contactId={id}
-                            preferences={preference}
+                            preference={preference}
                             isFirstLoad={isFirstLoad}
                         />
                     </CardAction>

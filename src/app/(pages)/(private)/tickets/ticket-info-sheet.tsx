@@ -168,10 +168,8 @@ export const TicketInfoSheetItens = ({ id }: { id: string }) => {
         )
     }
 
-    const { resource } = ticketMessageResponse
-
     return (
         <div></div>
-        // <MessagesBoard resource={resource} />
+        // <MessagesBoard messages={resource.items as unknown as Message[]} />
     )
 }

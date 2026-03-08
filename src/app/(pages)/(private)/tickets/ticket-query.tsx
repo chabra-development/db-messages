@@ -1,6 +1,8 @@
 "use client"
 
 import { findManyTickets } from "@/actions/blip/find-many-tickets"
+import { ImportTicketsButton } from "@/components/forms/form-import-all-tickets/import-tickets-button"
+import { LinkMessagesButton } from "@/components/forms/form-import-all-tickets/link-messages-button"
 import { Pagination } from "@/components/pagination"
 import {
     Card,
@@ -11,6 +13,7 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card"
+import { InputGroup } from "@/components/ui/input-group"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { authClient } from "@/lib/auth-client"
 import { User } from "@prisma/client"
@@ -18,9 +21,6 @@ import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
 import { TicketInfoSheet } from "./ticket-info-sheet"
 import { TicketsQueryLoading } from "./ticket-query-loading"
-import { ImportTicketsButton } from "@/components/forms/form-import-all-tickets/import-tickets-button"
-import { LinkMessagesButton } from "@/components/forms/form-import-all-tickets/link-messages-button"
-import { InputGroup, InputGroupButton } from "@/components/ui/input-group"
 
 export const TicketsQuery = () => {
 
@@ -71,7 +71,7 @@ export const TicketsQuery = () => {
             </CardHeader>
             <ScrollArea className="flex-1 min-h-200">
                 <ScrollBar />
-                <CardContent className="grid grid-cols-2 gap-2 space-y-2 px-2">
+                <CardContent className="grid grid-cols-1 gap-2 space-y-2 px-2">
                     {
                         items.map((ticket, index) => (
                             <TicketInfoSheet

@@ -2,7 +2,14 @@
 
 import { findManyTags } from "@/actions/tags/find-many-tags"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { Ellipsis } from "lucide-react"
 import { ChangeColorDialog } from "./change-color-dialog"
@@ -46,7 +53,7 @@ export const TagClient = () => {
                         : tags.map(({ id, name, color, createdById }) => (
                             <Card
                                 key={id}
-                                className="text-sm gap-2"
+                                className="text-sm gap-2 bg-background"
                             >
                                 <CardHeader>
                                     <CardTitle className="text-lg">
