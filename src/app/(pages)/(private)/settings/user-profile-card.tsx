@@ -43,6 +43,8 @@ export function UserProfileCard() {
 
     const { image, name, email } = user
 
+    console.log(image)
+
     return (
         <Card className="w-1/2 rounded-2xl pt-0 overflow-hidden">
             <div className="w-full h-32 border-b flex relative ">
@@ -50,11 +52,15 @@ export function UserProfileCard() {
             </div>
             <div className="w-full gap-0 -translate-y-16 px-6 space-y-4">
                 <Avatar className="size-20 border">
-                    <AvatarImage
-                        src={image ? image : undefined}
-                        alt={`Avatar do usuário ${name}`}
-                        className="object-cover"
-                    />
+                    {
+                        image && (
+                            <AvatarImage
+                                src={image}
+                                alt={`Avatar do usuário ${name}`}
+                                className="object-cover"
+                            />
+                        )
+                    }
                     <AvatarFallback className="scale-250">
                         {getInitials(name)}
                     </AvatarFallback>
