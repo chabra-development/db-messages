@@ -34,3 +34,26 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(tags, { status: 200 })
 }
+
+const createTagSchema = z.object({
+    tags: z.array(z.string()),
+    createdById: z.uuid()
+})
+
+export async function POST(req: NextRequest) {
+
+    const { success, data, error } = createTagSchema.safeParse(await req.json())
+
+    if (!success) {
+        return NextResponse.json(error, { status: 400 })
+    }
+
+    const tagsCreated = await prisma.tag.createMany({
+        data: data.tags.map(tag => ({
+            name: tag,
+            createdById: data.createdById
+        }))
+    })
+
+    return NextResponse.json(tagsCreated, { status: 201 })
+}

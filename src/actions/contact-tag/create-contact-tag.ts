@@ -1,20 +1,24 @@
 "use server"
 
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { CreateTagsProps } from "@/schemas/create-tags-schema"
-import { headers } from "next/headers"
-import { findContactById } from "../contacts/find-contact-by-id"
 
 type CreateContactTagsProps = CreateTagsProps & {
     contactId: string
+    headers: Headers
 }
 
-export async function createContactTags({ tags, contactId }: CreateContactTagsProps) {
+export async function createContactTags({ tags, contactId, headers }: CreateContactTagsProps) {
 
-    const session = await auth.api.getSession({
-        headers: await headers()
-    })
+    const token = headers.get("cookie")
+        ?.split(";")
+        .find(c => c.trim().startsWith("better-auth.session_token="))
+        ?.split("=")[1]
+
+    const session = token ? await prisma.session.findUnique({
+        where: { token },
+        include: { user: true }
+    }) : null
 
     if (!session) {
         throw new Error("Sessão inválida, tente conectar novamente.")
@@ -22,11 +26,22 @@ export async function createContactTags({ tags, contactId }: CreateContactTagsPr
 
     const createdById = session.user.id
 
-    await findContactById(contactId)
+    const contact = await prisma.contact.findFirst({
+        where: {
+            OR: [{ id: contactId }, { identity: contactId }]
+        },
+        select: { id: true }
+    })
+
+    if (!contact) {
+        throw new Error("Contato não encontrado.")
+    }
+
+    const resolvedContactId = contact.id
 
     // busca as tags já associadas ao contato
     const existingContactTags = await prisma.contactTag.findMany({
-        where: { contactId },
+        where: { contactId: resolvedContactId },
         include: { tag: true }
     })
 
@@ -44,14 +59,14 @@ export async function createContactTags({ tags, contactId }: CreateContactTagsPr
     const [deletedTags, ...createdTags] = await prisma.$transaction([
         prisma.contactTag.deleteMany({
             where: {
-                contactId,
+                contactId: resolvedContactId,
                 tagId: { in: tagIdsToDelete }
             }
         }),
         ...tagsToCreate.map(({ name }) =>
             prisma.contactTag.create({
                 data: {
-                    contact: { connect: { id: contactId } },
+                    contact: { connect: { id: resolvedContactId } },
                     tag: {
                         connectOrCreate: {
                             where: { name },

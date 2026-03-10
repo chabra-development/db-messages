@@ -1,4 +1,3 @@
-import { createContactTags } from "@/actions/contact-tag/create-contact-tag"
 import { findManyTags } from "@/actions/tags/find-many-tags"
 import { toast } from "@/components/toast"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +19,7 @@ import { createTagsObjetc, CreateTagsProps, createTagsSchema } from "@/schemas/c
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Tag } from "@prisma/client"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import axios from "axios"
 import { X } from "lucide-react"
 import { parseAsString, useQueryState } from "nuqs"
 import { Dispatch, SetStateAction } from "react"
@@ -51,7 +51,12 @@ export const FormCreateContactTags = ({
 
     const { mutate } = useMutation({
         mutationKey: ["create-contact-tag"],
-        mutationFn: createContactTags,
+        mutationFn: (tags: { name: string }[]) => {
+
+            const url = `/api/tags/${contactId}`
+
+            return axios.put(url, { tags }, { withCredentials: true })
+        },
         onSuccess: () => {
             toast({
                 title: "Tag adicionada com sucesso"
@@ -134,7 +139,7 @@ export const FormCreateContactTags = ({
     }
 
     function onSubmit({ tags }: CreateTagsProps) {
-        mutate({ tags, contactId })
+        mutate(tags)
     }
 
     return (
