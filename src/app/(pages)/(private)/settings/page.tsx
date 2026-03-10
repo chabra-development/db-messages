@@ -1,7 +1,9 @@
+import { findManyTags } from "@/actions/tags/find-many-tags"
 import { UserProfileCard } from "@/app/(pages)/(private)/settings/user-profile-card"
 import { ChooseBackground } from "@/components/choose-background"
 import { ChooseATheme } from "@/components/choose-theme"
 import { FormUpdateUser } from "@/components/forms/form-update-user"
+import { TagsManager } from "@/components/tags-manager"
 import {
 	Card,
 	CardContent,
@@ -20,13 +22,15 @@ export const metadata: Metadata = {
 	title: "Configurações | Stock App",
 }
 
-export default async function UploadPage() {
+export default async function SettingsPage() {
 
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	})
 
 	if (!session) redirect("/sign-in")
+
+	const tags = await findManyTags()
 
 	return (
 		<main className="h-dvh w-full flex items-center justify-center py-4">
@@ -67,6 +71,17 @@ export default async function UploadPage() {
 								</CardHeader>
 								<CardContent>
 									<ChooseATheme />
+								</CardContent>
+							</Card>
+							<Card className="w-full h-max">
+								<CardHeader>
+									<CardTitle className="text-lg">Tags</CardTitle>
+									<CardDescription>
+										Crie e gerencie as tags para categorizar contatos
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<TagsManager initialTags={tags} />
 								</CardContent>
 							</Card>
 						</CardContent>

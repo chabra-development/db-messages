@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Chabra Tags",
+  "version": "1.0.0",
+  "description": "Atribuição de tags a contatos no Blip Desk",
+  "permissions": ["storage", "activeTab", "tabs"],
+  "host_permissions": [
+    "*://chabra.desk.blip.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://chabra.desk.blip.ai/*"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "Chabra Tags",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

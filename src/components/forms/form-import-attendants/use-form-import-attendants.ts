@@ -7,7 +7,7 @@ import {
 } from "@/schemas/import-attendants-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 
 export function useFormImportAttendants() {
