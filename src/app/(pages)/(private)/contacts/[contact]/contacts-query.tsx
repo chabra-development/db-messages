@@ -147,6 +147,8 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         return <ContactsQueryLoading />
     }
 
+    console.log(contact)
+
     const { name, phoneNumber, tags, preferences } = contact
 
     const preference = preferences.length !== 0 ? preferences[0] : null

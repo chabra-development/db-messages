@@ -6,33 +6,27 @@ interface Params {
 }
 
 export async function GET(_: NextRequest, { params }: Params) {
-
+    
     const { id: contactId } = await params
 
-    const contact = await prisma.contact.findUnique({
+    const contact = await prisma.contact.findFirst({
         where: {
-            id: contactId
+            OR: [{ id: contactId }, { identity: contactId }]
         },
-        select: {
-            id: true
-        }
+        select: { id: true }
     })
 
     if (!contact) {
         return NextResponse.json(
-            {
-                error: "Não foi encontrado o contato selecionado."
-            }, {
-            status: 404
-        })
+            { error: "Não foi encontrado o contato selecionado." },
+            { status: 404 }
+        )
     }
 
     const tags = await prisma.tag.findMany({
         where: {
             contacts: {
-                some: {
-                    contactId
-                }
+                some: { contactId: contact.id }
             }
         }
     })
