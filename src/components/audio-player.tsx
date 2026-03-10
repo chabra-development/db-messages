@@ -1,6 +1,5 @@
 "use client"
 
-
 import {
     AudioPlayerButton,
     AudioPlayerDuration,
@@ -11,10 +10,13 @@ import {
     useAudioPlayer,
     useAudioPlayerTime,
 } from "@/components/ui/audio-player"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter } from "@/components/ui/card"
+import { useDownloadFile } from "@/hooks/use-download-file"
 import { cn } from "@/lib/utils"
 import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
+import { Download, Loader2 } from "lucide-react"
 
 type Track = {
     id: string
@@ -40,6 +42,7 @@ export function AudioPlayer({
             data={{ id: id ?? "audio", name, url }}
         >
             <Player
+                url={url}
                 direction={direction}
                 date={date}
             />
@@ -50,15 +53,18 @@ export function AudioPlayer({
 type PlayerProps = {
     direction: MessageDirection
     date: Date
+    url: string
 }
 
-const Player = ({ direction, date }: PlayerProps) => {
+const Player = ({ direction, date, url }: PlayerProps) => {
 
     const isSent = direction === MessageDirection.SENT
 
     const player = useAudioPlayer<Track>()
 
     const time = useAudioPlayerTime()
+
+    const { download, isDownloading } = useDownloadFile()
 
     return (
         <Card className={cn(
@@ -84,12 +90,24 @@ const Player = ({ direction, date }: PlayerProps) => {
                         ? <AudioPlayerDuration className="text-xs tabular-nums" />
                         : <AudioPlayerTime className="text-xs tabular-nums" />
                 }
-
             </CardFooter>
             <CardFooter>
                 <CardDescription className="ml-auto">
                     {formatDate(date, "HH:mm")}
                 </CardDescription>
+            </CardFooter>
+            <CardFooter>
+                <Button
+                    disabled={isDownloading}
+                    onClick={() => download(url)}
+                >
+                    {
+                        isDownloading
+                            ? <Loader2 className="animate-spin" />
+                            : <Download />
+                    }
+                    Baixar
+                </Button>
             </CardFooter>
         </Card>
     )

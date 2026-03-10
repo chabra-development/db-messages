@@ -1,7 +1,12 @@
-import { Card, CardDescription, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Card, CardAction, CardDescription, CardFooter, CardHeader } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Spinner } from "@/components/ui/spinner"
+import { useDownloadFile } from "@/hooks/use-download-file"
 import { cn } from "@/lib/utils"
 import { MessageDirection } from "@prisma/client"
 import { formatDate } from "date-fns"
+import { ArrowDownToLine, Download } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 
@@ -19,6 +24,8 @@ export const ContactMediaImage = ({
     id: string
 }) => {
 
+    const { download, isDownloading } = useDownloadFile()
+
     const [loaded, setLoaded] = useState(false)
     const [dimensions, setDimensions] = useState({ width: 400, height: 400 })
 
@@ -34,17 +41,43 @@ export const ContactMediaImage = ({
                     : "dark:bg-muted bg-zinc-100"
             )}
         >
-            {/* Container com aspect ratio dinâmico */}
+            <CardHeader className="p-1">
+                <CardAction>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant={"ghost"}
+                                disabled={isDownloading}
+                            >
+                                {
+                                    isDownloading
+                                        ? <Spinner />
+                                        : <ArrowDownToLine />
+                                }
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem
+                                disabled={isDownloading}
+                                onClick={e => {
+                                    e.preventDefault()
+                                    download(uri)
+                                }}
+                            >
+                                <Download />
+                                Baixar arquivo
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </CardAction>
+            </CardHeader>
             <div
                 className="relative w-full rounded-md overflow-hidden"
                 style={{ aspectRatio: `${dimensions.width} / ${dimensions.height}` }}
             >
-                {/* Placeholder blur */}
                 {!loaded && (
                     <div className="absolute inset-0 bg-linear-to-br from-muted via-muted-foreground/10 to-muted animate-pulse" />
                 )}
-
-                {/* Imagem principal */}
                 <Image
                     src={uri}
                     width={dimensions.width}

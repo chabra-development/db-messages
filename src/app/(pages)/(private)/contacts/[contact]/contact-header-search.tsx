@@ -1,6 +1,7 @@
 import { CaledarRange } from "@/components/caledar-range"
 import { SearchInput } from "@/components/seach-input"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,6 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 import {
     Sheet,
     SheetContent,
@@ -15,7 +17,8 @@ import {
     SheetTitle,
     SheetTrigger
 } from "@/components/ui/sheet"
-import { Calendar, Search } from "lucide-react"
+import { Calendar, Images, Search } from "lucide-react"
+import { AccordeonSheetContact } from "./accordion-sheet-contact"
 
 export const ContactHeaderSearch = () => {
     return (
@@ -54,6 +57,20 @@ export const ContactHeaderSearch = () => {
                 <div className="px-4">
                     <SearchInput className="rounded-full" />
                 </div>
+                <Separator />
+                <Card className="mx-4">
+                    <CardHeader>
+                        <CardTitle>
+                            <div className="flex items-center gap-2">
+                                <Images />
+                                Medias, links e docs
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <AccordeonSheetContact />
+                    </CardContent>
+                </Card>
             </SheetContent>
         </Sheet>
     )

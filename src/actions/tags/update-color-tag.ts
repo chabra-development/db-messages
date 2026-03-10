@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { findTagById } from "./find-many-tags copy"
+import { findTagById } from "./find-tag-by-id"
 
 type UpdateColorTagProps = {
     id: string

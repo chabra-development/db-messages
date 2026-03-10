@@ -1,7 +1,6 @@
 import { UserProfileCard } from "@/app/(pages)/(private)/settings/user-profile-card"
 import { ChooseBackground } from "@/components/choose-background"
 import { ChooseATheme } from "@/components/choose-theme"
-import { FormUpdateUser } from "@/components/forms/form-update-user"
 import {
 	Card,
 	CardContent,
@@ -46,7 +45,6 @@ export default async function UploadPage() {
 						</CardHeader>
 						<div className="w-full flex gap-2 px-6">
 							<UserProfileCard />
-							<FormUpdateUser className="w-1/2 h-full flex-1" />
 						</div>
 						<CardContent className="size-full flex flex-col gap-2">
 							<Card>
