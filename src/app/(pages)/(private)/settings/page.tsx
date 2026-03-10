@@ -1,3 +1,4 @@
+import { findManyTags } from "@/actions/tags/find-many-tags"
 import { UserProfileCard } from "@/app/(pages)/(private)/settings/user-profile-card"
 import { ChooseBackground } from "@/components/choose-background"
 import { ChooseATheme } from "@/components/choose-theme"
@@ -19,13 +20,15 @@ export const metadata: Metadata = {
 	title: "Configurações | Stock App",
 }
 
-export default async function UploadPage() {
+export default async function SettingsPage() {
 
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	})
 
 	if (!session) redirect("/sign-in")
+
+	const tags = await findManyTags()
 
 	return (
 		<main className="h-dvh w-full flex items-center justify-center py-4">
