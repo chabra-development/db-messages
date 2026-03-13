@@ -147,8 +147,6 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         return <ContactsQueryLoading />
     }
 
-    console.log(contact)
-
     const { name, phoneNumber, tags, preferences } = contact
 
     const preference = preferences.length !== 0 ? preferences[0] : null
@@ -189,7 +187,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         }
                     </CardDescription>
                     <CardAction className="flex items-center gap-2">
-                        <ContactHeaderSearch />
+                        <ContactHeaderSearch contactId={id} />
                         <ContactHeaderDropMenu
                             contactId={id}
                             preference={preference}
