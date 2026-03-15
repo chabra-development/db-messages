@@ -187,7 +187,7 @@ export const ContactsQuery = ({ id }: { id: string }) => {
                         }
                     </CardDescription>
                     <CardAction className="flex items-center gap-2">
-                        <ContactHeaderSearch contactId={id} />
+                        <ContactHeaderSearch />
                         <ContactHeaderDropMenu
                             contactId={id}
                             preference={preference}

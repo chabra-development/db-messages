@@ -9,6 +9,7 @@ import { Roboto_Mono } from "next/font/google"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { ReactNode } from "react"
 import "./globals.css"
+import "plyr/dist/plyr.css"
 
 const roboto = Roboto_Mono({
   variable: "--font-jetbrains-mono",
