@@ -1,5 +1,7 @@
 import { findContactById } from "@/actions/contacts/find-contact-by-id"
+import { Suspense } from "react"
 import { ContactsQuery } from "./contacts-query"
+import { ContactsQueryLoading } from "./contacts-query-loading"
 
 type ContactParams = {
     params: Promise<{ contact: string }>
@@ -27,6 +29,8 @@ export default async function Contact({ params }: ContactParams) {
     const contact = decodeURIComponent((await params).contact)
 
     return (
-        <ContactsQuery id={contact} />
+        <Suspense fallback={<ContactsQueryLoading />}>
+            <ContactsQuery id={contact} />
+        </Suspense>
     )
 }

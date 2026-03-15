@@ -40,6 +40,7 @@ export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
             {messages.map((message, index, array) => (
                 <div
                     key={message.id}
+                    id={`message-${message.id}`}
                     className={cn(
                         "w-full max-w-full min-w-0 flex flex-col",
                         message.direction === "SENT" ? "items-end" : "items-start"

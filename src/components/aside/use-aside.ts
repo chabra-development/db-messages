@@ -1,9 +1,11 @@
 "use client"
 
 import { findManyContacts } from "@/actions/contacts/find-many-contacts"
+import { GlobalMessageResult, searchMessagesGlobal } from "@/actions/messages/search-messages-global"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Contact } from "@prisma/client"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 import { parseAsString, useQueryState } from "nuqs"
 import { useState } from "react"
 
@@ -11,6 +13,7 @@ const TAKE = 20
 
 export function UseAside() {
 
+    const router = useRouter()
     const [searchQuery, setSearchQuery] = useQueryState("contact-name", parseAsString.withDefault(""))
     const [activeContactId, setActiveContactId] = useState<string | null>(null)
 
@@ -28,8 +31,8 @@ export function UseAside() {
         enabled: !hasSearch,
     })
 
-    // ── Busca server-side ────────────────────────────────────────
-    const searchQuery_ = useQuery({
+    // ── Busca de contatos server-side ────────────────────────────────────────
+    const contactSearchQuery = useQuery({
         queryKey: ["contacts-search", debouncedSearch],
         queryFn: () =>
             findManyContacts({
@@ -43,29 +46,53 @@ export function UseAside() {
         enabled: hasSearch,
     })
 
+    const contactResults = hasSearch
+        ? (contactSearchQuery.data?.data ?? [])
+        : (infiniteQuery.data?.pages.flatMap((p) => p.data) ?? [])
+
+    const contactSearchDone = hasSearch && !contactSearchQuery.isLoading
+    const noContactResults = contactSearchDone && contactResults.length === 0
+
+    // ── Busca de mensagens (fallback quando não há contatos) ─────────────────
+    const messageSearchQuery = useQuery({
+        queryKey: ["messages-global-search", debouncedSearch],
+        queryFn: () => searchMessagesGlobal({ query: debouncedSearch }),
+        enabled: noContactResults,
+    })
+
     const isLoading = hasSearch
-        ? searchQuery_.isLoading
+        ? contactSearchQuery.isLoading
         : infiniteQuery.isLoading
 
     const isFetching = hasSearch
-        ? searchQuery_.isFetching
+        ? contactSearchQuery.isFetching || (noContactResults && messageSearchQuery.isFetching)
         : infiniteQuery.isFetching
 
     const error = hasSearch
-        ? searchQuery_.error
+        ? (contactSearchQuery.error ?? messageSearchQuery.error)
         : infiniteQuery.error
 
     const refetch = hasSearch
-        ? searchQuery_.refetch
+        ? contactSearchQuery.refetch
         : infiniteQuery.refetch
 
-    const contacts = hasSearch
-        ? (searchQuery_.data?.data ?? [])
-        : (infiniteQuery.data?.pages.flatMap((p) => p.data) ?? [])
+    const contacts = contactResults
 
     const totalContacts = hasSearch
-        ? (searchQuery_.data?.data.length ?? 0)
-        : (infiniteQuery.data?.pages[0]?.data.length ?? 0) // placeholder até ter count
+        ? contactResults.length
+        : (infiniteQuery.data?.pages[0]?.data.length ?? 0)
+
+    const messageResults: GlobalMessageResult[] = noContactResults
+        ? (messageSearchQuery.data ?? [])
+        : []
+
+    const isSearchingMessages = noContactResults && messageSearchQuery.isFetching
+
+    function handleSelectMessage(message: GlobalMessageResult) {
+        const { contact } = message
+        setActiveContactId(contact.identity)
+        router.push(`/contacts/${contact.id}?contact-name=${searchQuery}&message-id=${message.id}`)
+    }
 
     if (isLoading) return undefined
 
@@ -76,6 +103,7 @@ export function UseAside() {
         setSearchQuery,
         handleClearSearch: () => setSearchQuery(""),
         handleSelectContact: (contact: Contact) => setActiveContactId(contact.identity),
+        handleSelectMessage,
         isSearching,
         hasSearch,
         isFetching,
@@ -88,5 +116,9 @@ export function UseAside() {
         fetchNextPage: infiniteQuery.fetchNextPage,
         hasNextPage: infiniteQuery.hasNextPage,
         isFetchingNextPage: infiniteQuery.isFetchingNextPage,
+        // busca de mensagens
+        messageResults,
+        isSearchingMessages,
+        noContactResults,
     }
 }
