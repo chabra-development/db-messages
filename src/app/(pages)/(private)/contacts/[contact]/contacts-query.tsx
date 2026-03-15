@@ -19,6 +19,7 @@ import { Prisma } from "@prisma/client"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, Pin } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { ContactHeaderDropMenu } from "./contact-header-drop-menu"
 import { ContactHeaderSearch } from "./contact-header-search"
 import { ContactsQueryLoading } from "./contacts-query-loading"
@@ -38,6 +39,8 @@ export type ContactWithRelations = Prisma.ContactGetPayload<{
 export const ContactsQuery = ({ id }: { id: string }) => {
 
     const { data: session } = authClient.useSession()
+    const searchParams = useSearchParams()
+    const highlightMessageId = searchParams.get("message-id")
 
     const {
         error,
@@ -83,13 +86,24 @@ export const ContactsQuery = ({ id }: { id: string }) => {
         isFetchingNextPage
     } = useMessages(id)
 
-    // 1. Scroll inicial para o fim
+    // 1. Scroll inicial para o fim (ou para mensagem destacada)
     useEffect(() => {
         if (messages.length === 0) return
         if (!isFirstLoad.current) return
+
+        if (highlightMessageId) {
+            const el = document.getElementById(`message-${highlightMessageId}`)
+            if (el) {
+                el.scrollIntoView({ behavior: "instant", block: "center" })
+                el.classList.add("highlight-message")
+                isFirstLoad.current = false
+                return
+            }
+        }
+
         bottomRef.current?.scrollIntoView({ behavior: "instant" })
         isFirstLoad.current = false
-    }, [messages.length])
+    }, [messages.length, highlightMessageId])
 
     // 2. Reseta ao trocar de contato
     useEffect(() => {

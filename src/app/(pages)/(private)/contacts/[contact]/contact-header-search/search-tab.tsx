@@ -16,42 +16,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useSearchMessages } from "@/hooks/use-search-messages"
 import { cn } from "@/lib/utils"
-import { Prisma } from "@prisma/client"
+import { MessageContentPreview } from "@/components/message-content-preview"
 import { formatDate } from "date-fns"
 import { Calendar, Loader2, X } from "lucide-react"
-
-function getContentPreview(content: Prisma.JsonValue): string {
-
-    if (typeof content === "string") return content
-
-    if (typeof content === "object" && content !== null) {
-        const obj = content as Record<string, unknown>
-
-        // Respostas (replied.value)
-        if (obj.replied && typeof (obj.replied as Record<string, unknown>).value === "string") {
-            return (obj.replied as Record<string, unknown>).value as string
-        }
-
-        // Interativos (body.text)
-        if (obj.body && typeof (obj.body as Record<string, unknown>).text === "string") {
-            return (obj.body as Record<string, unknown>).text as string
-        }
-
-        // Select (text)
-        if (typeof obj.text === "string") return obj.text
-
-        // Mídia
-        if (typeof obj.type === "string" && obj.uri) return `[${obj.type}]`
-
-        // Ticket
-        if (obj.sequentialId) return `[Ticket #${obj.sequentialId}]`
-
-        // Emoji
-        if (obj.emoji) return "[Reação]"
-    }
-
-    return "[Mensagem]"
-}
 
 export const SearchTab = ({ 
     contactId, 
@@ -164,9 +131,10 @@ export const SearchTab = ({
                                         {formatDate(message.sentAt, "HH:mm")}
                                     </span>
                                 </div>
-                                <p className="line-clamp-2 wrap-break-word">
-                                    {getContentPreview(message.content)}
-                                </p>
+                                <MessageContentPreview
+                                    content={message.content}
+                                    className="line-clamp-2 wrap-break-word"
+                                />
                             </div>
                         ))}
                     </div>

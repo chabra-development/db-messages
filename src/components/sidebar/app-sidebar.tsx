@@ -58,11 +58,6 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 			icon: BookUser
 		},
 		{
-			label: "Tickets",
-			href: "/tickets",
-			icon: Tag
-		},
-		{
 			label: "Opções",
 			href: "/settings",
 			icon: Settings
@@ -76,11 +71,16 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 			icon: UsersRound
 		},
 		{
+			label: "Tickets",
+			href: "/tickets",
+			icon: Tag
+		},
+		{
 			label: "Tags",
 			href: "/tags",
 			icon: Hash
 		}
-	]
+	] as const
 
 	return (
 		<Sidebar
