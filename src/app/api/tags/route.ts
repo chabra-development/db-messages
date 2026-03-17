@@ -36,7 +36,15 @@ export async function GET(req: NextRequest) {
 }
 
 const createTagSchema = z.object({
-    tags: z.array(z.string()),
+    tags: z.array(
+        z.object({
+            name: z
+                .string()
+                .nonempty(),
+            color: z
+                .string()
+                .regex(/^#?[0-9a-fA-F]+$/, "String não é um HEX válido")
+        })),
     createdById: z.uuid()
 })
 
@@ -49,8 +57,9 @@ export async function POST(req: NextRequest) {
     }
 
     const tagsCreated = await prisma.tag.createMany({
-        data: data.tags.map(tag => ({
-            name: tag,
+        data: data.tags.map(({ color, name }) => ({
+            name,
+            color,
             createdById: data.createdById
         }))
     })
