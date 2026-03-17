@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Ellipsis } from "lucide-react"
 import { ChangeColorDialog } from "./change-color-dialog"
 import { TagClienFooter } from "./tags-query-footer"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export const TagClient = () => {
 
@@ -42,40 +43,42 @@ export const TagClient = () => {
                     Adicione, atualize e exclua tags para os contatos
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2.5 grid grid-cols-2 gap-2">
-                {
-                    tags.length === 0
-                        ? (
-                            <CardDescription>
-                                Sem tags adicionadas
-                            </CardDescription>
-                        )
-                        : tags.map(({ id, name, color, createdById }) => (
-                            <Card
-                                key={id}
-                                className="text-sm gap-2 bg-background"
-                            >
-                                <CardHeader>
-                                    <CardTitle className="text-lg">
-                                        {name}
-                                    </CardTitle>
-                                    <CardAction>
-                                        <Button variant={"ghost"}>
-                                            <Ellipsis />
-                                        </Button>
-                                    </CardAction>
-                                </CardHeader>
-                                <CardContent>
-                                    <ChangeColorDialog
-                                        id={id}
-                                        color={color}
-                                    />
-                                </CardContent>
-                                <TagClienFooter createdById={createdById} />
-                            </Card>
-                        ))
-                }
-            </CardContent>
+            <ScrollArea className="flex-1 min-h-200">
+                <CardContent className="space-y-2.5 grid grid-cols-2 gap-2">
+                    {
+                        tags.length === 0
+                            ? (
+                                <CardDescription>
+                                    Sem tags adicionadas
+                                </CardDescription>
+                            )
+                            : tags.map(({ id, name, color, createdById }) => (
+                                <Card
+                                    key={id}
+                                    className="text-sm gap-2 bg-background"
+                                >
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            {name}
+                                        </CardTitle>
+                                        <CardAction>
+                                            <Button variant={"ghost"}>
+                                                <Ellipsis />
+                                            </Button>
+                                        </CardAction>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ChangeColorDialog
+                                            id={id}
+                                            color={color}
+                                        />
+                                    </CardContent>
+                                    <TagClienFooter createdById={createdById} />
+                                </Card>
+                            ))
+                    }
+                </CardContent>
+            </ScrollArea>
         </Card>
     )
 }
