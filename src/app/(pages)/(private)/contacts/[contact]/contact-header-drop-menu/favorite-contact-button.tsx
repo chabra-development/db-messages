@@ -22,14 +22,13 @@ export const FavoriteContactButton = ({
         onSuccess: ({ favorite }) => {
             toast({
                 title: `Contato ${favorite
-                    ? "retirado dos"
-                    : "adicionado aos"} 
-                    favoritos`
+                    ? "adicionado aos"
+                    : "retirado dos"} favoritos`
             })
 
-            queryClient.invalidateQueries({
-                queryKey: ["find-contact-by-id", contactId]
-            })
+            queryClient.invalidateQueries({ queryKey: ["find-contact-by-id", contactId] })
+            queryClient.invalidateQueries({ queryKey: ["find-favorite-contacts"] })
+            queryClient.invalidateQueries({ queryKey: ["find-contact-preference-by-contact-id", contactId] })
         }
     })
 

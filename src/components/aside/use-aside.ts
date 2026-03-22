@@ -2,6 +2,7 @@
 
 import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { GlobalMessageResult, searchMessagesGlobal } from "@/actions/messages/search-messages-global"
+import { findFavoriteContactsByUserId } from "@/actions/user-preference/find-favorite-contacts-by-user-id"
 import { findPinnedContactsByUserId } from "@/actions/user-preference/find-pinned-contacts-by-user-id"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Contact } from "@prisma/client"
@@ -27,6 +28,14 @@ export function UseAside() {
         queryKey: ["find-pinned-contacts"],
         queryFn: () => findPinnedContactsByUserId(),
     })
+
+    // ── Contatos favoritos ────────────────────────────────────────
+    const favoriteQuery = useQuery({
+        queryKey: ["find-favorite-contacts"],
+        queryFn: () => findFavoriteContactsByUserId(),
+    })
+
+    const favoriteContacts = favoriteQuery.data?.map((p) => p.contact) ?? []
 
     const pinnedContacts = pinnedQuery.data?.map((p) => p.contact) ?? []
     const pinnedContactIds = pinnedContacts.map((c) => c.id)
@@ -137,5 +146,7 @@ export function UseAside() {
         messageResults,
         isSearchingMessages,
         noContactResults,
+        // favoritos
+        favoriteContacts,
     }
 }

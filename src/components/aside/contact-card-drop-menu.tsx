@@ -37,6 +37,7 @@ type ContactCardDropMenuProps = {
 }
 
 export function ContactCardDropMenu({ contactId, preference }: ContactCardDropMenuProps) {
+    
     const { data: session } = authClient.useSession()
     const isFirstLoad = useRef(true)
 
