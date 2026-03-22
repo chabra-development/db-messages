@@ -1,11 +1,31 @@
+"use server"
+
 import { BUCKET_NAME } from "@/constraints/bucket"
 import { supabase } from "@/lib/supabase"
 
-export function getPublicUrl(path: string) {
+function extractPath(input: string): string {
+
+    if (input.startsWith("http")) {
+
+        const marker = `${BUCKET_NAME}/`
+
+        const index = input.indexOf(marker)
+
+        if (index === -1) {
+            throw new Error("URL inválida — bucket não encontrado")
+        }
+
+        return input.slice(index + marker.length)
+    }
+
+    return input
+}
+
+export async function getPublicUrl(input: string): Promise<string> {
+    
+    const path = extractPath(input)
 
     const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path)
-
-    const publicUrl = data.publicUrl
-
-    return publicUrl
+    
+    return data.publicUrl
 }

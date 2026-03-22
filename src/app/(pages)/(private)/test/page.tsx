@@ -27,6 +27,7 @@ import { compressImageFile } from "@/hooks/use-compress-image"
 import { useState } from "react"
 
 export function FileUploaderTest({ contactId }: FileUploaderTestProps) {
+    
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState<UploadResult | null>(null)
     const [error, setError] = useState<string | null>(null)

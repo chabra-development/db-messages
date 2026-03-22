@@ -1,5 +1,6 @@
 // message-renderer.tsx
 import { AudioPlayer } from "@/components/audio-player"
+import { BUCKET_NAME } from "@/constraints/bucket"
 import { ContactInterative } from "@/contacts/contact-interative"
 import { ContactInterativeList } from "@/contacts/contact-interative-list"
 import { ContactMediaImage } from "@/contacts/contact-media-image"
@@ -35,9 +36,11 @@ import {
     isLimeReplyToSelect,
     isLimeReplyToText,
     isLimeSelectContent,
+    isLimeStaticFileContent,
     isLimeTicketContent,
 } from "@/guards/lime-thread-messages.guards"
 import { Message, MessageDirection } from "@prisma/client"
+import { ContactMediaFile } from "./contact-media-file"
 import { ContactMessageWithLink } from "./contact-message-with-link"
 
 export type MessageRendererProps = {
@@ -139,6 +142,16 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
                     direction={direction}
                     uri={content.uri}
                     type={content.type}
+                />
+            )
+        }
+        if (isLimeStaticFileContent(content)) {
+            return (
+                <ContactMediaFile
+                    uri={content.uri}
+                    mimeType={content.type}
+                    direction={direction}
+                    date={sentAt}
                 />
             )
         }

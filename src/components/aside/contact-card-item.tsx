@@ -1,12 +1,15 @@
 'use client'
 
+import { findContactPreferenceByContactId } from "@/actions/user-preference/find-contact-preference-by-contact-id"
 import { phoneNumberBRSchema } from "@/functions/validate-phone-number"
 import { cn } from "@/lib/utils"
-import { Phone } from "lucide-react"
+import { Contact } from "@prisma/client"
+import { useQuery } from "@tanstack/react-query"
+import { Phone, Pin } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { Contact } from "@prisma/client"
+import { ContactCardDropMenu } from "./contact-card-drop-menu"
 
 interface ContactCardItemProps {
     contact: Contact
@@ -23,6 +26,11 @@ export function ContactCardItem({
 }: ContactCardItemProps) {
 
     const name = contact.name || "Sem nome"
+
+    const { data: preference } = useQuery({
+        queryKey: ["find-contact-preference-by-contact-id", contact.id],
+        queryFn: () => findContactPreferenceByContactId(contact.id),
+    })
 
     const { data: phoneNumber, error } = phoneNumberBRSchema.safeParse(contact.phoneNumber)
 
@@ -63,33 +71,43 @@ export function ContactCardItem({
     }
 
     return (
-        <Link
-            onNavigate={onClick}
-            href={`/contacts/${contact.id}?contact-name=${searchQuery}`}
-        >
-            <Card className={cn(
-                "w-full",
-                "hover:bg-muted/70 active:bg-muted",
-                "transition-all duration-200",
-                "text-left group",
-                isActive && "bg-muted border-border"
-            )} >
-                <CardHeader className="flex-1 min-w-0">
-                    <CardTitle className={cn(
-                        "font-medium text-base truncate transition-colors",
-                        "group-hover:text-primary",
-                        isActive && "text-primary"
-                    )}>
-                        {highlightText(name)}
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-1.5 text-xs truncate">
-                        <Phone className="size-3" />
-                        <span className="truncate">
-                            {phoneNumber}
-                        </span>
-                    </CardDescription>
-                </CardHeader>
-            </Card>
-        </Link>
+        <div className="relative group/card">
+            <Link
+                onNavigate={onClick}
+                href={`/contacts/${contact.id}?contact-name=${searchQuery}`}
+            >
+                <Card className={cn(
+                    "w-full",
+                    "hover:bg-muted/70 active:bg-muted",
+                    "transition-all duration-200",
+                    "text-left group",
+                    isActive && "bg-muted border-border"
+                )} >
+                    <CardHeader className="flex-1 min-w-0 pr-8">
+                        <CardTitle className={cn(
+                            "font-medium text-base truncate transition-colors",
+                            "group-hover:text-primary",
+                            isActive && "text-primary"
+                        )}>
+                            <div className="flex items-center gap-2">
+                                {preference?.pinned && (
+                                    <Pin className="size-3.5 fill-primary text-primary -rotate-45 shrink-0" />
+                                )}
+                                {highlightText(name)}
+                            </div>
+                        </CardTitle>
+                        <CardDescription className="flex items-center gap-1.5 text-xs truncate">
+                            <Phone className="size-3" />
+                            <span className="truncate">
+                                {phoneNumber}
+                            </span>
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </Link>
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <ContactCardDropMenu contactId={contact.id} preference={preference} />
+            </div>
+        </div>
     )
 }
