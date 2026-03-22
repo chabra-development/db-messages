@@ -17,19 +17,18 @@ export const PinnedButton = ({
 }: PinnedButtonProps) => {
 
     const { mutate } = useMutation({
-        mutationKey: ["toggle-favorite-contact"],
+        mutationKey: ["toggle-pinned-contact"],
         mutationFn: togglePinnedContact,
         onSuccess: ({ pinned }) => {
             toast({
                 title: `Contato ${pinned
-                    ? "retirado dos"
-                    : "adicionado aos"} 
-                    fixados`
+                    ? "adicionado aos"
+                    : "retirado dos"} fixados`
             })
 
-            queryClient.invalidateQueries({
-                queryKey: ["find-contact-by-id", contactId]
-            })
+            queryClient.invalidateQueries({ queryKey: ["find-contact-by-id", contactId] })
+            queryClient.invalidateQueries({ queryKey: ["find-pinned-contacts"] })
+            queryClient.invalidateQueries({ queryKey: ["find-infinity-contacts"] })
         }
     })
 

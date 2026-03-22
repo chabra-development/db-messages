@@ -2,6 +2,7 @@
 
 import { findManyContacts } from "@/actions/contacts/find-many-contacts"
 import { GlobalMessageResult, searchMessagesGlobal } from "@/actions/messages/search-messages-global"
+import { findPinnedContactsByUserId } from "@/actions/user-preference/find-pinned-contacts-by-user-id"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Contact } from "@prisma/client"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
@@ -21,11 +22,26 @@ export function UseAside() {
     const isSearching = searchQuery !== debouncedSearch
     const hasSearch = debouncedSearch.trim().length > 0
 
+    // ── Contatos fixados ─────────────────────────────────────────
+    const pinnedQuery = useQuery({
+        queryKey: ["find-pinned-contacts"],
+        queryFn: () => findPinnedContactsByUserId(),
+    })
+
+    const pinnedContacts = pinnedQuery.data?.map((p) => p.contact) ?? []
+    const pinnedContactIds = pinnedContacts.map((c) => c.id)
+
     // ── Scroll infinito (sem busca) ──────────────────────────────
     const infiniteQuery = useInfiniteQuery({
-        queryKey: ["find-infinity-contacts"],
+        queryKey: ["find-infinity-contacts", pinnedContactIds],
         queryFn: ({ pageParam }) =>
-            findManyContacts({ cursor: pageParam, take: TAKE }),
+            findManyContacts({
+                cursor: pageParam,
+                take: TAKE,
+                where: pinnedContactIds.length > 0
+                    ? { id: { notIn: pinnedContactIds } }
+                    : undefined,
+            }),
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
         enabled: !hasSearch,
@@ -99,6 +115,7 @@ export function UseAside() {
     return {
         error,
         refetch,
+        pinnedContacts,
         searchQuery,
         setSearchQuery,
         handleClearSearch: () => setSearchQuery(""),

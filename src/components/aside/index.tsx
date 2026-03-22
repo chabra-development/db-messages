@@ -37,6 +37,7 @@ export const Aside = () => {
         hasNextPage,
         fetchNextPage,
         contacts,
+        pinnedContacts,
         debouncedSearch,
         activeContactId,
         messageResults,
@@ -84,6 +85,7 @@ export const Aside = () => {
                 ) : (
                     <AsideContactResults
                         contacts={contacts}
+                        pinnedContacts={pinnedContacts}
                         hasSearch={hasSearch}
                         isFetching={isFetching}
                         filteredCount={filteredCount}
