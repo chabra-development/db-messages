@@ -53,6 +53,12 @@ export function isLimeMediaContent(value: unknown): value is LimeMediaContent {
     return LimeMediaContentSchema.safeParse(value).success
 }
 
+export function isLimeStaticFileContent(value: unknown): value is LimeMediaContent {
+    if (!isLimeMediaContent(value)) return false
+    const { type } = value
+    return !type.startsWith("image/") && !type.startsWith("video/") && !type.startsWith("audio/")
+}
+
 /* ======================================================
  * Emoji
  * ====================================================== */
@@ -299,6 +305,7 @@ const KNOWN_CONTENT_GUARDS = [
     isLimeTicketContent,
     isLimeSelectContent,
     isLimeMediaContent,
+    isLimeStaticFileContent,
     isLimeEmojiReaction,
     isLimeInteractiveButton,
     isLimeInteractiveList,

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     if (!parsed.success) {
         return NextResponse.json(
-            { error: parsed.error.flatten().fieldErrors },
+            { error: z.prettifyError(parsed.error) },
             { status: 400 }
         )
     }
@@ -40,7 +40,7 @@ const createTagSchema = z.object({
         z.object({
             name: z
                 .string()
-                .nonempty(),
+                .min(1),
             color: z
                 .string()
                 .regex(/^#?[0-9a-fA-F]+$/, "String não é um HEX válido")
