@@ -24,6 +24,7 @@ import {
 	BookUser,
 	ChevronUp,
 	Cog,
+	Database,
 	Hash,
 	LucideIcon,
 	Settings,
@@ -79,7 +80,12 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 			label: "Tags",
 			href: "/tags",
 			icon: Hash
-		}
+		},
+		{
+			label: "Supabase",
+			href: "/supabase" as Route,
+			icon: Database
+		},
 	] as const
 
 	return (
