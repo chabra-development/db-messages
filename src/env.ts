@@ -18,6 +18,9 @@ const envSchema = z.object({
   SUPABASE_KEY: z
     .string()
     .min(1, "SUPABASE_KEY é obrigatória"),
+  SUPABASE_MANAGEMENT_TOKEN: z
+    .string()
+    .optional(),
 
   // Blip Keys
   ROUTER_API_KEY: z
