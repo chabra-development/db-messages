@@ -23,7 +23,6 @@ export async function proxy(request: NextRequest) {
   // Rotas públicas que não precisam de autenticação
   const publicRoutes = [
     "/sign-in",
-    "/sign-up",
     "/forgot-password",
     "/reset-password",
   ]
@@ -31,8 +30,8 @@ export async function proxy(request: NextRequest) {
 
   // Se for rota pública, permite acesso
   if (isPublicRoute) {
-    // Se tiver sessão e tentar acessar sign-in/sign-up, redireciona para contacts
-    if (session && (pathname === "/sign-in" || pathname === "/sign-up")) {
+    // Se tiver sessão e tentar acessar sign-in, redireciona para contacts
+    if (session && pathname === "/sign-in") {
       return NextResponse.redirect(new URL("/contacts", request.url))
     }
     return NextResponse.next()

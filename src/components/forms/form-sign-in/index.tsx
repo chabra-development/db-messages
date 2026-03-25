@@ -106,9 +106,6 @@ export const FormSign = () => {
 						{visible ? "esconder senha" : "mostrar senha"}
 					</Button>
 				</div>
-				<Button asChild type="button" variant={"link"} className="w-full">
-					<Link href="/sign-up">Criar uma conta</Link>
-				</Button>
 				<span className="block mx-auto">
 					ou
 				</span>
