@@ -26,6 +26,7 @@ import {
 	Cog,
 	Database,
 	Hash,
+	HelpCircle,
 	LucideIcon,
 	Settings,
 	ShieldUser,
@@ -62,6 +63,11 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 			label: "Opções",
 			href: "/settings",
 			icon: Settings
+		},
+		{
+			label: "Ajuda",
+			href: "/help",
+			icon: HelpCircle
 		},
 	] as const
 
