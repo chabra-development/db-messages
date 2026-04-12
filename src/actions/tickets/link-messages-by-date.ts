@@ -62,6 +62,10 @@ export async function linkTicketMessages(ticketId: string) {
         throw new Error("Ticket não encontrado")
     }
 
+    if (!ticket.contactId) {
+        return { linked: 0 }
+    }
+
     // Definir range de datas
     const startDate = ticket.openDate || ticket.storageDate
     const endDate = ticket.closeDate || new Date() // Se não fechou, até agora
@@ -150,6 +154,12 @@ async function processLinkMessages(jobId: string) {
             // Processar cada ticket
             for (const ticket of tickets) {
                 try {
+                    // Sem contactId não é possível vincular mensagens
+                    if (!ticket.contactId) {
+                        processed++
+                        continue
+                    }
+
                     const startDate = ticket.openDate || ticket.storageDate
                     const endDate = ticket.closeDate || new Date()
 
@@ -252,7 +262,7 @@ async function processLinkMessages(jobId: string) {
  * Retorna estatísticas sobre mensagens vinculadas
  */
 export async function getLinkStatistics() {
-    const [linked, unlinked, total, ticketsWithMessages] = await Promise.all([
+    const [linked, unlinked, total, ticketsWithMessages, ticketsTotal] = await Promise.all([
         prisma.message.count({
             where: { ticketId: { not: null } },
         }),
@@ -263,6 +273,7 @@ export async function getLinkStatistics() {
         prisma.ticket.count({
             where: { messageCount: { gt: 0 } },
         }),
+        prisma.ticket.count(),
     ])
 
     return {
@@ -274,7 +285,7 @@ export async function getLinkStatistics() {
         },
         tickets: {
             withMessages: ticketsWithMessages,
-            total: await prisma.ticket.count(),
+            total: ticketsTotal,
         },
     }
 }

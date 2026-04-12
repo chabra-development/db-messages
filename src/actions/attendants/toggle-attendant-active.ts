@@ -1,5 +1,6 @@
 "use server"
 
+import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 
 export async function toggleAttendantActive({ attendantId }: { attendantId: string }) {
@@ -26,6 +27,13 @@ export async function toggleAttendantActive({ attendantId }: { attendantId: stri
             name: true,
             isActive: true
         },
+    })
+
+    await logger({
+        category: "USER_MANAGEMENT",
+        action: updated.isActive ? "attendant.activated" : "attendant.deactivated",
+        entityId: attendantId,
+        metadata: { attendantName: attendant.name, isActive: updated.isActive },
     })
 
     return updated

@@ -28,6 +28,7 @@ import {
 	Hash,
 	HelpCircle,
 	LucideIcon,
+	ScrollText,
 	Settings,
 	ShieldUser,
 	Tag,
@@ -91,6 +92,11 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
 			label: "Supabase",
 			href: "/supabase" as Route,
 			icon: Database
+		},
+		{
+			label: "Logs",
+			href: "/logs" as Route,
+			icon: ScrollText
 		},
 	] as const
 

@@ -2,6 +2,7 @@
 
 import { env } from "@/env"
 import { delay } from "@/functions/delay"
+import { logger } from "@/lib/logger"
 import z from "zod"
 import { createImportJob } from "../import-job/create-import-job"
 import { deleteImportJob } from "../import-job/delete-import-job"
@@ -12,7 +13,7 @@ import { processBatch } from "./process-batch"
 
 // Configurações de importação
 const TAKE = 100 // Máximo suportado pela API
-const BATCH_SIZE = 10 // Processa 10 contatos por vez
+const BATCH_SIZE = 50 // Processa 50 contatos por vez
 const DELAY_BETWEEN_BATCHES = 500 // 500ms entre lotes (rate limiting)
 const JOB_CLEANUP_DELAY = 60_000 // 1 minuto para limpar job concluído
 
@@ -79,6 +80,13 @@ export async function importContacts(): Promise<ImportResult> {
         ; (async () => {
             const startedAt = Date.now()
 
+            await logger({
+                category: "IMPORT",
+                action: "import.contacts.started",
+                entityId: job.id,
+                metadata: { total: uniqueContacts.length, deduplicatedCount, batchSize: BATCH_SIZE },
+            })
+
             try {
                 await updateImportJobStatus(job.id, "RUNNING")
 
@@ -116,8 +124,26 @@ export async function importContacts(): Promise<ImportResult> {
                     payloadSize,
                 })
 
+                await logger({
+                    category: "IMPORT",
+                    action: "import.contacts.completed",
+                    entityId: job.id,
+                    metadata: {
+                        total: uniqueContacts.length,
+                        succeeded: totalSucceeded,
+                        failed: totalFailed,
+                        durationMs: Date.now() - startedAt,
+                    },
+                })
+
             } catch (error) {
-                console.error("Import contacts job failed:", error)
+                await logger({
+                    level: "ERROR",
+                    category: "IMPORT",
+                    action: "import.contacts.failed",
+                    entityId: job.id,
+                    metadata: { error: error instanceof Error ? error.message : "Unknown error" },
+                })
 
                 await updateImportJobStatus(job.id, "FAILED", {
                     error: error instanceof Error ? error.message : "Unknown error",

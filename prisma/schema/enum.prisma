@@ -46,3 +46,21 @@ enum ImportLogType {
   ATTENDANTS
   MESSAGES
 }
+
+enum LogLevel {
+  INFO
+  WARN
+  ERROR
+
+  @@map("log_levels")
+}
+
+enum LogCategory {
+  IMPORT
+  JOB
+  USER_MANAGEMENT
+  AUTH
+  SYSTEM
+
+  @@map("log_categories")
+}

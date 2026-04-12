@@ -57,8 +57,8 @@ model Ticket {
   // ============================================
   // RELAÇÕES
   // ============================================
-  contactId String    @map("contact_id")
-  contact   Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String?   @map("contact_id")
+  contact   Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
   messages  Message[]
 
   // ============================================

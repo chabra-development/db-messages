@@ -1,10 +1,11 @@
 "use server"
 
 import { auth } from "@/lib/auth"
-import { Role } from "@prisma/client"
+import { logger } from "@/lib/logger"
+import { prisma } from "@/lib/prisma"
+import { Role, User } from "@prisma/client"
 import { headers } from "next/headers"
 import { findAttendantsById } from "./find-attendants-by-id"
-import { prisma } from "@/lib/prisma"
 
 type ChangeRoleAttendantProps = {
     attendantId: string
@@ -38,7 +39,7 @@ export async function changeRoleAttendant({
         throw new Error("Não foi possivel alterar o cargo do funcionário")
     }
 
-    await findAttendantsById(attendantId)
+    const attendant = await findAttendantsById<User>(attendantId)
 
     const attendantUpdated = await prisma.user.update({
         where: {
@@ -47,6 +48,19 @@ export async function changeRoleAttendant({
         data: {
             role: newRole
         }
+    })
+
+    await logger({
+        category: "USER_MANAGEMENT",
+        action: "attendant.role.changed",
+        entityId: attendantId,
+        userId: session.user.id,
+        metadata: {
+            attendantName: attendant.name,
+            previousRole: attendant.role,
+            newRole,
+            changedBy: session.user.email,
+        },
     })
 
     return attendantUpdated

@@ -1,0 +1,35 @@
+model SystemLog {
+  // ============================================
+  // IDENTIFICAÇÃO
+  // ============================================
+  id String @id @default(uuid())
+
+  // ============================================
+  // CLASSIFICAÇÃO
+  // ============================================
+  level    LogLevel    @default(INFO)
+  category LogCategory
+  action   String
+
+  // ============================================
+  // CONTEXTO
+  // ============================================
+  message  String?
+  entityId String? @map("entity_id")
+  userId   String? @map("user_id")
+  metadata Json?
+
+  // ============================================
+  // DATAS
+  // ============================================
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // ============================================
+  // ÍNDICES
+  // ============================================
+  @@index([category])
+  @@index([level])
+  @@index([createdAt])
+  @@index([action])
+  @@map("system_logs")
+}

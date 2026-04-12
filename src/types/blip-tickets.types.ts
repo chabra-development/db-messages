@@ -62,7 +62,7 @@ export type LimeTicket = {
     status: TicketStatus
 
     storageDate: string
-    statusDate: string
+    statusDate?: string
 
     openDate?: string
     closeDate?: string

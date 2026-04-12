@@ -3,11 +3,12 @@
 import { delay } from "@/functions/delay"
 import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
 import { auth } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { ImportAttendantsProps } from "@/schemas/import-attendants-schema"
 
 // Configurações de importação
-const BATCH_SIZE = 10 // Processa 10 atendentes por vez
+const BATCH_SIZE = 50 // Processa 50 atendentes por vez
 const DELAY_BETWEEN_BATCHES = 500 // 500ms entre lotes (rate limiting)
 const JOB_CLEANUP_DELAY = 60_000 // 1 minuto para limpar job concluído
 
@@ -191,6 +192,15 @@ export async function importAttendants({
 
         // Processa em background (não bloqueia a resposta)
         ; (async () => {
+            const startedAt = Date.now()
+
+            await logger({
+                category: "IMPORT",
+                action: "import.attendants.started",
+                entityId: job.id,
+                metadata: { total: uniqueAttendants.length, deduplicatedCount, batchSize: BATCH_SIZE },
+            })
+
             try {
                 // Atualiza status para running
                 await prisma.importJob.update({
@@ -238,8 +248,26 @@ export async function importAttendants({
                     },
                 })
 
+                await logger({
+                    category: "IMPORT",
+                    action: "import.attendants.completed",
+                    entityId: job.id,
+                    metadata: {
+                        total: uniqueAttendants.length,
+                        succeeded: totalSucceeded,
+                        failed: totalFailed,
+                        durationMs: Date.now() - startedAt,
+                    },
+                })
+
             } catch (error) {
-                console.error("Import job failed:", error)
+                await logger({
+                    level: "ERROR",
+                    category: "IMPORT",
+                    action: "import.attendants.failed",
+                    entityId: job.id,
+                    metadata: { error: error instanceof Error ? error.message : "Unknown error" },
+                })
 
                 // Marca job como erro
                 await prisma.importJob.update({
