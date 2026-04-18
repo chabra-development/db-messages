@@ -1,20 +1,24 @@
 "use client"
 
-import { linkAllMessagesToTickets, linkDeferredTickets } from "@/actions/tickets/link-messages-by-date"
+import {
+    importAllTicketMessages,
+    importDeferredTicketMessages,
+    type ImportTicketMessagesDeferred,
+} from "@/actions/tickets/import-ticket-messages"
 import { ImportProgressToast } from "@/components/import-data-toast"
 import { BrailleSpinner } from "@/components/ui/braille-spinner"
 import { Button } from "@/components/ui/button"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link2 } from "lucide-react"
+import { MessageSquareMore } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-export function LinkMessagesButton() {
+export function ImportTicketMessagesButton() {
     const queryClient = useQueryClient()
     const [jobId, setJobId] = useState<string | null>(null)
 
     const { mutate, isPending } = useMutation({
-        mutationFn: linkAllMessagesToTickets,
+        mutationFn: importAllTicketMessages,
         onSuccess: (data) => {
             if (data.success && data.jobId) {
                 setJobId(data.jobId)
@@ -22,12 +26,12 @@ export function LinkMessagesButton() {
             }
         },
         onError: (error) => {
-            toast.error(error instanceof Error ? error.message : "Erro ao vincular mensagens")
+            toast.error(error instanceof Error ? error.message : "Erro ao importar mensagens")
         },
     })
 
     const { mutate: mutateDeferred } = useMutation({
-        mutationFn: linkDeferredTickets,
+        mutationFn: (tickets: ImportTicketMessagesDeferred[]) => importDeferredTicketMessages(tickets),
         onSuccess: (data) => {
             if (data.success && data.jobId) {
                 setJobId(data.jobId)
@@ -46,24 +50,25 @@ export function LinkMessagesButton() {
                     <BrailleSpinner name="braille">Iniciando...</BrailleSpinner>
                 ) : (
                     <>
-                        <Link2 className="size-4" />
-                        Vincular Mensagens
+                        <MessageSquareMore className="size-4" />
+                        Importar Mensagens
                     </>
                 )}
             </Button>
 
             {jobId && (
                 <ImportProgressToast
-                    message="tickets"
+                    message="mensagens de tickets"
                     jobId={jobId}
                     onComplete={() => {
                         setJobId(null)
+                        queryClient.invalidateQueries({ queryKey: ["find-many-tickets"] })
                         queryClient.invalidateQueries({ queryKey: ["link-statistics"] })
-                        toast.success("Mensagens vinculadas com sucesso!")
+                        toast.success("Importação de mensagens concluída!")
                     }}
                     onDeferred={(deferred) => {
                         toast.info(`${deferred.length} ticket(s) adiado(s) serão reprocessados automaticamente.`)
-                        mutateDeferred(deferred)
+                        mutateDeferred(deferred as ImportTicketMessagesDeferred[])
                     }}
                 />
             )}

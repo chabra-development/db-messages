@@ -22,15 +22,19 @@ import { useEffect } from "react"
 import { createPortal } from "react-dom"
 import { toast } from "sonner"
 
+type DeferredTicket = { ticketId: string; blipId: string; startSkip: number }
+
 interface ImportProgressToastProps {
     message: string
     jobId: string
     onComplete?: () => void
+    onDeferred?: (deferred: DeferredTicket[]) => void
 }
 
 export function ImportProgressToast({
     jobId,
     onComplete,
+    onDeferred,
     message
 }: ImportProgressToastProps) {
 
@@ -45,10 +49,14 @@ export function ImportProgressToast({
     } = useImportProgress({ jobId })
 
     useEffect(() => {
-        if (isComplete && onComplete) {
-            onComplete()
+        if (isComplete) {
+            onComplete?.()
+            const deferred = data?.metadata?.deferred
+            if (onDeferred && Array.isArray(deferred) && deferred.length > 0) {
+                onDeferred(deferred)
+            }
         }
-    }, [isComplete, onComplete])
+    }, [isComplete])
 
     // Toast de progresso
     useEffect(() => {
@@ -238,6 +246,8 @@ interface SuccessToastContentProps {
 function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
 
     const { succeeded, failedCount, failed } = data
+    const deferred = Array.isArray(data.metadata?.deferred) ? data.metadata.deferred : null
+    const deferredCount = deferred?.length ?? 0
 
     return (
         <ScrollArea className="h-fit max-h-120 border shadow-lg p-4 rounded-lg bg-background">
@@ -280,7 +290,22 @@ function SuccessToastContent({ data, onDismiss }: SuccessToastContentProps) {
                             </span>
                         </div>
                     )}
+                    {deferredCount > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Clock className="size-4 text-yellow-600" />
+                            <span className="text-sm font-medium text-yellow-700">
+                                {deferredCount} adiado(s)
+                            </span>
+                        </div>
+                    )}
                 </div>
+
+                {/* Aviso de tickets adiados */}
+                {deferredCount > 0 && (
+                    <div className="p-3 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-400">
+                        {deferredCount} ticket(s) com mais de 10.000 mensagens foram adiados. Use "Reprocessar adiados" para continuar a vinculação.
+                    </div>
+                )}
 
                 {/* Lista de erros colapsável */}
                 {failed && failed.length > 0 && (

@@ -86,9 +86,7 @@ async function syncSingleTicket(ticketId: string, blipId: string, startSkip = 0)
 
         if (messages.length === 0) break
 
-        const blipIds = messages.map(
-            (m) => (m.metadata?.["#messageId"] as string | undefined) ?? m.id,
-        )
+        const blipIds = messages.map((m) => m.id)
 
         // 1 query para buscar todos do batch
         const existing = await prisma.message.findMany({

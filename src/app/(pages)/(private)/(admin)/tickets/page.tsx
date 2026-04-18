@@ -1,3 +1,4 @@
+import { ImportTicketMessagesButton } from "@/components/forms/form-import-all-tickets/import-ticket-messages-button"
 import { ImportTicketsButton } from "@/components/forms/form-import-all-tickets/import-tickets-button"
 import { LinkMessagesButton } from "@/components/forms/form-import-all-tickets/link-messages-button"
 import { LinkStatsButton } from "@/components/forms/form-import-all-tickets/link-stats-button"
@@ -35,6 +36,7 @@ export default async function TicketsPage() {
                     <CardAction>
                         <ButtonGroup>
                             <ImportTicketsButton />
+                            <ImportTicketMessagesButton />
                             <LinkMessagesButton />
                             <LinkStatsButton />
                         </ButtonGroup>

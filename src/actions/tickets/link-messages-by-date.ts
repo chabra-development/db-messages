@@ -180,9 +180,7 @@ async function syncSingleTicketMessages(ticketId: string, blipId: string, startS
             break
         }
 
-        const blipIds = messages.map(
-            (m) => (m.metadata?.["#messageId"] as string | undefined) ?? m.id,
-        )
+        const blipIds = messages.map((m) => m.id)
 
         const existing = await prisma.message.findMany({
             where: { blipId: { in: blipIds } },

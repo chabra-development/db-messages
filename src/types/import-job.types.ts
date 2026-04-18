@@ -20,6 +20,10 @@ export interface ImportProgress {
         totalFailed?: number
         completedAt?: string
         error?: string
+        // link-messages fields
+        totalSynced?: number
+        totalNotFound?: number
+        deferred?: number | Array<{ ticketId: string; blipId: string; startSkip: number }>
     }
     createdAt: Date
     updatedAt: Date

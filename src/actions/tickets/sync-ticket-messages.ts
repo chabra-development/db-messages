@@ -36,9 +36,7 @@ export async function syncTicketMessages(ticketId: string, blipId: string) {
         }
 
         // Resolver IDs do batch: metadata["#messageId"] ?? message.id
-        const blipIds = messages.map(
-            (m) => (m.metadata?.["#messageId"] as string | undefined) ?? m.id,
-        )
+        const blipIds = messages.map((m) => m.id)
 
         // 1 query para buscar todos os existentes no banco
         const existing = await prisma.message.findMany({
