@@ -1,3 +1,4 @@
+import { TicketActionsMenu } from "@/app/(pages)/(private)/(admin)/tickets/ticket-actions-menu"
 import { Badge } from "@/components/ui/badge"
 import { extractNameFromBlipIdentity } from "@/functions/extract-name-from-blip-identity"
 import { TicketStatus } from "@prisma/client"
@@ -118,5 +119,10 @@ export const columns: ColumnDef<TicketRow>[] = [
                 {row.original.messageCount}
             </span>
         ),
+    },
+    {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => <TicketActionsMenu ticket={row.original} />,
     },
 ]
