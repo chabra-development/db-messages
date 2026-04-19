@@ -1,18 +1,13 @@
-"use client"
+"use client";
 
-import { importAttendants } from "@/actions/attendants/import-attendants"
-import { useMutation } from "@tanstack/react-query"
+import { importAttendants } from "@/actions/attendants/import-attendants";
+import { useMutation } from "@tanstack/react-query";
 
 export const ImportAttendantsButton = () => {
+  const { mutate } = useMutation({
+    mutationKey: ["import-attendants"],
+    mutationFn: importAttendants,
+  });
 
-    const { mutate } = useMutation({
-        mutationKey: ["import-attendants"],
-        mutationFn: importAttendants
-    })
-
-    return (
-        <div>
-
-        </div>
-    )
-}
+  return <div></div>;
+};

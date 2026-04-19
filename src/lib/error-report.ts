@@ -1,54 +1,54 @@
 export interface ErrorReportData {
-    error: {
-        name: string
-        message: string
-        stack?: string
-        digest?: string
-        statusCode?: number
-        cause?: string
-        fileName?: string
-        lineNumber?: number
-        columnNumber?: number
-    }
-    route?: {
-        fullUrl: string
-        pathname: string
-        search: string
-        hash?: string
-        origin: string
-        host?: string
-        protocol: string
-        referrer: string
-        historyLength?: number
-    } | null
-    browser?: {
-        userAgent: string
-        language: string
-        languages?: string[]
-        platform: string
-        vendor?: string
-        cookieEnabled?: boolean
-        onLine: boolean
-        hardwareConcurrency?: number
-        deviceMemory?: number
-        maxTouchPoints?: number
-        screenWidth: number
-        screenHeight: number
-        windowWidth: number
-        windowHeight: number
-        pixelRatio?: number
-        colorDepth?: number
-        timezone: string
-        timezoneOffset?: number
-    } | null
-    timestamp: string
-    localTime: string
+  error: {
+    name: string;
+    message: string;
+    stack?: string;
+    digest?: string;
+    statusCode?: number;
+    cause?: string;
+    fileName?: string;
+    lineNumber?: number;
+    columnNumber?: number;
+  };
+  route?: {
+    fullUrl: string;
+    pathname: string;
+    search: string;
+    hash?: string;
+    origin: string;
+    host?: string;
+    protocol: string;
+    referrer: string;
+    historyLength?: number;
+  } | null;
+  browser?: {
+    userAgent: string;
+    language: string;
+    languages?: string[];
+    platform: string;
+    vendor?: string;
+    cookieEnabled?: boolean;
+    onLine: boolean;
+    hardwareConcurrency?: number;
+    deviceMemory?: number;
+    maxTouchPoints?: number;
+    screenWidth: number;
+    screenHeight: number;
+    windowWidth: number;
+    windowHeight: number;
+    pixelRatio?: number;
+    colorDepth?: number;
+    timezone: string;
+    timezoneOffset?: number;
+  } | null;
+  timestamp: string;
+  localTime: string;
 }
 
 export function generateTextReport(data: ErrorReportData): string {
-    const { error, route, browser, timestamp, localTime } = data
+  const { error, route, browser, timestamp, localTime } = data;
 
-    return `
+  return `
 ================================================================================
                            RELATORIO DE ERRO
 ================================================================================
@@ -117,150 +117,161 @@ ${error.stack || "Stack trace nao disponivel"}
 ================================================================================
                          FIM DO RELATORIO
 ================================================================================
-`.trim()
+`.trim();
 }
 
 export function downloadAsText(data: ErrorReportData): void {
-    const report = generateTextReport(data)
-    const blob = new Blob([report], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
-    const filename = `erro-${data.error.name}-${date}.txt`
+  const report = generateTextReport(data);
+  const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const filename = `erro-${data.error.name}-${date}.txt`;
 
-    const link = document.createElement("a")
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function downloadAsPdf(data: ErrorReportData): void {
-    const { error, route, browser, timestamp, localTime } = data
+  const { error, route, browser, timestamp, localTime } = data;
 
-    // PDF generation using canvas-based approach (no external deps)
-    const pageWidth = 595.28 // A4 width in points
-    const pageHeight = 841.89 // A4 height in points
-    const margin = 40
-    const contentWidth = pageWidth - margin * 2
-    const lineHeight = 14
-    const sectionGap = 10
+  // PDF generation using canvas-based approach (no external deps)
+  const pageWidth = 595.28; // A4 width in points
+  const pageHeight = 841.89; // A4 height in points
+  const margin = 40;
+  const contentWidth = pageWidth - margin * 2;
+  const lineHeight = 14;
+  const sectionGap = 10;
 
-    let currentPage = 1
-    let yPos = margin
-    const pages: string[][] = [[]]
+  let currentPage = 1;
+  let yPos = margin;
+  const pages: string[][] = [[]];
 
-    function addLine(text: string, indent = 0) {
-        if (yPos + lineHeight > pageHeight - margin) {
-            currentPage++
-            pages.push([])
-            yPos = margin
-        }
-        const prefix = " ".repeat(indent)
-        pages[currentPage - 1].push(`${yPos}|${prefix}${text}`)
-        yPos += lineHeight
+  function addLine(text: string, indent = 0) {
+    if (yPos + lineHeight > pageHeight - margin) {
+      currentPage++;
+      pages.push([]);
+      yPos = margin;
     }
+    const prefix = " ".repeat(indent);
+    pages[currentPage - 1].push(`${yPos}|${prefix}${text}`);
+    yPos += lineHeight;
+  }
 
-    function addGap() {
-        yPos += sectionGap
+  function addGap() {
+    yPos += sectionGap;
+  }
+
+  function addSection(title: string) {
+    addGap();
+    addLine(`${"=".repeat(70)}`);
+    addLine(`  ${title}`);
+    addLine(`${"=".repeat(70)}`);
+    addGap();
+  }
+
+  // Header
+  addLine("RELATORIO DE ERRO");
+  addLine(`Gerado em: ${localTime}`);
+  addLine(`Timestamp: ${timestamp}`);
+
+  // Error Info
+  addSection("INFORMACOES DO ERRO");
+  addLine(`Nome/Tipo:    ${error.name}`);
+  addLine(`Mensagem:     ${error.message}`);
+  addLine(`Digest:       ${error.digest || "N/A"}`);
+  addLine(`Status Code:  ${error.statusCode || "N/A"}`);
+  addLine(`Causa Raiz:   ${error.cause || "N/A"}`);
+  if (error.fileName) addLine(`Arquivo:      ${error.fileName}`);
+  if (error.lineNumber) addLine(`Linha:        ${error.lineNumber}`);
+  if (error.columnNumber) addLine(`Coluna:       ${error.columnNumber}`);
+
+  // Route Info
+  addSection("INFORMACOES DA ROTA");
+  addLine(`URL Completa: ${route?.fullUrl || "N/A"}`);
+  addLine(`Pathname:     ${route?.pathname || "N/A"}`);
+  addLine(`Query String: ${route?.search || "Nenhuma"}`);
+  if (route?.hash !== undefined)
+    addLine(`Hash:         ${route.hash || "Nenhum"}`);
+  addLine(`Origem:       ${route?.origin || "N/A"}`);
+  addLine(`Protocolo:    ${route?.protocol || "N/A"}`);
+  addLine(`Referrer:     ${route?.referrer || "N/A"}`);
+  if (route?.historyLength)
+    addLine(`Historico:    ${route.historyLength} paginas`);
+
+  // Browser Info
+  addSection("INFORMACOES DO NAVEGADOR");
+  addLine(`User Agent:   ${browser?.userAgent || "N/A"}`);
+  addLine(`Idioma:       ${browser?.language || "N/A"}`);
+  if (browser?.languages)
+    addLine(`Idiomas:      ${browser.languages.join(", ")}`);
+  addLine(`Plataforma:   ${browser?.platform || "N/A"}`);
+  if (browser?.vendor) addLine(`Vendor:       ${browser.vendor}`);
+  addLine(`Online:       ${browser?.onLine ? "Sim" : "Nao"}`);
+  if (browser?.cookieEnabled !== undefined)
+    addLine(
+      `Cookies:      ${browser.cookieEnabled ? "Habilitados" : "Desabilitados"}`,
+    );
+
+  // Device Info
+  addSection("INFORMACOES DO DISPOSITIVO");
+  addLine(
+    `Tela:         ${browser?.screenWidth || "N/A"} x ${browser?.screenHeight || "N/A"}`,
+  );
+  addLine(
+    `Janela:       ${browser?.windowWidth || "N/A"} x ${browser?.windowHeight || "N/A"}`,
+  );
+  if (browser?.pixelRatio) addLine(`Pixel Ratio:  ${browser.pixelRatio}x`);
+  if (browser?.colorDepth) addLine(`Color Depth:  ${browser.colorDepth} bits`);
+  if (browser?.hardwareConcurrency)
+    addLine(`CPU Cores:    ${browser.hardwareConcurrency}`);
+  if (browser?.deviceMemory)
+    addLine(`Memoria:      ${browser.deviceMemory} GB`);
+
+  // Time Info
+  addSection("INFORMACOES DE TEMPO");
+  addLine(`Timestamp:    ${timestamp}`);
+  addLine(`Hora Local:   ${localTime}`);
+  addLine(`Timezone:     ${browser?.timezone || "N/A"}`);
+  if (browser?.timezoneOffset !== undefined)
+    addLine(`UTC Offset:   ${-browser.timezoneOffset / 60} horas`);
+
+  // Stack Trace
+  addSection("STACK TRACE");
+  const stackLines = (error.stack || "Stack trace nao disponivel").split("\n");
+  for (const line of stackLines) {
+    // Break long lines
+    const maxChars = 80;
+    if (line.length > maxChars) {
+      for (let i = 0; i < line.length; i += maxChars) {
+        addLine(line.slice(i, i + maxChars), i > 0 ? 4 : 0);
+      }
+    } else {
+      addLine(line);
     }
+  }
 
-    function addSection(title: string) {
-        addGap()
-        addLine(`${"=".repeat(70)}`)
-        addLine(`  ${title}`)
-        addLine(`${"=".repeat(70)}`)
-        addGap()
-    }
+  // Build PDF manually (minimal PDF spec)
+  const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const filename = `erro-${error.name}-${date}.pdf`;
 
-    // Header
-    addLine("RELATORIO DE ERRO")
-    addLine(`Gerado em: ${localTime}`)
-    addLine(`Timestamp: ${timestamp}`)
+  // Use a simpler approach: create canvas, render text, convert to PDF-like image
+  // Actually, let's use a proper minimal PDF builder
 
-    // Error Info
-    addSection("INFORMACOES DO ERRO")
-    addLine(`Nome/Tipo:    ${error.name}`)
-    addLine(`Mensagem:     ${error.message}`)
-    addLine(`Digest:       ${error.digest || "N/A"}`)
-    addLine(`Status Code:  ${error.statusCode || "N/A"}`)
-    addLine(`Causa Raiz:   ${error.cause || "N/A"}`)
-    if (error.fileName) addLine(`Arquivo:      ${error.fileName}`)
-    if (error.lineNumber) addLine(`Linha:        ${error.lineNumber}`)
-    if (error.columnNumber) addLine(`Coluna:       ${error.columnNumber}`)
+  // For best compatibility, we'll use a print-based approach
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    // Fallback: download as TXT if popup blocked
+    downloadAsText(data);
+    return;
+  }
 
-    // Route Info
-    addSection("INFORMACOES DA ROTA")
-    addLine(`URL Completa: ${route?.fullUrl || "N/A"}`)
-    addLine(`Pathname:     ${route?.pathname || "N/A"}`)
-    addLine(`Query String: ${route?.search || "Nenhuma"}`)
-    if (route?.hash !== undefined) addLine(`Hash:         ${route.hash || "Nenhum"}`)
-    addLine(`Origem:       ${route?.origin || "N/A"}`)
-    addLine(`Protocolo:    ${route?.protocol || "N/A"}`)
-    addLine(`Referrer:     ${route?.referrer || "N/A"}`)
-    if (route?.historyLength) addLine(`Historico:    ${route.historyLength} paginas`)
-
-    // Browser Info
-    addSection("INFORMACOES DO NAVEGADOR")
-    addLine(`User Agent:   ${browser?.userAgent || "N/A"}`)
-    addLine(`Idioma:       ${browser?.language || "N/A"}`)
-    if (browser?.languages) addLine(`Idiomas:      ${browser.languages.join(", ")}`)
-    addLine(`Plataforma:   ${browser?.platform || "N/A"}`)
-    if (browser?.vendor) addLine(`Vendor:       ${browser.vendor}`)
-    addLine(`Online:       ${browser?.onLine ? "Sim" : "Nao"}`)
-    if (browser?.cookieEnabled !== undefined)
-        addLine(`Cookies:      ${browser.cookieEnabled ? "Habilitados" : "Desabilitados"}`)
-
-    // Device Info
-    addSection("INFORMACOES DO DISPOSITIVO")
-    addLine(`Tela:         ${browser?.screenWidth || "N/A"} x ${browser?.screenHeight || "N/A"}`)
-    addLine(`Janela:       ${browser?.windowWidth || "N/A"} x ${browser?.windowHeight || "N/A"}`)
-    if (browser?.pixelRatio) addLine(`Pixel Ratio:  ${browser.pixelRatio}x`)
-    if (browser?.colorDepth) addLine(`Color Depth:  ${browser.colorDepth} bits`)
-    if (browser?.hardwareConcurrency) addLine(`CPU Cores:    ${browser.hardwareConcurrency}`)
-    if (browser?.deviceMemory) addLine(`Memoria:      ${browser.deviceMemory} GB`)
-
-    // Time Info
-    addSection("INFORMACOES DE TEMPO")
-    addLine(`Timestamp:    ${timestamp}`)
-    addLine(`Hora Local:   ${localTime}`)
-    addLine(`Timezone:     ${browser?.timezone || "N/A"}`)
-    if (browser?.timezoneOffset !== undefined)
-        addLine(`UTC Offset:   ${-browser.timezoneOffset / 60} horas`)
-
-    // Stack Trace
-    addSection("STACK TRACE")
-    const stackLines = (error.stack || "Stack trace nao disponivel").split("\n")
-    for (const line of stackLines) {
-        // Break long lines
-        const maxChars = 80
-        if (line.length > maxChars) {
-            for (let i = 0; i < line.length; i += maxChars) {
-                addLine(line.slice(i, i + maxChars), i > 0 ? 4 : 0)
-            }
-        } else {
-            addLine(line)
-        }
-    }
-
-    // Build PDF manually (minimal PDF spec)
-    const date = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
-    const filename = `erro-${error.name}-${date}.pdf`
-
-    // Use a simpler approach: create canvas, render text, convert to PDF-like image
-    // Actually, let's use a proper minimal PDF builder
-
-    // For best compatibility, we'll use a print-based approach
-    const printWindow = window.open("", "_blank")
-    if (!printWindow) {
-        // Fallback: download as TXT if popup blocked
-        downloadAsText(data)
-        return
-    }
-
-    const reportText = generateTextReport(data)
-    const htmlContent = `<!DOCTYPE html>
+  const reportText = generateTextReport(data);
+  const htmlContent = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -504,8 +515,8 @@ export function downloadAsPdf(data: ErrorReportData): void {
     Relatorio gerado automaticamente em ${localTime} | ${filename}
   </div>
 </body>
-</html>`
+</html>`;
 
-    printWindow.document.write(htmlContent)
-    printWindow.document.close()
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
 }

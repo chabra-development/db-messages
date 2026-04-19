@@ -1,0 +1,14 @@
+
+=== INICIANDO importação de mensagens — 11863 tickets ===
+
+--- Progresso: 50/11863 (0.4%) | created=0 linked=0 failed=0 deferred=0 ---
+  [#6700] ✓ created=0 linked=19 notFound=0
+  [#6699] ⚠ ADIADO created=0 linked=34 notFound=0 nextSkip=10000
+  [#6701] ⚠ ADIADO created=0 linked=100 notFound=0 nextSkip=10000
+  [#6702] ⚠ ADIADO created=0 linked=14 notFound=0 nextSkip=10000
+
+=== INICIANDO importação de mensagens — 11863 tickets ===
+
+  [#6264] ⚠ ADIADO created=0 linked=77 notFound=0 nextSkip=10000
+  [#6341] ⚠ ADIADO created=0 linked=100 notFound=0 nextSkip=10000
+--- Progresso: 50/11863 (0.4%) | created=0 linked=177 failed=0 deferred=2 ---

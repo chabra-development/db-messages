@@ -1,31 +1,28 @@
-"use server"
+"use server";
 
-import { BUCKET_NAME } from "@/constraints/bucket"
-import { supabase } from "@/lib/supabase"
+import { BUCKET_NAME } from "@/constraints/bucket";
+import { supabase } from "@/lib/supabase";
 
 function extractPath(input: string): string {
+  if (input.startsWith("http")) {
+    const marker = `${BUCKET_NAME}/`;
 
-    if (input.startsWith("http")) {
+    const index = input.indexOf(marker);
 
-        const marker = `${BUCKET_NAME}/`
-
-        const index = input.indexOf(marker)
-
-        if (index === -1) {
-            throw new Error("URL inválida — bucket não encontrado")
-        }
-
-        return input.slice(index + marker.length)
+    if (index === -1) {
+      throw new Error("URL inválida — bucket não encontrado");
     }
 
-    return input
+    return input.slice(index + marker.length);
+  }
+
+  return input;
 }
 
 export async function getPublicUrl(input: string): Promise<string> {
-    
-    const path = extractPath(input)
+  const path = extractPath(input);
 
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path)
-    
-    return data.publicUrl
+  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
+
+  return data.publicUrl;
 }

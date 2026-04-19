@@ -1,0 +1,24 @@
+{
+  "lastTicketSkip": 50,
+  "totalProcessed": 50,
+  "totalCreated": 0,
+  "totalLinked": 177,
+  "totalFailed": 0,
+  "deferred": [
+    {
+      "ticketId": "3303906a-ad69-4042-8e15-a4bdc6c918d2",
+      "blipId": "4cf6f01b-ebdc-4aff-9bff-019cd93de779",
+      "contactId": "c413db33-a6ae-4d58-bc65-ac9a3a3169de",
+      "startSkip": 10000,
+      "sequentialId": 6264
+    },
+    {
+      "ticketId": "e093343b-1c7f-4d50-ad9e-3936cbffe326",
+      "blipId": "9846038c-39d6-490a-b8d3-019cdcba1435",
+      "contactId": "14ae894a-78e7-4b1f-9610-6236895add6a",
+      "startSkip": 10000,
+      "sequentialId": 6341
+    }
+  ],
+  "startedAt": "2026-04-18T20:43:41.651Z"
+}

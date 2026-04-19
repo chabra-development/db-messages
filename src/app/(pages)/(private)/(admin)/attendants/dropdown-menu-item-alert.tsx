@@ -1,10 +1,8 @@
-"use client"
+"use client";
 
-import {
-  changeRoleAttendant
-} from "@/actions/attendants/change-role-attendants"
-import { SpanErrorMessage } from "@/components/span-error"
-import { toast } from "@/components/toast"
+import { changeRoleAttendant } from "@/actions/attendants/change-role-attendants";
+import { SpanErrorMessage } from "@/components/span-error";
+import { toast } from "@/components/toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +12,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,39 +28,37 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Spinner } from "@/components/ui/spinner"
-import { queryClient } from "@/providers/theme-provider"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Role, User } from "@prisma/client"
-import { useMutation } from "@tanstack/react-query"
-import { Eye, EyeClosed } from "lucide-react"
-import { ReactNode, useState } from "react"
-import { useForm } from "react-hook-form"
-import z from "zod"
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { queryClient } from "@/providers/theme-provider";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Role, User } from "@prisma/client";
+import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeClosed } from "lucide-react";
+import { ReactNode, useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
 interface DropdownMenuItemAlertProps {
-  children: ReactNode
-  title: string
-  description: string
-  confirmText?: string
-  cancelText?: string
-  icon?: ReactNode
-  disabled?: boolean
-  user: User
-  setDropdownOpen: (open: boolean) => void
+  children: ReactNode;
+  title: string;
+  description: string;
+  confirmText?: string;
+  cancelText?: string;
+  icon?: ReactNode;
+  disabled?: boolean;
+  user: User;
+  setDropdownOpen: (open: boolean) => void;
 }
 
 const dropdownMenuItemAlertSchema = z.object({
-  adminPassword: z
-    .string()
-    .nonempty("A senha é obrigatória"),
-  newRole: z
-    .enum(["ADMIN", "SUPERVISOR", "USER"])
-})
+  adminPassword: z.string().nonempty("A senha é obrigatória"),
+  newRole: z.enum(["ADMIN", "SUPERVISOR", "USER"]),
+});
 
-type DropdownMenuItemAlertFormProps =
-  z.infer<typeof dropdownMenuItemAlertSchema>
+type DropdownMenuItemAlertFormProps = z.infer<
+  typeof dropdownMenuItemAlertSchema
+>;
 
 export function DropdownMenuItemAlert({
   children,
@@ -73,20 +69,16 @@ export function DropdownMenuItemAlert({
   icon,
   disabled = false,
   user,
-  setDropdownOpen
+  setDropdownOpen,
 }: DropdownMenuItemAlertProps) {
+  const roles = ["ADMIN", "SUPERVISOR", "USER"] as const;
 
-  const roles = ["ADMIN", "SUPERVISOR", "USER"] as const
+  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
 
-  const [open, setOpen] = useState(false)
-  const [visible, setVisible] = useState(false)
+  const Icon = visible ? Eye : EyeClosed;
 
-  const Icon = visible ? Eye : EyeClosed
-
-  const {
-    mutate,
-    isPending: isLoading
-  } = useMutation({
+  const { mutate, isPending: isLoading } = useMutation({
     mutationKey: ["change-role-attendant"],
     mutationFn: changeRoleAttendant,
     onSuccess: ({ name, role }) => {
@@ -94,37 +86,38 @@ export function DropdownMenuItemAlert({
         title: "O cargo foi atualizado",
         description: `O usuário ${name} agora é um ${role}`,
         onAutoClose: () => {
-          setDropdownOpen(false)
-          setOpen(false)
-        }
-      })
-      queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] })
-    }
-  })
+          setDropdownOpen(false);
+          setOpen(false);
+        },
+      });
+      queryClient.invalidateQueries({ queryKey: ["find-many-attendants"] });
+    },
+  });
 
   const {
     setValue,
     watch,
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<DropdownMenuItemAlertFormProps>({
     resolver: zodResolver(dropdownMenuItemAlertSchema),
     defaultValues: {
-      adminPassword: undefined
-    }
-  })
+      adminPassword: undefined,
+    },
+  });
 
-  const adminPassword = watch("adminPassword")
+  const adminPassword = watch("adminPassword");
 
   function onSubmit({
-    adminPassword, newRole
+    adminPassword,
+    newRole,
   }: DropdownMenuItemAlertFormProps) {
     mutate({
       adminPassword,
       newRole,
-      attendantId: user.id
-    })
+      attendantId: user.id,
+    });
   }
 
   return (
@@ -132,26 +125,19 @@ export function DropdownMenuItemAlert({
       <DropdownMenuItem
         disabled={disabled}
         onSelect={(e) => {
-          e.preventDefault()
-          setOpen(true)
+          e.preventDefault();
+          setOpen(true);
         }}
       >
         {icon && <span className="mr-2">{icon}</span>}
         {children}
       </DropdownMenuItem>
 
-      <AlertDialog
-        open={open}
-        onOpenChange={setOpen}
-      >
+      <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent className="w-1/3">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {title}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {description}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-6">
             <Select
@@ -163,23 +149,16 @@ export function DropdownMenuItemAlert({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {
-                    roles.map(role => (
-                      <SelectItem
-                        key={role}
-                        value={role}
-                      >
-                        {role}
-                      </SelectItem>
-                    ))
-                  }
+                  {roles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
             <div className="flex flex-col gap-2.5">
-              <Label >
-                Digite sua senha para confirmar troca de cargo:
-              </Label>
+              <Label>Digite sua senha para confirmar troca de cargo:</Label>
               <InputGroup className="bg-input">
                 <InputGroupInput
                   placeholder="*******"
@@ -189,17 +168,15 @@ export function DropdownMenuItemAlert({
                 <InputGroupAddon align="inline-end">
                   <Button
                     variant="ghost"
-                    onClick={() => setVisible(visible => !visible)}
+                    onClick={() => setVisible((visible) => !visible)}
                   >
                     <Icon />
                   </Button>
                 </InputGroupAddon>
               </InputGroup>
-              {
-                errors.adminPassword && (
-                  <SpanErrorMessage message={errors.adminPassword.message} />
-                )
-              }
+              {errors.adminPassword && (
+                <SpanErrorMessage message={errors.adminPassword.message} />
+              )}
             </div>
           </div>
           <AlertDialogFooter>
@@ -215,8 +192,8 @@ export function DropdownMenuItemAlert({
               disabled={isLoading || !adminPassword}
               className="w-1/3"
               onClick={(e) => {
-                e.preventDefault()
-                handleSubmit(onSubmit)()
+                e.preventDefault();
+                handleSubmit(onSubmit)();
               }}
             >
               {isLoading ? <Spinner /> : confirmText}
@@ -225,5 +202,5 @@ export function DropdownMenuItemAlert({
         </AlertDialogContent>
       </AlertDialog>
     </form>
-  )
+  );
 }

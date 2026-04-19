@@ -134,8 +134,20 @@
   }
 
   @keyframes highlight-pulse {
-    0%   { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 8px; }
-    70%  { outline: 2px solid color-mix(in oklch, var(--primary) 60%, transparent); outline-offset: 4px; border-radius: 8px; }
-    100% { outline: 2px solid transparent; outline-offset: 4px; border-radius: 8px; }
+    0% {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+    70% {
+      outline: 2px solid color-mix(in oklch, var(--primary) 60%, transparent);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+    100% {
+      outline: 2px solid transparent;
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
   }
 }
