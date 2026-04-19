@@ -1,56 +1,55 @@
-import { toggleFavoriteContact } from "@/actions/user-preference/toggle-favorite-contact"
-import { toast } from "@/components/toast"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { queryClient } from "@/providers/theme-provider"
-import { ContactUserPreference } from "@prisma/client"
-import { useMutation } from "@tanstack/react-query"
-import { Heart, HeartMinus } from "lucide-react"
+import { toggleFavoriteContact } from "@/actions/user-preference/toggle-favorite-contact";
+import { toast } from "@/components/toast";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { queryClient } from "@/providers/theme-provider";
+import { ContactUserPreference } from "@prisma/client";
+import { useMutation } from "@tanstack/react-query";
+import { Heart, HeartMinus } from "lucide-react";
 
 type FavoriteContactButtonProps = {
-    contactId: string
-    preference: ContactUserPreference | null
-}
+  contactId: string;
+  preference: ContactUserPreference | null;
+};
 
 export const FavoriteContactButton = ({
-    contactId, preference
+  contactId,
+  preference,
 }: FavoriteContactButtonProps) => {
+  const { mutate } = useMutation({
+    mutationKey: ["toggle-favorite-contact"],
+    mutationFn: toggleFavoriteContact,
+    onSuccess: ({ favorite }) => {
+      toast({
+        title: `Contato ${
+          favorite ? "adicionado aos" : "retirado dos"
+        } favoritos`,
+      });
 
-    const { mutate } = useMutation({
-        mutationKey: ["toggle-favorite-contact"],
-        mutationFn: toggleFavoriteContact,
-        onSuccess: ({ favorite }) => {
-            toast({
-                title: `Contato ${favorite
-                    ? "adicionado aos"
-                    : "retirado dos"} favoritos`
-            })
+      queryClient.invalidateQueries({
+        queryKey: ["find-contact-by-id", contactId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["find-favorite-contacts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["find-contact-preference-by-contact-id", contactId],
+      });
+    },
+  });
 
-            queryClient.invalidateQueries({ queryKey: ["find-contact-by-id", contactId] })
-            queryClient.invalidateQueries({ queryKey: ["find-favorite-contacts"] })
-            queryClient.invalidateQueries({ queryKey: ["find-contact-preference-by-contact-id", contactId] })
-        }
-    })
+  const myPreferencesExist = preference?.favorite ?? false;
 
-    const myPreferencesExist = preference?.favorite ?? false
+  const IconHeart = myPreferencesExist ? HeartMinus : Heart;
 
-    const IconHeart = myPreferencesExist ? HeartMinus : Heart
+  function handleToggleFavoriteContact() {
+    mutate(contactId);
+  }
 
-    function handleToggleFavoriteContact() {
-        mutate(contactId)
-    }
-
-    return (
-        <DropdownMenuItem onClick={handleToggleFavoriteContact}>
-            <IconHeart className={cn(
-                "text-red-500",
-                !myPreferencesExist && "fill-red-500"
-            )} />
-            {
-                myPreferencesExist
-                    ? "Remover dos favoritos"
-                    : "Adicionar aos favoritos"
-            }
-        </DropdownMenuItem>
-    )
-}
+  return (
+    <DropdownMenuItem onClick={handleToggleFavoriteContact}>
+      <IconHeart
+        className={cn("text-red-500", !myPreferencesExist && "fill-red-500")}
+      />
+      {myPreferencesExist ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+    </DropdownMenuItem>
+  );
+};

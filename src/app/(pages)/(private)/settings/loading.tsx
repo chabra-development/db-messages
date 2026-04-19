@@ -1,9 +1,9 @@
-import { Background } from "@/components/background"
+import { Background } from "@/components/background";
 
 export default function Loading() {
-    return (
-        <Background>
-            <div />
-        </Background>
-    )
+  return (
+    <Background>
+      <div />
+    </Background>
+  );
 }

@@ -1,23 +1,22 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { findContactById } from "../contacts/find-contact-by-id"
+import { prisma } from "@/lib/prisma";
+import { findContactById } from "../contacts/find-contact-by-id";
 
 export async function findManyContactsTagByContactId(contactId: string) {
-    
-    await findContactById(contactId)
+  await findContactById(contactId);
 
-    return await prisma.contactTag.findMany({
-        where: {
-            contactId
-        },
+  return await prisma.contactTag.findMany({
+    where: {
+      contactId,
+    },
+    select: {
+      tag: {
         select: {
-            tag: {
-                select: {
-                    id: true,
-                    name: true,
-                }
-            }
-        }
-    })
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
 }

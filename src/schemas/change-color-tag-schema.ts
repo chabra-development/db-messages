@@ -1,7 +1,7 @@
-import z from "zod"
+import z from "zod";
 
 export const changeColorTagSchema = z.object({
-	color: z.string(),
-})
+  color: z.string(),
+});
 
-export type ChangeColorListProps = z.infer<typeof changeColorTagSchema>
+export type ChangeColorListProps = z.infer<typeof changeColorTagSchema>;

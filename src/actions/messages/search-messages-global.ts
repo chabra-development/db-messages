@@ -1,41 +1,43 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { Message } from "@prisma/client"
-import { Prisma } from "@prisma/client"
+import { prisma } from "@/lib/prisma";
+import { Message } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
-export type GlobalMessageResult = Pick<Message, "id" | "direction" | "content" | "sentAt" | "status"> & {
-    contact: {
-        id: string
-        name: string | null
-        phoneNumber: string | null
-        identity: string
-    }
-}
+export type GlobalMessageResult = Pick<
+  Message,
+  "id" | "direction" | "content" | "sentAt" | "status"
+> & {
+  contact: {
+    id: string;
+    name: string | null;
+    phoneNumber: string | null;
+    identity: string;
+  };
+};
 
 type Params = {
-    query: string
-    take?: number
-}
+  query: string;
+  take?: number;
+};
 
 export async function searchMessagesGlobal({
-    query,
-    take = 20,
+  query,
+  take = 20,
 }: Params): Promise<GlobalMessageResult[]> {
+  if (!query.trim()) return [];
 
-    if (!query.trim()) return []
+  const term = `%${query.trim()}%`;
 
-    const term = `%${query.trim()}%`
+  type RawResult = Omit<GlobalMessageResult, "sentAt" | "contact"> & {
+    sentAt: Date;
+    contactId: string;
+    contactName: string | null;
+    contactPhoneNumber: string | null;
+    contactIdentity: string;
+  };
 
-    type RawResult = Omit<GlobalMessageResult, "sentAt" | "contact"> & {
-        sentAt: Date
-        contactId: string
-        contactName: string | null
-        contactPhoneNumber: string | null
-        contactIdentity: string
-    }
-
-    const results = await prisma.$queryRaw<RawResult[]>`
+  const results = await prisma.$queryRaw<RawResult[]>`
         SELECT
             m.id,
             m.direction,
@@ -51,15 +53,23 @@ export async function searchMessagesGlobal({
         WHERE m.content::text ILIKE ${term}
         ORDER BY m.sent_at DESC
         LIMIT ${take}
-    `
+    `;
 
-    return results.map(({ contactId, contactName, contactPhoneNumber, contactIdentity, ...msg }) => ({
-        ...msg,
-        contact: {
-            id: contactId,
-            name: contactName,
-            phoneNumber: contactPhoneNumber,
-            identity: contactIdentity,
-        },
-    }))
+  return results.map(
+    ({
+      contactId,
+      contactName,
+      contactPhoneNumber,
+      contactIdentity,
+      ...msg
+    }) => ({
+      ...msg,
+      contact: {
+        id: contactId,
+        name: contactName,
+        phoneNumber: contactPhoneNumber,
+        identity: contactIdentity,
+      },
+    }),
+  );
 }

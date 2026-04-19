@@ -1,99 +1,96 @@
-"use server"
+"use server";
 
 export interface OgData {
-    title: string | null
-    description: string | null
-    image: string | null
-    siteName: string | null
-    favicon: string | null
-    url: string
-    hostname: string
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+  favicon: string | null;
+  url: string;
+  hostname: string;
 }
 
 export async function fetchOgData(url: string): Promise<OgData | null> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; LinkPreview/1.0; +https://example.com)",
+      },
+      signal: AbortSignal.timeout(5000),
+    });
 
-    try {
+    if (!response.ok) return null;
 
-        const response = await fetch(url, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (compatible; LinkPreview/1.0; +https://example.com)",
-            },
-            signal: AbortSignal.timeout(5000),
-        })
+    const html = await response.text();
 
-        if (!response.ok) return null
+    const getMetaContent = (property: string): string | null => {
+      const patterns = [
+        new RegExp(
+          `<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`,
+          "i",
+        ),
+        new RegExp(
+          `<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`,
+          "i",
+        ),
+        new RegExp(
+          `<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']*)["']`,
+          "i",
+        ),
+        new RegExp(
+          `<meta[^>]*content=["']([^"']*)["'][^>]*name=["']${property}["']`,
+          "i",
+        ),
+      ];
 
-        const html = await response.text()
+      for (const pattern of patterns) {
+        const match = html.match(pattern);
+        if (match?.[1]) return match[1];
+      }
 
-        const getMetaContent = (property: string): string | null => {
-            const patterns = [
-                new RegExp(
-                    `<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`,
-                    "i"
-                ),
-                new RegExp(
-                    `<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`,
-                    "i"
-                ),
-                new RegExp(
-                    `<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']*)["']`,
-                    "i"
-                ),
-                new RegExp(
-                    `<meta[^>]*content=["']([^"']*)["'][^>]*name=["']${property}["']`,
-                    "i"
-                ),
-            ]
+      return null;
+    };
 
-            for (const pattern of patterns) {
-                const match = html.match(pattern)
-                if (match?.[1]) return match[1]
-            }
+    const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
 
-            return null
-        }
+    const title =
+      getMetaContent("og:title") ||
+      getMetaContent("twitter:title") ||
+      titleMatch?.[1] ||
+      null;
 
-        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+    const description =
+      getMetaContent("og:description") ||
+      getMetaContent("twitter:description") ||
+      getMetaContent("description") ||
+      null;
 
-        const title =
-            getMetaContent("og:title") ||
-            getMetaContent("twitter:title") ||
-            titleMatch?.[1] ||
-            null
+    const image =
+      getMetaContent("og:image") || getMetaContent("twitter:image") || null;
 
-        const description =
-            getMetaContent("og:description") ||
-            getMetaContent("twitter:description") ||
-            getMetaContent("description") ||
-            null
+    const siteName = getMetaContent("og:site_name") || null;
 
-        const image =
-            getMetaContent("og:image") ||
-            getMetaContent("twitter:image") ||
-            null
+    const parsedUrl = new URL(url);
 
-        const siteName = getMetaContent("og:site_name") || null
+    const favicon = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=64`;
 
-        const parsedUrl = new URL(url)
+    let resolvedImage = image;
 
-        const favicon = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=64`
-
-        let resolvedImage = image
-
-        if (image && !image.startsWith("http")) {
-            resolvedImage = new URL(image, url).href
-        }
-
-        return {
-            title,
-            description,
-            image: resolvedImage,
-            siteName,
-            favicon,
-            url,
-            hostname: parsedUrl.hostname,
-        }
-    } catch {
-        return null
+    if (image && !image.startsWith("http")) {
+      resolvedImage = new URL(image, url).href;
     }
+
+    return {
+      title,
+      description,
+      image: resolvedImage,
+      siteName,
+      favicon,
+      url,
+      hostname: parsedUrl.hostname,
+    };
+  } catch {
+    return null;
+  }
 }

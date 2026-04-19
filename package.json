@@ -12,7 +12,11 @@
     "db:generate": "prisma generate --schema=./prisma/schema",
     "db:migrate": "prisma migrate dev --schema=./prisma/schema",
     "db:reset": "prisma migrate reset --schema=./prisma/schema",
-    "db:push": "prisma db push --schema=./prisma/schema"
+    "db:push": "prisma db push --schema=./prisma/schema",
+    "cron:contacts": "bun scripts/cron-import-contacts.ts",
+    "cron:tickets": "bun scripts/cron-import-tickets.ts",
+    "cron:messages": "bun scripts/run-import-ticket-messages.ts",
+    "cron:all": "bun run cron:contacts && bun run cron:tickets && bun run cron:messages"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

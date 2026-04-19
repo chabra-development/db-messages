@@ -1,1 +1,1 @@
-export const BUCKET_NAME = "chabra-db-messages"
+export const BUCKET_NAME = "chabra-db-messages";

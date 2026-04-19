@@ -1,20 +1,19 @@
-"use server"
+"use server";
 
-import { auth } from "@/lib/auth"
+import { auth } from "@/lib/auth";
 
 type SignInEmailInput = {
-    email: string
-    password: string
-}
+  email: string;
+  password: string;
+};
 
 export async function signInEmail({ email, password }: SignInEmailInput) {
+  const { user } = await auth.api.signInEmail({
+    body: {
+      email,
+      password,
+    },
+  });
 
-    const { user } = await auth.api.signInEmail({
-        body: {
-            email,
-            password,
-        },
-    })
-
-    return { user }
+  return { user };
 }
