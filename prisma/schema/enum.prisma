@@ -45,6 +45,8 @@ enum ImportLogType {
   CONTACTS
   ATTENDANTS
   MESSAGES
+  TICKETS
+  TICKET_MESSAGES
 }
 
 enum LogLevel {
