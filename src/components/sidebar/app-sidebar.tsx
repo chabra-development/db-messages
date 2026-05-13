@@ -89,7 +89,7 @@ export const AppSidebar = ({ user }: { user: AuthenticatedUser }) => {
       icon: Hash,
     },
     {
-      label: "Supabase",
+      label: "Storage",
       href: "/supabase" as Route,
       icon: Database,
     },

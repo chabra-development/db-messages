@@ -11,10 +11,11 @@ const envSchema = z.object({
     .min(32, "BETTER_AUTH_SECRET deve ter no mínimo 32 caracteres"),
   BETTER_AUTH_URL: z.string("BETTER_AUTH_URL deve ser uma URL válida"),
 
-  // Supabase
-  SUPABASE_URL: z.url("SUPABASE_URL deve ser uma URL válida"),
-  SUPABASE_KEY: z.string().min(1, "SUPABASE_KEY é obrigatória"),
-  SUPABASE_MANAGEMENT_TOKEN: z.string().optional(),
+  // Storage (S3-compatible, MinIO self-hosted em .107)
+  STORAGE_ENDPOINT: z.url("STORAGE_ENDPOINT deve ser uma URL válida"),
+  STORAGE_BUCKET: z.string().min(1, "STORAGE_BUCKET é obrigatória"),
+  STORAGE_ACCESS_KEY: z.string().min(1, "STORAGE_ACCESS_KEY é obrigatória"),
+  STORAGE_SECRET_KEY: z.string().min(1, "STORAGE_SECRET_KEY é obrigatória"),
 
   // Blip Keys
   ROUTER_API_KEY: z.string().min(1, "ROUTER_API_KEY é obrigatória"),

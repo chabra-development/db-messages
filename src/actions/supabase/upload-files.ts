@@ -2,7 +2,8 @@
 
 import { generateNameFile } from "@/actions/supabase/generate-file-name";
 import { BUCKET_NAME } from "@/constraints/bucket";
-import { supabase } from "@/lib/supabase";
+import { s3 } from "@/lib/storage";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getPublicUrl } from "./get-public-url";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -47,9 +48,9 @@ function validateFile(file: File): void {
 }
 
 export async function deleteFile(filename: string) {
-  const { error } = await supabase.storage.from(BUCKET_NAME).remove([filename]);
-
-  if (error) throw new Error("Não foi possível excluir o arquivo");
+  await s3.send(
+    new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: filename }),
+  );
 }
 
 export async function updateFile(file: File, contactId: string) {
@@ -60,17 +61,19 @@ export async function updateFile(file: File, contactId: string) {
     type: file.type,
   });
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(filename, file, {
-      cacheControl: "0",
-      upsert: true,
-      contentType: file.type,
-    });
+  const body = Buffer.from(await file.arrayBuffer());
 
-  if (error) throw new Error(error.message);
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: filename,
+      Body: body,
+      ContentType: file.type,
+      CacheControl: "no-cache",
+    }),
+  );
 
-  return data;
+  return { path: filename };
 }
 
 export async function uploadFile(file: File, messageId: string) {

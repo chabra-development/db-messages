@@ -1,7 +1,7 @@
 "use server";
 
 import { BUCKET_NAME } from "@/constraints/bucket";
-import { supabase } from "@/lib/supabase";
+import { env } from "@/env";
 
 function extractPath(input: string): string {
   if (input.startsWith("http")) {
@@ -22,7 +22,6 @@ function extractPath(input: string): string {
 export async function getPublicUrl(input: string): Promise<string> {
   const path = extractPath(input);
 
-  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-
-  return data.publicUrl;
+  const base = env.STORAGE_ENDPOINT.replace(/\/+$/, "");
+  return `${base}/${BUCKET_NAME}/${path}`;
 }

@@ -1,7 +1,9 @@
 "use server";
 
 import { BUCKET_NAME } from "@/constraints/bucket";
-import { supabase } from "@/lib/supabase";
+import { s3 } from "@/lib/storage";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 function extractPath(input: string): string {
   // Se for URL completa, extrai o path após o bucket name
@@ -18,14 +20,14 @@ function extractPath(input: string): string {
 export async function getDownloadUrl(input: string) {
   const path = extractPath(input);
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .createSignedUrl(path, 60);
-
-  if (error) throw new Error(error.message);
+  const url = await getSignedUrl(
+    s3,
+    new GetObjectCommand({ Bucket: BUCKET_NAME, Key: path }),
+    { expiresIn: 60 },
+  );
 
   return {
-    url: data.signedUrl,
+    url,
     fileName: path.split("/").at(-1) ?? "arquivo",
   };
 }

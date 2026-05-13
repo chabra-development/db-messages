@@ -21,8 +21,8 @@ function formatBytes(bytes: number) {
   return `${value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${sizes[i]}`;
 }
 
-// Limite do plano free do Supabase: 1 GB
-const STORAGE_QUOTA_BYTES = 1 * 1024 * 1024 * 1024;
+// HD reservado na .107 pro MinIO: 500 GB (D:\minio-data)
+const STORAGE_QUOTA_BYTES = 500 * 1024 * 1024 * 1024;
 
 const MIMETYPE_LABEL: Record<string, string> = {
   image: "Imagens",
