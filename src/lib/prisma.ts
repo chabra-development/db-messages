@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { Pool as PgPool } from "pg";
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
+import { neonConfig } from "@neondatabase/serverless";
 
 // Quando DATABASE_WS_PROXY está setada (e.g. "db.chabra.com.br"), conecta via WebSocket
 // pelo wsproxy self-hosted que repassa pra Postgres TCP. Sem essa env, usa TCP direto
@@ -18,7 +18,7 @@ function makeAdapter() {
     neonConfig.useSecureWebSocket = true;
     neonConfig.pipelineConnect = false;
     neonConfig.pipelineTLS = false;
-    return new PrismaNeon(new NeonPool({ connectionString: url }));
+    return new PrismaNeon({ connectionString: url });
   }
   return new PrismaPg(new PgPool({ connectionString: url }));
 }
