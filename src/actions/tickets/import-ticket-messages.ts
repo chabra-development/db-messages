@@ -11,8 +11,13 @@ import type {
 import { ImportJobStatus, Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 
-// Estende limite de Vercel function (default 60s no Hobby).
-export const maxDuration = 300;
+// Nota: arquivos "use server" só permitem export de async functions, então
+// maxDuration não pode ser exportado daqui. Vercel Hobby tem timeout hard
+// de 60s pra server actions de qualquer forma — a action retorna rápido
+// (cria ImportJob e dispara o worker em background); a Vercel mantém a
+// função viva enquanto há promises pendentes mas mata ao final do quota.
+// Idempotência (skipDuplicates) permite que múltiplos cliques no botão
+// retomem de onde parou.
 
 const MAX_SKIP = 10_000;
 const BATCH_SIZE = 100;
