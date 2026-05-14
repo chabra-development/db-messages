@@ -11,8 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Metadata } from "next";
 import { ImportHistoryTableContainer } from "./imports-query";
+import { RunningJobsQuery } from "./running-jobs-query";
 
 export const metadata: Metadata = {
   title: "Importações | db-messages",
@@ -35,8 +37,18 @@ export default async function ImportsPage() {
           </ButtonGroup>
         </CardAction>
       </CardHeader>
-      <CardContent>
-        <ImportHistoryTableContainer />
+      <CardContent className="space-y-6">
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Em andamento</h2>
+          <RunningJobsQuery />
+        </section>
+
+        <Separator />
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Histórico</h2>
+          <ImportHistoryTableContainer />
+        </section>
       </CardContent>
     </Card>
   );
