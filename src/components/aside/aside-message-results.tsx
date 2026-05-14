@@ -17,6 +17,7 @@ type Props = {
   activeContactId: string | null;
   debouncedSearch: string;
   onSelectMessage: (message: GlobalMessageResult) => void;
+  hideEmptyState?: boolean;
 };
 
 export function AsideMessageResults({
@@ -25,6 +26,7 @@ export function AsideMessageResults({
   activeContactId,
   debouncedSearch,
   onSelectMessage,
+  hideEmptyState = false,
 }: Props) {
   return (
     <>
@@ -45,9 +47,11 @@ export function AsideMessageResults({
       {isSearchingMessages ? (
         <MessageSearchSkeleton />
       ) : messageResults.length === 0 ? (
-        <CardContent className="px-2 pt-4 pb-6">
-          <AsideEmptyState searchQuery={debouncedSearch} />
-        </CardContent>
+        hideEmptyState ? null : (
+          <CardContent className="px-2 pt-4 pb-6">
+            <AsideEmptyState searchQuery={debouncedSearch} />
+          </CardContent>
+        )
       ) : (
         <CardContent className="px-2 pt-4 pb-6">
           <div className="space-y-2">
@@ -78,6 +82,7 @@ export function AsideMessageResults({
                 </div>
                 <MessageContentPreview
                   content={message.content}
+                  highlight={debouncedSearch}
                   className="text-muted-foreground text-xs line-clamp-2 wrap-break-word"
                 />
               </div>

@@ -32,10 +32,48 @@ function getContentPreview(content: Prisma.JsonValue): string {
   return "[Mensagem]";
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Highlight estilo WhatsApp — destaca todas ocorrências do termo (case-insensitive)
+// e centraliza o preview ao redor da primeira match quando o texto é longo.
+function highlightAroundFirstMatch(text: string, term: string): string {
+  const escaped = escapeHtml(text);
+  if (!term.trim()) return escaped;
+
+  const escTerm = escapeHtml(term.trim());
+  const idx = escaped.toLowerCase().indexOf(escTerm.toLowerCase());
+
+  let snippet = escaped;
+  if (idx >= 0 && escaped.length > 140) {
+    const start = Math.max(0, idx - 40);
+    const end = Math.min(escaped.length, idx + escTerm.length + 100);
+    snippet = (start > 0 ? "…" : "") + escaped.slice(start, end) + (end < escaped.length ? "…" : "");
+  }
+
+  const re = new RegExp(`(${escapeRegex(escTerm)})`, "gi");
+  return snippet.replace(re, '<mark class="bg-primary/30 text-foreground rounded px-0.5">$1</mark>');
+}
+
 type Props = Omit<ComponentProps<"div">, "children" | "content"> & {
   content: Prisma.JsonValue;
+  highlight?: string;
 };
 
-export function MessageContentPreview({ content, ...props }: Props) {
-  return stringToHTML(getContentPreview(content), props);
+export function MessageContentPreview({ content, highlight, ...props }: Props) {
+  const raw = getContentPreview(content);
+  if (highlight && highlight.trim()) {
+    return stringToHTML(highlightAroundFirstMatch(raw, highlight), props);
+  }
+  return stringToHTML(raw, props);
 }

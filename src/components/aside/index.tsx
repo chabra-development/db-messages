@@ -105,29 +105,30 @@ export const Aside = () => {
           <ScrollArea className="h-full">
             <ScrollBar className="w-2" />
 
-            {noContactResults ? (
+            <AsideContactResults
+              contacts={contacts}
+              pinnedContacts={pinnedContacts}
+              hasSearch={hasSearch}
+              isFetching={isFetching}
+              filteredCount={filteredCount}
+              totalContacts={totalContacts}
+              debouncedSearch={debouncedSearch}
+              activeContactId={activeContactId}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              fetchNextPage={fetchNextPage}
+              onRefetch={refetch}
+              onSelectContact={handleSelectContact}
+            />
+
+            {hasSearch && (
               <AsideMessageResults
                 messageResults={messageResults}
                 isSearchingMessages={isSearchingMessages}
                 activeContactId={activeContactId}
                 debouncedSearch={debouncedSearch}
                 onSelectMessage={handleSelectMessage}
-              />
-            ) : (
-              <AsideContactResults
-                contacts={contacts}
-                pinnedContacts={pinnedContacts}
-                hasSearch={hasSearch}
-                isFetching={isFetching}
-                filteredCount={filteredCount}
-                totalContacts={totalContacts}
-                debouncedSearch={debouncedSearch}
-                activeContactId={activeContactId}
-                hasNextPage={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                fetchNextPage={fetchNextPage}
-                onRefetch={refetch}
-                onSelectContact={handleSelectContact}
+                hideEmptyState={!noContactResults}
               />
             )}
           </ScrollArea>

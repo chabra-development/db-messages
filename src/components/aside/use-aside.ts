@@ -78,11 +78,13 @@ export function UseAside() {
   const contactSearchDone = hasSearch && !contactSearchQuery.isLoading;
   const noContactResults = contactSearchDone && contactResults.length === 0;
 
-  // ── Busca de mensagens (fallback quando não há contatos) ─────────────────
+  // ── Busca de mensagens — sempre que houver busca (paridade WhatsApp Web)
+  //    Mostra matches no conteúdo junto com os contatos, com highlight do termo
+  //    no preview e click → scroll/jump na mensagem dentro da conversa. ──────
   const messageSearchQuery = useQuery({
     queryKey: ["messages-global-search", debouncedSearch],
     queryFn: () => searchMessagesGlobal({ query: debouncedSearch }),
-    enabled: noContactResults,
+    enabled: hasSearch,
   });
 
   const isLoading = hasSearch
@@ -90,8 +92,7 @@ export function UseAside() {
     : infiniteQuery.isLoading;
 
   const isFetching = hasSearch
-    ? contactSearchQuery.isFetching ||
-      (noContactResults && messageSearchQuery.isFetching)
+    ? contactSearchQuery.isFetching || messageSearchQuery.isFetching
     : infiniteQuery.isFetching;
 
   const error = hasSearch
@@ -108,11 +109,11 @@ export function UseAside() {
     ? contactResults.length
     : (infiniteQuery.data?.pages[0]?.data.length ?? 0);
 
-  const messageResults: GlobalMessageResult[] = noContactResults
+  const messageResults: GlobalMessageResult[] = hasSearch
     ? (messageSearchQuery.data ?? [])
     : [];
 
-  const isSearchingMessages = noContactResults && messageSearchQuery.isFetching;
+  const isSearchingMessages = hasSearch && messageSearchQuery.isFetching;
 
   function handleSelectMessage(message: GlobalMessageResult) {
     const { contact } = message;
