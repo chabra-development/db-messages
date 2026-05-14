@@ -2,6 +2,7 @@
 
 import { env } from "@/env";
 import { api } from "@/lib/axios";
+import { downloadAndStoreMedia, isBlipMediaType } from "@/lib/blip-media";
 import { prisma } from "@/lib/prisma";
 import type {
   LimeThreadMessage,
@@ -9,6 +10,9 @@ import type {
 } from "@/types/lime-thread-messages-response.types";
 import { ImportJobStatus, Prisma } from "@prisma/client";
 import { randomUUID } from "node:crypto";
+
+// Estende limite de Vercel function (default 60s no Hobby).
+export const maxDuration = 300;
 
 const MAX_SKIP = 10_000;
 const BATCH_SIZE = 100;
@@ -393,6 +397,34 @@ async function importSingleTicket(
 
     if (toCreate.length > 0 && contactId) {
       const cId = contactId;
+
+      // Pra cada msg com conteúdo de mídia, baixar do Blip e re-hospedar no MinIO.
+      // A URI vinda do Blip tem SAS de 30min, então só funciona se baixar AGORA.
+      // Em falha, mantém URI original (frontend mostra link quebrado quando expirar).
+      for (const m of toCreate) {
+        const content = m.content as { type?: unknown; uri?: unknown } | null;
+        if (
+          content &&
+          typeof content === "object" &&
+          isBlipMediaType(content.type) &&
+          typeof content.uri === "string"
+        ) {
+          try {
+            const newUri = await downloadAndStoreMedia(
+              content.uri,
+              cId,
+              content.type,
+              m.id,
+            );
+            (m.content as { uri: string }).uri = newUri;
+          } catch (err) {
+            console.error(
+              `[import-media] msg=${m.id} type=${content.type}: ${err instanceof Error ? err.message : err}`,
+            );
+          }
+        }
+      }
+
       const result = await prisma.message.createMany({
         data: toCreate.map((m) => ({
           blipId: m.id,
