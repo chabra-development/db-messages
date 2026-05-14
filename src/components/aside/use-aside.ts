@@ -1,6 +1,7 @@
 "use client";
 
 import { findManyContacts } from "@/actions/contacts/find-many-contacts";
+import { searchContactsExtended } from "@/actions/contacts/search-contacts-extended";
 import {
   GlobalMessageResult,
   searchMessagesGlobal,
@@ -62,18 +63,11 @@ export function UseAside() {
     enabled: !hasSearch,
   });
 
-  // ── Busca de contatos server-side ────────────────────────────────────────
+  // ── Busca estendida: contatos por nome/identity/telefone/email/CPF
+  //    + EXISTS em messages.content (capta CPF/nome digitado por terceiros) ──
   const contactSearchQuery = useQuery({
-    queryKey: ["contacts-search", debouncedSearch],
-    queryFn: () =>
-      findManyContacts({
-        where: {
-          OR: [
-            { name: { contains: debouncedSearch, mode: "insensitive" } },
-            { identity: { contains: debouncedSearch, mode: "insensitive" } },
-          ],
-        },
-      }),
+    queryKey: ["contacts-search-extended", debouncedSearch],
+    queryFn: () => searchContactsExtended(debouncedSearch),
     enabled: hasSearch,
   });
 
