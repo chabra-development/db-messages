@@ -23,9 +23,9 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       mapProfileToUser: (profile) => {
-        console.log("🔍 Google profile:", profile);
         return {
           image: profile.picture,
+          identity: `${encodeURIComponent(profile.email)}@blip.ai`,
         };
       },
     },

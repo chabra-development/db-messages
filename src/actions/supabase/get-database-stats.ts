@@ -11,7 +11,7 @@ export async function getDatabaseStats() {
     users,
     messagesByDirection,
     ticketsByStatus,
-  ] = await prisma.$transaction([
+  ] = await Promise.all([
     prisma.contact.count(),
     prisma.message.count(),
     prisma.ticket.count(),
