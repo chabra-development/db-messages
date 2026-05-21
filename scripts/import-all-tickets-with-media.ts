@@ -359,8 +359,11 @@ async function processTicket(ticket: { id: string; blip_id: string; customer_ide
 const start = Date.now();
 const pgInit = new Client({ connectionString: DATABASE_URL });
 await pgInit.connect();
+const SINCE_DAYS = process.env.SINCE_DAYS ? Number(process.env.SINCE_DAYS) : undefined;
+const whereSince = SINCE_DAYS ? `WHERE last_message_date > NOW() - INTERVAL '${SINCE_DAYS} days'` : '';
+const orderDir = SINCE_DAYS ? 'DESC' : 'ASC';
 const ticketsRes = await pgInit.query<{ id: string; blip_id: string; customer_identity: string | null }>(
-  `SELECT id::text, blip_id, customer_identity FROM tickets ORDER BY storage_date ASC`,
+  `SELECT id::text, blip_id, customer_identity FROM tickets ${whereSince} ORDER BY storage_date ${orderDir}`,
 );
 await pgInit.end();
 

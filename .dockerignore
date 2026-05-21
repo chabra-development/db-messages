@@ -1,0 +1,20 @@
+node_modules
+**/node_modules
+.next
+.git
+.gitignore
+.env*
+.vercel
+.claude
+.agents
+README.md
+biome.json
+*.md
+
+# Scripts standalone .107 rodam em containers separados (nao no app)
+scripts/
+logs/
+backups/
+
+# wsproxy.ts roda em container separado com tipos Bun.* nativos
+wsproxy.ts
