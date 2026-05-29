@@ -22,6 +22,8 @@ function extractPath(input: string): string {
 export async function getPublicUrl(input: string): Promise<string> {
   const path = extractPath(input);
 
-  const base = env.STORAGE_ENDPOINT.replace(/\/+$/, "");
+  // STORAGE_PUBLIC_URL é a base browser-facing; STORAGE_ENDPOINT só como fallback
+  // de retrocompat (em prod sempre deve estar setada). Ver bug-media-uri-host-interno.
+  const base = (env.STORAGE_PUBLIC_URL ?? env.STORAGE_ENDPOINT).replace(/\/+$/, "");
   return `${base}/${BUCKET_NAME}/${path}`;
 }

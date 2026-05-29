@@ -5,7 +5,11 @@ import { BUCKET_NAME } from "@/constraints/bucket";
 import { s3 } from "@/lib/storage";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
-const STORAGE_BASE = env.STORAGE_ENDPOINT.replace(/\/+$/, "");
+// STORAGE_PUBLIC_URL é a base browser-facing (ex: https://storage.chabra.com.br).
+// Fallback pra STORAGE_ENDPOINT (S3 client) só pra retrocompat — em prod a public URL
+// deve ser sempre setada explicitamente (caso contrário URIs gravadas no DB ficam com
+// host interno minio:9000 e o browser não resolve). Ver wiki bug-media-uri-host-interno.
+const STORAGE_BASE = (env.STORAGE_PUBLIC_URL ?? env.STORAGE_ENDPOINT).replace(/\/+$/, "");
 const STORAGE_PREFIX = `${STORAGE_BASE}/${BUCKET_NAME}/`;
 
 const MEDIA_TYPE_PATTERN =

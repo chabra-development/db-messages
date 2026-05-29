@@ -12,7 +12,12 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string("BETTER_AUTH_URL deve ser uma URL válida"),
 
   // Storage (S3-compatible, MinIO self-hosted em .107)
+  // STORAGE_ENDPOINT: endpoint do S3 client (interno via Docker DNS, ex: http://minio:9000).
+  // STORAGE_PUBLIC_URL: URL base usada para construir links de mídia gravados em
+  //   messages.content.uri (browser-facing, ex: https://storage.chabra.com.br).
+  //   Opcional para compat — sem ele cai pra STORAGE_ENDPOINT (legacy behavior).
   STORAGE_ENDPOINT: z.url("STORAGE_ENDPOINT deve ser uma URL válida"),
+  STORAGE_PUBLIC_URL: z.url("STORAGE_PUBLIC_URL deve ser uma URL válida").optional(),
   STORAGE_BUCKET: z.string().min(1, "STORAGE_BUCKET é obrigatória"),
   STORAGE_ACCESS_KEY: z.string().min(1, "STORAGE_ACCESS_KEY é obrigatória"),
   STORAGE_SECRET_KEY: z.string().min(1, "STORAGE_SECRET_KEY é obrigatória"),

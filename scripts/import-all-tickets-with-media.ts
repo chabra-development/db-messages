@@ -21,9 +21,16 @@ const STORAGE_ACCESS_KEY = process.env.STORAGE_ACCESS_KEY!;
 const STORAGE_SECRET_KEY = process.env.STORAGE_SECRET_KEY!;
 const STORAGE_ENDPOINT = process.env.STORAGE_ENDPOINT!;
 const STORAGE_INTERNAL_ENDPOINT = process.env.STORAGE_INTERNAL_ENDPOINT ?? "http://minio:9000";
+// STORAGE_PUBLIC_URL: URL base usada nos links gravados em messages.content.uri
+// (browser-facing, ex: https://storage.chabra.com.br). Sem ela cai pra STORAGE_ENDPOINT
+// — caso de bug pré-Fase 2 em que URIs entravam com host interno minio:9000 e não
+// carregavam no browser. Ver wiki/db-messages/bug-media-uri-host-interno.md.
+const STORAGE_PUBLIC_URL = process.env.STORAGE_PUBLIC_URL ?? STORAGE_ENDPOINT;
 const BLIP_DESK_API_KEY = process.env.BLIP_DESK_API_KEY!;
 const CONCURRENCY = Number(process.env.CONCURRENCY_TICKETS ?? "10");
 const LIMIT_TICKETS = process.env.LIMIT_TICKETS ? Number(process.env.LIMIT_TICKETS) : undefined;
+const MODE = (process.env.IMPORT_MODE ?? "delta") as "delta" | "full" | "since-days";
+const SINCE_DAYS = process.env.SINCE_DAYS ? Number(process.env.SINCE_DAYS) : undefined;
 
 const MAX_SKIP = 10_000;
 const BATCH_SIZE = 100;
@@ -33,7 +40,7 @@ if (!DATABASE_URL || !BLIP_DESK_API_KEY || !STORAGE_BUCKET || !STORAGE_ACCESS_KE
   process.exit(1);
 }
 
-const STORAGE_BASE = STORAGE_ENDPOINT.replace(/\/+$/, "");
+const STORAGE_BASE = STORAGE_PUBLIC_URL.replace(/\/+$/, "");
 const STORAGE_PREFIX = `${STORAGE_BASE}/${STORAGE_BUCKET}/`;
 
 const MEDIA_TYPE_PATTERN = /^(image|audio|video)\/|^application\/(pdf|zip|x-rar|x-7z|gzip|msword|vnd\.ms-|vnd\.openxml|vnd\.oasis)/;
@@ -149,19 +156,21 @@ async function createImportJob(total: number): Promise<string> {
          'running'::import_job_status, NOW(), NOW(), NOW(), $2::jsonb
        )
        RETURNING id`,
-      [
-        total,
-        JSON.stringify({
-          type: "import-all-standalone-107",
-          description: "Import standalone com mídia inline (rodando na .107)",
-          container: "import-all-bg",
-        }),
-      ],
+      [total, createImportJobMetadata(MODE)],
     );
     return r.rows[0].id;
   } finally {
     c.release();
   }
+}
+
+function createImportJobMetadata(mode: string): string {
+  return JSON.stringify({
+    type: "import-all-standalone-107",
+    mode,
+    description: `Import standalone (mode=${mode}, mídia inline, rodando na .107)`,
+    container: process.env.HOSTNAME ?? "import-all-bg",
+  });
 }
 
 async function updateImportJob(): Promise<void> {
@@ -341,11 +350,17 @@ async function processTicket(ticket: { id: string; blip_id: string; customer_ide
       if (messages.length < BATCH_SIZE) break;
     }
 
-    // Update messageCount no ticket
+    // Update messageCount + contact_id + last_message_date no ticket. O delta
+    // filter depende de message_count > 0 pra pular tickets já processados;
+    // last_message_date é usado pela UI /contacts pra ordenação.
     try {
       await client.query(
-        `UPDATE tickets SET message_count = (SELECT COUNT(*) FROM messages WHERE ticket_id = $1) WHERE id = $1`,
-        [ticket.id],
+        `UPDATE tickets SET
+           message_count     = (SELECT COUNT(*) FROM messages WHERE ticket_id = $1),
+           last_message_date = (SELECT MAX(sent_at) FROM messages WHERE ticket_id = $1),
+           contact_id        = COALESCE(contact_id, $2)
+         WHERE id = $1`,
+        [ticket.id, contactId],
       );
     } catch {}
 
@@ -359,13 +374,39 @@ async function processTicket(ticket: { id: string; blip_id: string; customer_ide
 const start = Date.now();
 const pgInit = new Client({ connectionString: DATABASE_URL });
 await pgInit.connect();
-const SINCE_DAYS = process.env.SINCE_DAYS ? Number(process.env.SINCE_DAYS) : undefined;
-const whereSince = SINCE_DAYS ? `WHERE last_message_date > NOW() - INTERVAL '${SINCE_DAYS} days'` : '';
-const orderDir = SINCE_DAYS ? 'DESC' : 'ASC';
+
+let where = "";
+let orderDir = "DESC";
+
+if (MODE === "full") {
+  // Sweep completo (semanal). ASC pra processar mais antigos primeiro = estabilidade
+  // em caso de retomada parcial.
+  orderDir = "ASC";
+} else if (MODE === "since-days" && SINCE_DAYS) {
+  where = `WHERE last_message_date > NOW() - INTERVAL '${SINCE_DAYS} days'`;
+} else {
+  // delta (default): tickets abertos OR criados após última run OR backlog não processado.
+  // `last_message_date` é populado pelo processTicket abaixo — quando faltar é porque
+  // o ticket nunca foi tocado, mas `message_count = 0` já cobre esse caso.
+  // Reduz pool de ~23k tickets pra ~7.6k na primeira run (drena backlog) → ~2k/run depois.
+  where = `
+    WHERE closed = false
+       OR storage_date > COALESCE(
+            (SELECT MAX(completed_at) - INTERVAL '12 hours'
+               FROM import_jobs
+              WHERE metadata->>'type' = 'import-all-standalone-107'
+                AND status = 'completed'),
+            NOW() - INTERVAL '90 days'
+          )
+       OR message_count = 0
+  `;
+}
+
 const ticketsRes = await pgInit.query<{ id: string; blip_id: string; customer_identity: string | null }>(
-  `SELECT id::text, blip_id, customer_identity FROM tickets ${whereSince} ORDER BY storage_date ${orderDir}`,
+  `SELECT id::text, blip_id, customer_identity FROM tickets ${where} ORDER BY storage_date ${orderDir}`,
 );
 await pgInit.end();
+console.log(`Modo: ${MODE} | Tickets selecionados: ${ticketsRes.rowCount} (de 23k+ totais)`);
 
 const tickets = LIMIT_TICKETS ? ticketsRes.rows.slice(0, LIMIT_TICKETS) : ticketsRes.rows;
 console.log(`\n=== IMPORT ALL TICKETS w/ MEDIA ===`);

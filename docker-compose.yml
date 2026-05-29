@@ -2,11 +2,20 @@ networks:
   db-messages-network:
     driver: bridge
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   postgres:
     image: postgres:17-alpine
     container_name: db-messages-postgres
     restart: unless-stopped
+    mem_limit: 6g
+    cpus: 2.0
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -22,11 +31,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   wsproxy:
     image: oven/bun:1.2-alpine
     container_name: db-messages-wsproxy
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    logging: *default-logging
     working_dir: /app
     command: ["bun", "run", "/app/wsproxy.ts"]
     volumes:
@@ -42,11 +55,20 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   minio:
     image: minio/minio:latest
     container_name: db-messages-minio
     restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1.0
+    logging: *default-logging
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: chabra_admin
@@ -61,10 +83,11 @@ services:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
   app:
     build:
@@ -72,18 +95,29 @@ services:
       dockerfile: Dockerfile
     container_name: db-messages-app
     restart: unless-stopped
+    mem_limit: 3g
+    cpus: 2.0
+    logging: *default-logging
     environment:
-      # Postgres interno (mesma docker network) — sem WS proxy
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
-      DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      # Postgres interno (mesma docker network).
+      # DATABASE_URL/DIRECT_URL como strings literais no .env (user app_writer pos-RBAC eixo 3.3),
+      # nao mais interpolados de POSTGRES_USER/POSTGRES_PASSWORD que sao do superuser inicial.
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
       # Better Auth
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       # OAuth
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      # Storage MinIO interno
+      # Storage MinIO:
+      #   STORAGE_ENDPOINT       = endpoint do S3 client (Docker DNS interno, upload).
+      #   STORAGE_PUBLIC_URL     = base browser-facing usada nas URIs de mídia
+      #                            gravadas em messages.content.uri. SEM ESSA VAR
+      #                            URIs caem com http://minio:9000 e quebram no
+      #                            browser (Fase 2 do fix em bug-media-uri-host-interno).
       STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_URL: ${STORAGE_PUBLIC_URL:-https://storage.chabra.com.br}
       STORAGE_BUCKET: ${STORAGE_BUCKET:-chabra-db-messages}
       STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
       STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
@@ -100,7 +134,115 @@ services:
       - db-messages-network
     ports:
       - "127.0.0.1:3001:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --tries=1 --timeout=5 http://127.0.0.1:3000/api/auth/get-session || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ====================================================================
+  # OBSERVABILIDADE — Prometheus + Grafana + 2 exporters (eixo 5.1)
+  # windows_exporter roda como BINARIO NATIVO no host (.107), nao container.
+  # Ver wiki/db-messages/observabilidade-prometheus-grafana.md
+  # ====================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: db-messages-prometheus
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 0.5
+    logging: *default-logging
+    volumes:
+      - type: bind
+        source: D:\prometheus-data
+        target: /prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=5GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - db-messages-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: db-messages-grafana
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.25
+    logging: *default-logging
+    volumes:
+      - type: bind
+        source: D:\grafana-data
+        target: /var/lib/grafana
+      - ./grafana-provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3002}
+    networks:
+      - db-messages-network
+    ports:
+      - "127.0.0.1:3002:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: db-messages-cadvisor
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    logging: *default-logging
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - db-messages-network
+    command:
+      - '--housekeeping_interval=30s'
+      - '--docker_only=true'
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: db-messages-postgres-exporter
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    logging: *default-logging
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - db-messages-network
 
   # cloudflared NAO esta no compose: roda como servico Windows nativo na .107
-  # gerenciando os hostnames db.chabra.com.br + storage.chabra.com.br + (futuro) wpp.chabra.com.br.
-  # Ver wiki: db-messages/plano-self-host-107.md fase 3.
+  # gerenciando os hostnames db.chabra.com.br + storage.chabra.com.br + wpp.chabra.com.br
+  # + (futuro) admin.chabra.com.br -> grafana:3000.
+  # Tunnel db-chabra-wsproxy (UUID fed22b93-...) eh REMOTE-MANAGED (--token, sem JSON file local).
+  # Ver wiki: db-messages/plano-self-host-107.md fase 3 + runbooks/2026-05-21-limpeza-cf-vercel.md item 3.
