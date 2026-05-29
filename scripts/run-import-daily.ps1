@@ -16,26 +16,57 @@ function Log($msg) {
   Write-Host $line
 }
 
+# Marca jobs com status='running' há mais de 6h como 'failed' (zumbis), MAS apenas
+# se o container associado (metadata.container) não estiver mais Up. Evita marcar
+# um job legítimo de longa duração cujo container ainda processa. Caso real:
+# 2026-05-27 e1f2a0df ficou 43h+ "running" em 91,4% — container havia morrido.
+function CleanupZombieJobs() {
+  $query = "SELECT id || '|' || COALESCE(metadata->>'container','') FROM import_jobs WHERE status = 'running' AND started_at < NOW() - INTERVAL '6 hours' AND metadata->>'type' IN ('import-all-standalone-107', 'tickets-standalone-107');"
+  $candidates = & docker exec db-messages-postgres psql -U chabra_admin -d wpp_blip -t -A -c $query 2>&1
+  if ($LASTEXITCODE -ne 0) { Log "[zombie-cleanup] WARN: psql exit=$LASTEXITCODE saida=$candidates"; return }
+  $rows = @($candidates | Where-Object { $_ -and $_ -match '\|' })
+  if ($rows.Count -eq 0) { Log "[zombie-cleanup] nenhum candidato"; return }
+  $marked = @()
+  foreach ($line in $rows) {
+    $parts = $line -split '\|', 2
+    $jobId = $parts[0]; $container = $parts[1]
+    if ($container) {
+      $up = & docker ps --filter "name=^${container}$" --format "{{.Status}}" 2>$null
+      if ($up -and $up -like "Up*") { Log "[zombie-cleanup] skip $jobId (container $container ainda Up: $up)"; continue }
+    }
+    $u = "UPDATE import_jobs SET status='failed', completed_at=NOW(), updated_at=NOW(), metadata=jsonb_set(COALESCE(metadata,'{}'::jsonb),'{cleanup_reason}',to_jsonb('auto-cleanup ' || NOW()::text || ': container ' || COALESCE(metadata->>'container','?') || ' nao encontrado / job > 6h')) WHERE id='$jobId';"
+    & docker exec db-messages-postgres psql -U chabra_admin -d wpp_blip -c $u 2>&1 | Out-Null
+    $marked += $jobId
+  }
+  if ($marked.Count -gt 0) { Log ("[zombie-cleanup] marcou {0} job(s) como failed: {1}" -f $marked.Count, ($marked -join ',')) }
+  else { Log "[zombie-cleanup] todos os candidatos ainda tem container Up — nada a marcar" }
+}
+
 $ProjectDir    = "C:\Users\CHABRA\Documents\db-messages-main"
 $EnvFile       = Join-Path $ProjectDir ".env.import-script"
 $Network       = "db-messages-main_db-messages-network"
 
 # Pipeline daily: 2 etapas sequenciais
 #   etapa A: tickets novos (rápido, ~1-2min)
-#   etapa B: mensagens dos tickets existentes (longo, ~30-60min)
+#   etapa B: mensagens dos tickets existentes (modo delta ~2-3h pós-drenagem
+#            do backlog inicial; sweep completo é responsabilidade do
+#            run-import-weekly-full.ps1)
 $Stages = @(
-  @{ Name = "import-tickets-bg";  Script = "import-new-tickets-standalone.ts"; Detached = $false },
-  @{ Name = "import-daily-bg";    Script = "import-all-tickets-with-media.ts"; Detached = $true  }
+  @{ Name = "import-tickets-bg";  Script = "import-new-tickets-standalone.ts"; Detached = $false; ExtraEnv = @() },
+  @{ Name = "import-daily-bg";    Script = "import-all-tickets-with-media.ts"; Detached = $true;  ExtraEnv = @("IMPORT_MODE=delta","CONCURRENCY_TICKETS=15") }
 )
 
 Log "[start] script triggered by Task Scheduler"
 
 if (-not (Test-Path $EnvFile)) { Log "[abort] .env nao encontrado em $EnvFile"; exit 1 }
 
+CleanupZombieJobs
+
 foreach ($stage in $Stages) {
   $name = $stage.Name
   $script = $stage.Script
   $detached = $stage.Detached
+  $extraEnv = $stage.ExtraEnv
   $scriptPath = Join-Path $ProjectDir "scripts\$script"
   if (-not (Test-Path $scriptPath)) { Log "[abort] script $script nao encontrado"; exit 1 }
 
@@ -46,13 +77,17 @@ foreach ($stage in $Stages) {
     & docker rm -f $name 2>&1 | Out-Null
   }
 
-  Log "[run] disparando $name -> $script (detached=$detached)"
+  # Monta lista de -e <KEY=VAL> a partir de ExtraEnv. Vazio = nada extra.
+  $envArgs = @()
+  foreach ($e in $extraEnv) { $envArgs += @("-e", $e) }
+
+  Log "[run] disparando $name -> $script (detached=$detached, extraEnv=[$($extraEnv -join ',')])"
   if ($detached) {
-    $containerId = & docker run -d --name $name --network $Network --env-file $EnvFile -v "${ProjectDir}\scripts:/scripts:ro" -w /scripts oven/bun:1.2-alpine bun /scripts/$script 2>&1
+    $containerId = & docker run -d --name $name --network $Network --env-file $EnvFile @envArgs -v "${ProjectDir}\scripts:/scripts:ro" -w /scripts oven/bun:1.2-alpine bun /scripts/$script 2>&1
     if ($LASTEXITCODE -ne 0) { Log ("[fail] {0}: {1}" -f $name, $containerId); exit $LASTEXITCODE }
     Log "[ok] $name iniciado: $containerId"
   } else {
-    & docker run --rm --name $name --network $Network --env-file $EnvFile -v "${ProjectDir}\scripts:/scripts:ro" -w /scripts oven/bun:1.2-alpine bun /scripts/$script 2>&1 | ForEach-Object { Add-Content -Path $LogFile -Value "  [$name] $_" }
+    & docker run --rm --name $name --network $Network --env-file $EnvFile @envArgs -v "${ProjectDir}\scripts:/scripts:ro" -w /scripts oven/bun:1.2-alpine bun /scripts/$script 2>&1 | ForEach-Object { Add-Content -Path $LogFile -Value "  [$name] $_" }
     if ($LASTEXITCODE -ne 0) { Log ("[fail] {0} saiu com {1}" -f $name, $LASTEXITCODE); exit $LASTEXITCODE }
     Log "[ok] $name terminou OK"
   }
