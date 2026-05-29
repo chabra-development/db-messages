@@ -18,6 +18,9 @@ const STORAGE_ACCESS_KEY = process.env.STORAGE_ACCESS_KEY!;
 const STORAGE_SECRET_KEY = process.env.STORAGE_SECRET_KEY!;
 const STORAGE_ENDPOINT = process.env.STORAGE_ENDPOINT!;
 const STORAGE_INTERNAL_ENDPOINT = process.env.STORAGE_INTERNAL_ENDPOINT ?? "http://minio:9000";
+// STORAGE_PUBLIC_URL: URL base usada para os links gravados em messages.content.uri.
+// Sem ela cai pra STORAGE_ENDPOINT — caso de bug pré-Fase 2. Ver wiki bug-media-uri-host-interno.
+const STORAGE_PUBLIC_URL = process.env.STORAGE_PUBLIC_URL ?? STORAGE_ENDPOINT;
 const BLIP_DESK_API_KEY = process.env.BLIP_DESK_API_KEY!;
 const ROUTER_API_KEY = process.env.ROUTER_API_KEY!;
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? "5");
@@ -118,7 +121,7 @@ async function downloadAndStore(pending: PendingMsg, freshUri: string, freshType
       Bucket: STORAGE_BUCKET, Key: key, Body: buf,
       ContentType: pending.type, CacheControl: "public, max-age=31536000",
     }));
-    const newUri = `${STORAGE_ENDPOINT}/${STORAGE_BUCKET}/${key}`;
+    const newUri = `${STORAGE_PUBLIC_URL}/${STORAGE_BUCKET}/${key}`;
     const w = pgWrite.query(
       `UPDATE messages SET content = jsonb_set(content, '{uri}', to_jsonb($1::text)) WHERE id = $2`,
       [newUri, pending.id],
@@ -186,9 +189,9 @@ if (!SKIP_TICKETS) {
   const ticketsRes = await pgRead.query<{ ticket_id: string; blip_ticket_id: string; pending_count: string }>(
     `SELECT t.id::text AS ticket_id, t.blip_id AS blip_ticket_id, COUNT(*)::text AS pending_count
      FROM tickets t JOIN messages m ON m.ticket_id = t.id
-     WHERE m.content->>'type' ~ $1 AND m.content->>'uri' IS NOT NULL AND m.content->>'uri' NOT LIKE $2
+     WHERE m.content->>'type' ~ $1 AND m.content->>'uri' LIKE 'https://blipmediastore%'
      GROUP BY t.id, t.blip_id ORDER BY COUNT(*) DESC`,
-    [MEDIA_REGEX, `${STORAGE_ENDPOINT}/%`],
+    [MEDIA_REGEX],
   );
   const allTickets = ticketsRes.rows;
   const tickets = LIMIT_TICKETS ? allTickets.slice(0, LIMIT_TICKETS) : allTickets;
@@ -203,8 +206,8 @@ if (!SKIP_TICKETS) {
       const itemsRes = await pgRead.query<PendingMsg>(
         `SELECT id::text, blip_id, content->>'type' AS type, content->>'uri' AS uri, contact_id::text
          FROM messages WHERE ticket_id = $1 AND content->>'type' ~ $2
-           AND content->>'uri' IS NOT NULL AND content->>'uri' NOT LIKE $3`,
-        [t.ticket_id, MEDIA_REGEX, `${STORAGE_ENDPOINT}/%`],
+           AND content->>'uri' LIKE 'https://blipmediastore%'`,
+        [t.ticket_id, MEDIA_REGEX],
       );
       const s = await processScope(`ticket ${t.blip_ticket_id.slice(0,8)}`, itemsRes.rows,
         (skip) => fetchBlipItems("postmaster@desk.msging.net",
@@ -232,10 +235,10 @@ if (!SKIP_CONTACTS) {
   const contactsRes = await pgRead.query<{ contact_id: string; identity: string; pending_count: string }>(
     `SELECT c.id::text AS contact_id, c.identity, COUNT(*)::text AS pending_count
      FROM contacts c JOIN messages m ON m.contact_id = c.id
-     WHERE m.content->>'type' ~ $1 AND m.content->>'uri' IS NOT NULL AND m.content->>'uri' NOT LIKE $2
+     WHERE m.content->>'type' ~ $1 AND m.content->>'uri' LIKE 'https://blipmediastore%'
        AND m.ticket_id IS NULL
      GROUP BY c.id, c.identity ORDER BY COUNT(*) DESC`,
-    [MEDIA_REGEX, `${STORAGE_ENDPOINT}/%`],
+    [MEDIA_REGEX],
   );
   const allContacts = contactsRes.rows;
   const contacts = LIMIT_CONTACTS ? allContacts.slice(0, LIMIT_CONTACTS) : allContacts;
@@ -250,8 +253,8 @@ if (!SKIP_CONTACTS) {
       const itemsRes = await pgRead.query<PendingMsg>(
         `SELECT id::text, blip_id, content->>'type' AS type, content->>'uri' AS uri, contact_id::text
          FROM messages WHERE contact_id = $1 AND ticket_id IS NULL
-           AND content->>'type' ~ $2 AND content->>'uri' IS NOT NULL AND content->>'uri' NOT LIKE $3`,
-        [c.contact_id, MEDIA_REGEX, `${STORAGE_ENDPOINT}/%`],
+           AND content->>'type' ~ $2 AND content->>'uri' LIKE 'https://blipmediastore%'`,
+        [c.contact_id, MEDIA_REGEX],
       );
       const encId = encodeURIComponent(c.identity);
       await processScope(`contact ${c.identity.slice(0,15)}`, itemsRes.rows,
