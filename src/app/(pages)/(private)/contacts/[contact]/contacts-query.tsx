@@ -86,24 +86,35 @@ export const ContactsQuery = ({ id }: { id: string }) => {
     isFetchingNextPage,
   } = useMessages(id);
 
-  // 1. Scroll inicial para o fim (ou para mensagem destacada)
+  // 1. Scroll inicial: para o fim quando não há highlight, ou para a mensagem
+  //    destacada quando ?message-id=... Quando o ID destacado não está na janela
+  //    inicial carregada (msg muito antiga), pagina recursivamente até encontrar
+  //    ou esgotar o histórico — resolve Bug 1+2 (search → click navegava só pro
+  //    contato, sem scrollar até a msg).
   useEffect(() => {
     if (messages.length === 0) return;
-    if (!isFirstLoad.current) return;
 
     if (highlightMessageId) {
       const el = document.getElementById(`message-${highlightMessageId}`);
       if (el) {
-        el.scrollIntoView({ behavior: "instant", block: "center" });
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("highlight-message");
         isFirstLoad.current = false;
         return;
       }
+      // Msg ainda não carregada — busca página mais antiga (loop continua via
+      // re-render quando messages.length aumenta). Para se hasNextPage=false.
+      if (hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+      return;
     }
 
-    bottomRef.current?.scrollIntoView({ behavior: "instant" });
-    isFirstLoad.current = false;
-  }, [messages.length, highlightMessageId]);
+    if (isFirstLoad.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "instant" });
+      isFirstLoad.current = false;
+    }
+  }, [messages.length, highlightMessageId, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // 2. Reseta ao trocar de contato
   useEffect(() => {

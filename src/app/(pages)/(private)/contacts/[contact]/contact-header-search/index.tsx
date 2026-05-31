@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Images, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { MediaTabs } from "./media-tabs";
 import { SearchTab } from "./search-tab";
@@ -14,15 +15,16 @@ export const ContactHeaderSearch = () => {
   const pathname = usePathname();
   const [, , contactId] = pathname.split("/");
   const [open, setOpen] = useState(false);
+  const [, setHighlightedMessageId] = useQueryState("message-id", parseAsString);
 
+  // Bug 2 (resolvido 2026-05-31): antes era scrollIntoView direto em msg-${id},
+  // o que falhava silenciosamente quando a msg estava fora da janela paginada
+  // do useMessages. Agora seta ?message-id=... via nuqs e deixa o
+  // contacts-query.tsx tomar conta — ele auto-pagina até a msg aparecer no
+  // DOM e então scrolla. nuqs evita o erro de typedRoutes do router.replace.
   function handleNavigate(messageId: string) {
     setOpen(false);
-    setTimeout(() => {
-      const el = document.getElementById(`message-${messageId}`);
-      if (!el) return;
-
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
+    setHighlightedMessageId(messageId);
   }
 
   return (
