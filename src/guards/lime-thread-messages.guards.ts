@@ -25,9 +25,14 @@ const RepliedTextSchema = z.object({
   value: z.string(),
 });
 
+// Blip ocasionalmente omite `id` e/ou `direction` em inReplyTo (ex: quoted
+// reply de mensagens forwarded fwd:fwd:). Manter ambos opcionais — schemas
+// muito estritos faziam isUnknownContent classificar essas msgs como
+// desconhecidas e messages-board.tsx crashava com throw. Ver bug-ui-search
+// crash 2026-05-31.
 const InReplyToBaseSchema = z.object({
-  id: z.string(),
-  direction: DirectionSchema,
+  id: z.string().optional(),
+  direction: DirectionSchema.optional(),
 });
 
 const LimeContactValueSchema = z.object({

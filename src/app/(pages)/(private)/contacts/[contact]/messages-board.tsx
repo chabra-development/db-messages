@@ -25,17 +25,18 @@ export const MessagesBoard = ({ messages }: MessagesBoardProps) => {
     );
   }
 
-  // ✅ valida uma vez, fora do map
-  const unknownMessage = messages.find(({ content }) =>
-    isUnknownContent(content),
-  );
-
-  if (unknownMessage) {
-    console.log(unknownMessage);
-
-    throw new Error(
-      `tipo não tratado: ${JSON.stringify(unknownMessage.content)}`,
-    );
+  // Bug 2026-05-31: antes era `throw new Error()` que crashava a conversa
+  // inteira quando aparecia 1 msg de tipo não tratado (frequente em msgs
+  // forwarded fwd:fwd: que o Blip às vezes envia com schema reduzido).
+  // Agora: log discreto, MessageRenderer cuida do fallback render por msg.
+  if (process.env.NODE_ENV !== "production") {
+    const unknown = messages.filter(({ content }) => isUnknownContent(content));
+    if (unknown.length > 0) {
+      console.warn(
+        `[messages-board] ${unknown.length} msg(s) com tipo não tratado:`,
+        unknown.map(m => ({ id: m.id, content: m.content })),
+      );
+    }
   }
 
   return (

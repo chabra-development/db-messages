@@ -253,5 +253,15 @@ export const MessageRenderer = ({ message }: MessageRendererProps) => {
     );
   }
 
-  return null;
+  // ── FALLBACK: tipo não suportado ──────────────────────
+  // Render placeholder em vez de retornar null silencioso, pra o usuário
+  // saber que existe uma mensagem ali (não é gap na conversa).
+  // O messages-board já loga em dev. Em prod fica como "[mensagem não suportada]".
+  return (
+    <ContactMessage
+      date={sentAt}
+      direction={direction}
+      content="[mensagem não suportada]"
+    />
+  );
 };
