@@ -1,7 +1,12 @@
 # run-import-daily.ps1
 # Disparado pelo Task Scheduler 2x/dia (12:00 e 19:00).
-# Cria container detached que importa tickets/mensagens/mídia do Blip → Postgres + MinIO locais.
-# Idempotente: se já tem `import-daily-bg` rodando, sai cedo (não duplica).
+# Cria container detached que importa tickets/mensagens/midia do Blip
+# -> Postgres + MinIO locais.
+# Idempotente: se ja tem `import-daily-bg` rodando, sai cedo (nao duplica).
+#
+# IMPORTANTE: este arquivo NAO pode conter caracteres non-ASCII (acentos, em-dash,
+# setas, etc.) porque PS 5.1 le UTF-8 sem BOM como Windows-1252 e quebra o parser.
+# Bug consumiu 2 dias de imports em 2026-05-29 a 2026-05-31. Manter ASCII puro.
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference    = "SilentlyContinue"
@@ -16,10 +21,10 @@ function Log($msg) {
   Write-Host $line
 }
 
-# Marca jobs com status='running' há mais de 6h como 'failed' (zumbis), MAS apenas
-# se o container associado (metadata.container) não estiver mais Up. Evita marcar
-# um job legítimo de longa duração cujo container ainda processa. Caso real:
-# 2026-05-27 e1f2a0df ficou 43h+ "running" em 91,4% — container havia morrido.
+# Marca jobs com status='running' ha mais de 6h como 'failed' (zumbis), MAS apenas
+# se o container associado (metadata.container) nao estiver mais Up. Evita marcar
+# um job legitimo de longa duracao cujo container ainda processa. Caso real:
+# 2026-05-27 e1f2a0df ficou 43h+ "running" em 91.4% - container havia morrido.
 function CleanupZombieJobs() {
   $query = "SELECT id || '|' || COALESCE(metadata->>'container','') FROM import_jobs WHERE status = 'running' AND started_at < NOW() - INTERVAL '6 hours' AND metadata->>'type' IN ('import-all-standalone-107', 'tickets-standalone-107');"
   $candidates = & docker exec db-messages-postgres psql -U chabra_admin -d wpp_blip -t -A -c $query 2>&1
@@ -39,7 +44,7 @@ function CleanupZombieJobs() {
     $marked += $jobId
   }
   if ($marked.Count -gt 0) { Log ("[zombie-cleanup] marcou {0} job(s) como failed: {1}" -f $marked.Count, ($marked -join ',')) }
-  else { Log "[zombie-cleanup] todos os candidatos ainda tem container Up — nada a marcar" }
+  else { Log "[zombie-cleanup] todos os candidatos tem container Up - nada a marcar" }
 }
 
 $ProjectDir    = "C:\Users\CHABRA\Documents\db-messages-main"
@@ -47,9 +52,9 @@ $EnvFile       = Join-Path $ProjectDir ".env.import-script"
 $Network       = "db-messages-main_db-messages-network"
 
 # Pipeline daily: 2 etapas sequenciais
-#   etapa A: tickets novos (rápido, ~1-2min)
-#   etapa B: mensagens dos tickets existentes (modo delta ~2-3h pós-drenagem
-#            do backlog inicial; sweep completo é responsabilidade do
+#   etapa A: tickets novos (rapido, ~1-2min)
+#   etapa B: mensagens dos tickets existentes (modo delta ~2-3h pos-drenagem
+#            do backlog inicial; sweep completo e responsabilidade do
 #            run-import-weekly-full.ps1)
 $Stages = @(
   @{ Name = "import-tickets-bg";  Script = "import-new-tickets-standalone.ts"; Detached = $false; ExtraEnv = @() },
