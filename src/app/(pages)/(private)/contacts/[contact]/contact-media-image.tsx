@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { useDownloadFile } from "@/hooks/use-download-file";
+import { useSignedUrl } from "@/hooks/use-signed-url";
 import { cn } from "@/lib/utils";
 import { MessageDirection } from "@prisma/client";
 import { formatDate } from "date-fns";
@@ -35,6 +38,10 @@ export const ContactMediaImage = ({
   id: string;
 }) => {
   const { download, isDownloading } = useDownloadFile();
+
+  // SEC-01: a URI persistida (URL pública crua) não é mais acessível sem auth;
+  // resolve para uma pre-signed URL no render.
+  const { data: signedUrl } = useSignedUrl(uri);
 
   const [loaded, setLoaded] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
@@ -76,28 +83,30 @@ export const ContactMediaImage = ({
         className="relative w-full rounded-md overflow-hidden"
         style={{ aspectRatio: `${dimensions.width} / ${dimensions.height}` }}
       >
-        {!loaded && (
+        {(!loaded || !signedUrl) && (
           <div className="absolute inset-0 bg-linear-to-br from-muted via-muted-foreground/10 to-muted animate-pulse" />
         )}
-        <Image
-          src={uri}
-          width={dimensions.width}
-          height={dimensions.height}
-          alt={`imagem ${type}`}
-          className={cn(
-            "w-full h-auto rounded-md transition-opacity duration-500",
-            loaded ? "opacity-100" : "opacity-0",
-          )}
-          sizes="(max-width: 768px) 100vw, 320px"
-          onLoad={(e) => {
-            const img = e.currentTarget;
-            setDimensions({
-              width: img.naturalWidth,
-              height: img.naturalHeight,
-            });
-            setLoaded(true);
-          }}
-        />
+        {signedUrl && (
+          <Image
+            src={signedUrl}
+            width={dimensions.width}
+            height={dimensions.height}
+            alt={`imagem ${type}`}
+            className={cn(
+              "w-full h-auto rounded-md transition-opacity duration-500",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
+            sizes="(max-width: 768px) 100vw, 320px"
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              setDimensions({
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+              });
+              setLoaded(true);
+            }}
+          />
+        )}
       </div>
       <CardFooter className="w-fit ml-auto rounded-sm p-1 absolute bottom-2.5 right-2.5 bg-black/30 backdrop-blur-sm">
         <CardDescription className="text-white font-medium">

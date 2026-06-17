@@ -18,6 +18,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { useDownloadFile } from "@/hooks/use-download-file";
+import { useSignedUrl } from "@/hooks/use-signed-url";
 import { cn } from "@/lib/utils";
 import { MessageDirection } from "@prisma/client";
 import { formatDate } from "date-fns";
@@ -44,11 +45,30 @@ export function AudioPlayer({
   direction,
   date,
 }: AudioPlayerProps) {
+  // SEC-01: o bucket não é mais anônimo. Assina a URL para o playback; o botão
+  // Baixar continua usando a URI crua (getDownloadUrl reassina por conta própria).
+  const { data: playbackUrl } = useSignedUrl(url);
+
+  if (!playbackUrl) {
+    const isSent = direction === MessageDirection.SENT;
+    return (
+      <Card
+        className={cn(
+          "w-1/2 h-24 animate-pulse",
+          "@max-5xl/chat:w-9/10",
+          isSent
+            ? "dark:bg-[#144d37] bg-[#d9fdd3] rounded-tr-none"
+            : "dark:bg-muted bg-zinc-100 rounded-tl-none",
+        )}
+      />
+    );
+  }
+
   return (
     <AudioPlayerProvider<Track>
-      url={url}
+      url={playbackUrl}
       id={id ?? "audio"}
-      data={{ id: id ?? "audio", name, url }}
+      data={{ id: id ?? "audio", name, url: playbackUrl }}
     >
       <Player url={url} direction={direction} date={date} />
     </AudioPlayerProvider>

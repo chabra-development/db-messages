@@ -12,6 +12,9 @@ export const MediaTabs = ({ contactId }: { contactId: string }) => {
   const { data: messagesWithMedia, isLoading } = useQuery({
     queryKey: ["find-many-media-by-contact-id", contactId],
     queryFn: () => findMessagesMediaByContactId(contactId),
+    // SEC-01: as content.uri vêm pre-assinadas do servidor (TTL 10 min).
+    // staleTime < TTL faz o painel re-buscar URLs frescas antes de expirarem.
+    staleTime: 5 * 60 * 1000,
   });
 
   if (!messagesWithMedia || isLoading) {

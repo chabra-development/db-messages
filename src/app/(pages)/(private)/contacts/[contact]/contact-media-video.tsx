@@ -1,4 +1,7 @@
+"use client";
+
 import { Card, CardDescription } from "@/components/ui/card";
+import { useSignedUrl } from "@/hooks/use-signed-url";
 import { cn } from "@/lib/utils";
 import { MessageDirection } from "@prisma/client";
 import { formatDate } from "date-fns";
@@ -19,6 +22,9 @@ export const ContactMediaVideo = ({
 }) => {
   const isSent = direction === MessageDirection.SENT;
 
+  // SEC-01: pre-signed URL no render (bucket não é mais anônimo).
+  const { data: signedUrl } = useSignedUrl(uri);
+
   return (
     <Card
       className={cn(
@@ -28,24 +34,28 @@ export const ContactMediaVideo = ({
           : "dark:bg-muted bg-zinc-100 rounded-tl-none",
       )}
     >
-      <Plyr
-        source={{
-          type: "video",
-          sources: [
-            {
-              src: uri,
-              type: "video/mp4",
-              size: 1080,
-            },
-          ],
-        }}
-        options={{
-          autoplay: true,
-          muted: true,
-          loop: { active: true },
-          controls: [],
-        }}
-      />
+      {signedUrl ? (
+        <Plyr
+          source={{
+            type: "video",
+            sources: [
+              {
+                src: signedUrl,
+                type: "video/mp4",
+                size: 1080,
+              },
+            ],
+          }}
+          options={{
+            autoplay: true,
+            muted: true,
+            loop: { active: true },
+            controls: [],
+          }}
+        />
+      ) : (
+        <div className="aspect-video w-72 max-w-full rounded-md bg-muted animate-pulse" />
+      )}
       <CardDescription className="absolute bottom-2.5 right-2.5 text-primary">
         {formatDate(date, "HH:mm")}
       </CardDescription>

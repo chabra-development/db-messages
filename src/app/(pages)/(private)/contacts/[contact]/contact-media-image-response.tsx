@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { generateVideoThumbnail } from "@/functions/generate-video-thumbnail";
 import { stringToHTML } from "@/functions/string-to-HTML";
+import { useSignedUrl } from "@/hooks/use-signed-url";
 import { cn } from "@/lib/utils";
 import { MessageDirection } from "@prisma/client";
 import { formatDate } from "date-fns";
@@ -36,18 +37,25 @@ export const ContactImageResponse = ({
 
   const isSent = direction === MessageDirection.SENT;
 
+  // SEC-01: a URI persistida não é mais acessível sem auth; resolve para uma
+  // pre-signed URL antes de exibir ou gerar o thumbnail do vídeo.
+  const { data: signedUrl } = useSignedUrl(uri);
+
   useEffect(() => {
     let isMounted = true;
 
+    // Espera a assinatura resolver antes de exibir/gerar thumbnail.
+    if (!signedUrl) return;
+
     if (!type.includes("video")) {
-      // Para imagens normais, usar a URI diretamente
+      // Para imagens normais, usar a URL assinada diretamente
       if (isMounted) {
-        setThumb(uri);
+        setThumb(signedUrl);
       }
       return;
     }
 
-    generateVideoThumbnail(uri).then((image) => {
+    generateVideoThumbnail(signedUrl).then((image) => {
       if (!isMounted) return;
 
       setThumb(image);
@@ -56,10 +64,12 @@ export const ContactImageResponse = ({
     return () => {
       isMounted = false;
     };
-  }, [uri, type]);
+  }, [signedUrl, type]);
 
   const [typeSplited] = type.split("/");
   const Icon = typeSplited === "video" ? FileVideo : FileImage;
+
+  const displaySrc = thumb ?? signedUrl;
 
   return (
     <a href={`#${id}`} className={cn("w-1/4", "@max-5xl/chat:w-9/10")}>
@@ -78,25 +88,27 @@ export const ContactImageResponse = ({
             </div>
             <div className="relative size-24 overflow-hidden rounded-tr-md">
               {/* Placeholder blur */}
-              {!imageLoaded && thumb && (
+              {!imageLoaded && (
                 <div className="absolute inset-0 bg-linear-to-br from-muted to-muted-foreground/20 animate-pulse" />
               )}
 
-              <Image
-                src={thumb ?? uri}
-                width={100}
-                height={100}
-                unoptimized
-                quality={40}
-                alt={`imagem ${type}`}
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=="
-                className={cn(
-                  "object-cover size-full transition-opacity duration-300",
-                  imageLoaded ? "opacity-100" : "opacity-0",
-                )}
-                onLoad={() => setImageLoaded(true)}
-              />
+              {displaySrc && (
+                <Image
+                  src={displaySrc}
+                  width={100}
+                  height={100}
+                  unoptimized
+                  quality={40}
+                  alt={`imagem ${type}`}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=="
+                  className={cn(
+                    "object-cover size-full transition-opacity duration-300",
+                    imageLoaded ? "opacity-100" : "opacity-0",
+                  )}
+                  onLoad={() => setImageLoaded(true)}
+                />
+              )}
             </div>
           </div>
         </CardHeader>

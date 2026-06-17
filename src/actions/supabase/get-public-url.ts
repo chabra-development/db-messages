@@ -1,7 +1,9 @@
 "use server";
 
 import { BUCKET_NAME } from "@/constraints/bucket";
-import { env } from "@/env";
+import { s3Public } from "@/lib/storage";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 function extractPath(input: string): string {
   if (input.startsWith("http")) {
@@ -19,11 +21,25 @@ function extractPath(input: string): string {
   return input;
 }
 
+// SEC-01: antes retornava a URL pública crua, o que exigia `anonymous download`
+// no bucket (PII de saúde acessível sem auth). Agora devolve uma pre-signed URL
+// (TTL 10 min) assinada com `s3Public` (endpoint browser-facing), mantendo a
+// mídia acessível ao browser e aos viewers externos SEM acesso anônimo.
+// `extractPath` aceita tanto URL completa (URIs já gravadas em
+// messages.content.uri) quanto key relativa — por isso não é preciso migrar o DB.
 export async function getPublicUrl(input: string): Promise<string> {
+  // Mídia legada/externa (ex.: blipmediastore, discord) não está no nosso bucket
+  // e não pode ser assinada — devolve a URL como está (comportamento pré-SEC-01,
+  // sem regredir mídia que já era externa).
+  if (input.startsWith("http") && !input.includes(`${BUCKET_NAME}/`)) {
+    return input;
+  }
+
   const path = extractPath(input);
 
-  // STORAGE_PUBLIC_URL é a base browser-facing; STORAGE_ENDPOINT só como fallback
-  // de retrocompat (em prod sempre deve estar setada). Ver bug-media-uri-host-interno.
-  const base = (env.STORAGE_PUBLIC_URL ?? env.STORAGE_ENDPOINT).replace(/\/+$/, "");
-  return `${base}/${BUCKET_NAME}/${path}`;
+  return getSignedUrl(
+    s3Public,
+    new GetObjectCommand({ Bucket: BUCKET_NAME, Key: path }),
+    { expiresIn: 600 },
+  );
 }
